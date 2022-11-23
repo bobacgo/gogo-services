@@ -1,0 +1,7 @@
+go 1.19
+
+use (
+	./admin-service
+	./common-lib
+	./main-service
+)

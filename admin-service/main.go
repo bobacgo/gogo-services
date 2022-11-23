@@ -1,1 +1,1 @@
-package admin_service
+package main

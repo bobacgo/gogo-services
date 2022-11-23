@@ -1,16 +1,3 @@
-# gogo-services
+# main-service
 
-### create project
-> 守护进程的项目以 -service 结尾
-```shell
-# first create
-go work init
-```
-
-```shell
-# add project
-cd ./xxx-service
-go mod init github.com/gogoclouds/gogo-services/xxx-service
-cd ../
-go work use ./xxx-service
-```
+主服务、提供http接口、主要对接前端。
