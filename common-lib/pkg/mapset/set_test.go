@@ -1,4 +1,4 @@
-package pkg_test
+package mapset_test
 
 import (
 	"testing"
