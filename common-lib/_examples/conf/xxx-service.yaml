@@ -1,0 +1,10 @@
+app:
+  service: xxx-service
+  version: v1.0.0
+  server:
+    http:
+      addr: 0.0.0.0:8000
+      timeout: 1s
+    rpc:
+      addr: 0.0.0.0:9000
+      timeout: 1s

@@ -1,0 +1,5 @@
+log:
+  level: debug # 可选 debug | info | error
+  file:
+    size: 10 # 10MB 切割文件
+    path: ./logs
