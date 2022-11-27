@@ -17,11 +17,11 @@ import (
 
 // 从配置文件映射结构
 
-// NewLogger
-func NewLogger(serviceName string, conf *config.Log) {
+// Init 日志配置
+func Init(appName string, conf config.Log) {
 	core := zapcore.NewCore( // 输出到日志文件
 		setJSONEncoder(),
-		setLoggerWriter(serviceName, conf),
+		setLoggerWriter(appName, conf),
 		level2Int(conf.Level))
 
 	outputConsole := zapcore.NewCore( // 输出到控制台
@@ -57,8 +57,8 @@ func level2Int(level string) zapcore.Level {
 	}
 }
 
-func setLoggerWriter(serviceName string, conf *config.Log) zapcore.WriteSyncer {
-	fName := makeFileName(conf.DirPath, serviceName)
+func setLoggerWriter(appName string, conf config.Log) zapcore.WriteSyncer {
+	fName := makeFileName(conf.DirPath, appName)
 	return zapcore.AddSync(
 		&lumberjack.Logger{
 			Filename:   fName,                 // 要写入的日志文件

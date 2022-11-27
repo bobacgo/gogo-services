@@ -1,8 +1,12 @@
 package main
 
 import (
+	"github.com/gin-gonic/gin"
+	"github.com/gogoclouds/gogo-services/common-lib/app"
 	"github.com/gogoclouds/gogo-services/common-lib/dns"
+	"github.com/gogoclouds/gogo-services/common-lib/g"
 	"github.com/gogoclouds/gogo-services/common-lib/pkg/mapset"
+	"github.com/gogoclouds/gogo-services/common-lib/server"
 )
 
 var (
@@ -15,10 +19,19 @@ var (
 )
 
 func main() {
-	server := dns.Server
 	fileMetadata := &dns.FileMetadata{
 		Namespace: dnsNamespace, FileGroup: fileGroup, FileNameSet: mapset.Of(configFilenames...),
 	}
-	server.LoadConfig(dnsConfigFilePath, fileMetadata)
-	select {}
+	app.Init(dnsConfigFilePath, fileMetadata)
+	appConf := g.Conf.App()
+	server.RunHttpServer(appConf.Server.Http.Addr, router)
+}
+
+func router(e *gin.Engine) {
+	e.GET("/ping", func(c *gin.Context) {
+		c.JSON(200, map[string]interface{}{
+			"code": 0,
+			"msg":  "ok",
+		})
+	})
 }

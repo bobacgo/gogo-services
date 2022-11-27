@@ -37,10 +37,10 @@ func (c *Configuration) AppServiceKV() map[string]any {
 	return c.c.App.ServiceKV
 }
 
-func (c *Configuration) Log() App {
+func (c *Configuration) Log() Log {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
-	return c.c.App
+	return c.c.Log
 }
 
 func (c *Configuration) Database() Database {
@@ -89,6 +89,14 @@ type App struct {
 		Rpc  Transport
 	}
 	ServiceKV map[string]any `yaml:"serviceKV"` // 业务自定义kv
+}
+
+func (a App) EnabledRPC() bool {
+	return a.Server.Rpc.Addr != ""
+}
+
+func (a App) EnabledHttp() bool {
+	return a.Server.Http.Addr != ""
 }
 
 // --------------- log ----------------
