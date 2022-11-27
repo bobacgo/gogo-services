@@ -2,12 +2,13 @@ package logger
 
 import (
 	"fmt"
-	"github.com/gogoclouds/gogo-services/common-lib/dns/config"
-	"github.com/gogoclouds/gogo-services/common-lib/g"
 	"log"
 	"os"
 	"strings"
 	"time"
+
+	"github.com/gogoclouds/gogo-services/common-lib/dns/config"
+	"github.com/gogoclouds/gogo-services/common-lib/g"
 
 	"github.com/natefinch/lumberjack"
 	"go.uber.org/zap"
@@ -57,7 +58,7 @@ func level2Int(level string) zapcore.Level {
 }
 
 func setLoggerWriter(serviceName string, conf *config.Log) zapcore.WriteSyncer {
-	fName := getFileName(conf.DirPath, serviceName)
+	fName := makeFileName(conf.DirPath, serviceName)
 	return zapcore.AddSync(
 		&lumberjack.Logger{
 			Filename:   fName,                 // 要写入的日志文件
@@ -70,7 +71,7 @@ func setLoggerWriter(serviceName string, conf *config.Log) zapcore.WriteSyncer {
 }
 
 // xxx/logs/xxx-service-2006-01-01-150405.log
-func getFileName(path, name string) string {
+func makeFileName(path, name string) string {
 	if path == "" {
 		path = "/logs"
 	}

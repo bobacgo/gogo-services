@@ -2,10 +2,14 @@ package g
 
 import (
 	redis "github.com/go-redis/redis/v8"
+	"github.com/gogoclouds/gogo-services/common-lib/dns/config"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 	"sync"
 )
+
+// Conf All 配置
+var Conf config.Configuration
 
 // Log 打印日志
 var Log *zap.SugaredLogger

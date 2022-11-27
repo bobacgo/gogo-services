@@ -1,5 +1,5 @@
 log:
   level: debug # 可选 debug | info | error
-  file:
-    size: 10 # 10MB 切割文件
-    path: ./logs
+  fileSizeMax: 10 # 10MB 切割文件
+  fileAgeMax: 30 # 日志保留30天
+  dirPath: ./logs

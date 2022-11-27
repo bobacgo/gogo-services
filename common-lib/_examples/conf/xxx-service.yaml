@@ -1,5 +1,5 @@
 app:
-  service: xxx-service
+  name: xxx-service
   version: v1.0.0
   server:
     http:
@@ -8,3 +8,6 @@ app:
     rpc:
       addr: 0.0.0.0:9000
       timeout: 1s
+  serviceKV: # 应用的业务自定义配置
+    authenticationKey: xxxx.xxx.xx
+

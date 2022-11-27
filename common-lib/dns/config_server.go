@@ -2,10 +2,13 @@ package dns
 
 import (
 	"fmt"
+	"log"
+
+	"github.com/gogoclouds/gogo-services/common-lib/dns/config"
+	"github.com/gogoclouds/gogo-services/common-lib/g"
 	"github.com/gogoclouds/gogo-services/common-lib/pkg/mapset"
 	"github.com/polarismesh/polaris-go"
 	"github.com/polarismesh/polaris-go/pkg/model"
-	"log"
 )
 
 type FileMetadata struct {
@@ -27,6 +30,7 @@ func (sc serverCenter) LoadConfig(dnsConfigFilePath string, remoteConfigFile *Fi
 		log.Panicln(err)
 	}
 
+	g.Conf = config.New()
 	remoteConfigFile.FileNameSet.Each(func(filename string) {
 		// 获取远程的配置文件
 		configFile, err := configApi.GetConfigFile(remoteConfigFile.Namespace, remoteConfigFile.FileGroup, filename)
@@ -34,10 +38,10 @@ func (sc serverCenter) LoadConfig(dnsConfigFilePath string, remoteConfigFile *Fi
 			log.Panicln(err)
 		}
 
-		// 打印配置文件内容
-		fmt.Printf("%s\n", configFile.GetContent())
+		g.Conf.Sync([]byte(configFile.GetContent()))
 		configFile.AddChangeListener(changeListener)
 	})
+	fmt.Printf("%+v\n", g.Conf)
 }
 
 func changeListener(event model.ConfigFileChangeEvent) {
@@ -48,5 +52,6 @@ func changeListener(event model.ConfigFileChangeEvent) {
 	fmt.Println(event.OldValue)
 	fmt.Println("------------- new value ------------------- ")
 	fmt.Println(event.NewValue)
+	g.Conf.Sync([]byte(event.NewValue))
 	fmt.Println("-------------------------------------------- ")
 }
