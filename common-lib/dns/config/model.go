@@ -1,4 +1,13 @@
-package config
+package dns
+
+type Config struct {
+	App  App
+	Log  Log
+	Data struct {
+		Database Database
+		Redis    Redis
+	}
+}
 
 // Transport 传输协议
 type Transport struct {
