@@ -8,8 +8,6 @@ import (
 	"time"
 
 	"github.com/gogoclouds/gogo-services/common-lib/dns/config"
-	"github.com/gogoclouds/gogo-services/common-lib/g"
-
 	"github.com/natefinch/lumberjack"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -17,8 +15,8 @@ import (
 
 // 从配置文件映射结构
 
-// Init 日志配置
-func Init(appName string, conf config.Log) {
+// New 日志配置
+func New(appName string, conf config.Log) *zap.SugaredLogger {
 	core := zapcore.NewCore( // 输出到日志文件
 		setJSONEncoder(),
 		setLoggerWriter(appName, conf),
@@ -30,8 +28,7 @@ func Init(appName string, conf config.Log) {
 		level2Int(conf.Level),
 	)
 	core = zapcore.NewTee(core, outputConsole)
-	// initialize 日志对象 g.Log
-	g.Log = zap.New(core, zap.AddCaller()).Sugar()
+	return zap.New(core, zap.AddCaller()).Sugar()
 }
 
 func setConsoleEncoder() zapcore.Encoder {

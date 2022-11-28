@@ -2,49 +2,43 @@ package dns
 
 import (
 	"fmt"
+	"github.com/gogoclouds/gogo-services/common-lib/pkg"
+	"gopkg.in/yaml.v3"
 	"log"
 
 	"github.com/gogoclouds/gogo-services/common-lib/dns/config"
 	"github.com/gogoclouds/gogo-services/common-lib/g"
-	"github.com/gogoclouds/gogo-services/common-lib/pkg/mapset"
 	"github.com/polarismesh/polaris-go"
 	"github.com/polarismesh/polaris-go/pkg/model"
 )
 
-type FileMetadata struct {
-	Namespace   string
-	FileGroup   string
-	FileNameSet mapset.Set[string] // 要拉起的文件集合
-}
-
 // LoadConfig
 //
 // eg: dnsConfigFilePath = "./configs/polaris.yaml"
-func (sc serverCenter) LoadConfig(dnsConfigFilePath string, remoteConfigFile *FileMetadata) {
-	if dnsConfigFilePath == "" {
-		log.Panicf("dns config file path: %s\n", dnsConfigFilePath)
-	}
-
-	configApi, err := polaris.NewConfigAPIByFile("./configs/polaris.yaml")
+func (sc serverCenter) LoadConfig(dnsConfigFilePath string, remoteConfigFile *config.FileMetadata) {
+	configApi, err := polaris.NewConfigAPIByFile(dnsConfigFilePath)
 	if err != nil {
-		log.Panicln(err)
+		panic(err)
 	}
 
 	g.Conf = config.New()
-	remoteConfigFile.FileNameSet.Each(func(filename string) {
-		// 获取远程的配置文件
-		configFile, err := configApi.GetConfigFile(remoteConfigFile.Namespace, remoteConfigFile.FileGroup, filename)
-		if err != nil {
-			log.Panicln(err)
-		}
-
-		g.Conf.Sync([]byte(configFile.GetContent()))
-		configFile.AddChangeListener(changeListener)
-	})
-	fmt.Printf("%+v\n", g.Conf)
+	pkg.StreamSlice(remoteConfigFile.Filenames).Distinct(). // 有序去重
+		Each(func(idx int, filename string) {
+			// 获取远程的配置文件
+			configFile, err := configApi.GetConfigFile(remoteConfigFile.Namespace, remoteConfigFile.Group, filename)
+			if err != nil {
+				panic(err)
+			}
+			if err = g.Conf.Sync([]byte(configFile.GetContent())); err != nil {
+				panic(err)
+			}
+			configFile.AddChangeListener(sc.changeListener)
+		})
+	// 打印读取到的配置信息
+	sc.printConfInfo()
 }
 
-func changeListener(event model.ConfigFileChangeEvent) {
+func (sc serverCenter) changeListener(event model.ConfigFileChangeEvent) {
 	log.Printf("config change: %+v\n", event.ConfigFileMetadata)
 	log.Printf("change type : %d\n", event.ChangeType)
 	fmt.Println("-------------------------------------------- ")
@@ -52,6 +46,16 @@ func changeListener(event model.ConfigFileChangeEvent) {
 	fmt.Println(event.OldValue)
 	fmt.Println("------------- new value ------------------- ")
 	fmt.Println(event.NewValue)
-	g.Conf.Sync([]byte(event.NewValue))
 	fmt.Println("-------------------------------------------- ")
+	if err := g.Conf.Sync([]byte(event.NewValue)); err != nil {
+		g.Log.Errorf("sync config: %v", err)
+	}
+}
+
+func (sc serverCenter) printConfInfo() {
+	// 打印读取到的配置信息
+	printConf, _ := yaml.Marshal(g.Conf.Config())
+	log.Println("======================= config info ========================")
+	fmt.Println(string(printConf))
+	log.Println("======================= config info end ====================")
 }

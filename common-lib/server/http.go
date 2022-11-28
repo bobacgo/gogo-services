@@ -2,9 +2,9 @@ package server
 
 import "github.com/gin-gonic/gin"
 
-type registerHttpFn func(e *gin.Engine)
+type RegisterHttpFn func(e *gin.Engine)
 
-func RunHttpServer(addr string, register registerHttpFn) {
+func RunHttpServer(addr string, register RegisterHttpFn) {
 	e := gin.New()
 	e.Use(gin.Logger()) // TODO -> zap.Logger
 	e.Use(gin.Recovery())

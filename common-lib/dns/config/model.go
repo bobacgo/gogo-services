@@ -1,64 +1,9 @@
 package config
 
-import (
-	"fmt"
-	"gopkg.in/yaml.v3"
-	"log"
-	"sync"
-)
-
-type Configuration struct {
-	mu sync.RWMutex
-	c  *config
-}
-
-func New() Configuration {
-	return Configuration{mu: sync.RWMutex{}, c: &config{}}
-}
-
-// Sync 局部更新
-func (c *Configuration) Sync(data []byte) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	if err := yaml.Unmarshal(data, c.c); err != nil {
-		log.Printf("sync config: %v", err)
-	}
-}
-
-func (c *Configuration) App() App {
-	c.mu.RLock()
-	defer c.mu.RUnlock()
-	return c.c.App
-}
-
-func (c *Configuration) AppServiceKV() map[string]any {
-	c.mu.RLock()
-	defer c.mu.RUnlock()
-	return c.c.App.ServiceKV
-}
-
-func (c *Configuration) Log() Log {
-	c.mu.RLock()
-	defer c.mu.RUnlock()
-	return c.c.Log
-}
-
-func (c *Configuration) Database() Database {
-	c.mu.RLock()
-	defer c.mu.RUnlock()
-	return c.c.Data.Database
-}
-
-func (c *Configuration) Redis() Redis {
-	c.mu.RLock()
-	defer c.mu.RUnlock()
-	return c.c.Data.Redis
-}
-
-func (c Configuration) String() string {
-	c.mu.RLock()
-	defer c.mu.RUnlock()
-	return fmt.Sprintf("%+v\n", c.c)
+type FileMetadata struct {
+	Namespace string
+	Group     string
+	Filenames []string
 }
 
 // --------------------------------------
@@ -119,7 +64,7 @@ type Database struct {
 }
 
 type Redis struct {
-	Addr         string // 127.0.0.1:6379
-	ReadTimeout  string `yaml:"readTimeout"`  // 0.2s
-	WriteTimeout string `yaml:"writeTimeout"` // 0.2s
+	Addr         []string // [127.0.0.1:6379, 127.0.0.1:7000]
+	ReadTimeout  string   `yaml:"readTimeout"`  // 0.2s
+	WriteTimeout string   `yaml:"writeTimeout"` // 0.2s
 }

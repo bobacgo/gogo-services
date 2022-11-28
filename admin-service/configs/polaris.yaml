@@ -1,10 +1,15 @@
+# polaris
 global:
   serverConnector:
     addresses:
-      # - 192.168.15.10:58091
-      - 192.168.15.8:48091
+      - polaris-headless:48091
 config:
   configConnector:
     addresses:
-      # - 192.168.15.10:58093
-      - 192.168.15.8:48093
+      - polaris-headless:48093
+
+# 自己服务本身需要的配置数据
+_config:
+  namespace: default
+  group: gogo_v1.0.0
+  filenames: ['admin-service.yaml', 'common.yaml', 'mysql.yaml', 'redis.yaml']

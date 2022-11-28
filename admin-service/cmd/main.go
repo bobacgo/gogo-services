@@ -1,37 +1,19 @@
 package main
 
 import (
-	"github.com/gin-gonic/gin"
+	"context"
+	"flag"
+	"github.com/gogoclouds/gogo-services/admin-service/api"
 	"github.com/gogoclouds/gogo-services/common-lib/app"
-	"github.com/gogoclouds/gogo-services/common-lib/dns"
-	"github.com/gogoclouds/gogo-services/common-lib/g"
-	"github.com/gogoclouds/gogo-services/common-lib/pkg/mapset"
-	"github.com/gogoclouds/gogo-services/common-lib/server"
 )
 
-var (
-	dnsConfigFilePath = "../configs/polaris.yaml"
-	dnsNamespace      = "default"
-	fileGroup         = "gogo_v1.0.0"
-	configFilenames   = []string{
-		"admin-service.yaml", "common.yaml", "mysql.yaml", "redis.yaml", "test.yaml",
-	}
-)
+var config = flag.String("config", "./configs/polaris.yaml", "config file path")
 
 func main() {
-	fileMetadata := &dns.FileMetadata{
-		Namespace: dnsNamespace, FileGroup: fileGroup, FileNameSet: mapset.Of(configFilenames...),
-	}
-	app.Init(dnsConfigFilePath, fileMetadata)
-	appConf := g.Conf.App()
-	server.RunHttpServer(appConf.Server.Http.Addr, router)
-}
-
-func router(e *gin.Engine) {
-	e.GET("/ping", func(c *gin.Context) {
-		c.JSON(200, map[string]interface{}{
-			"code": 0,
-			"msg":  "ok",
-		})
-	})
+	flag.Parse()
+	ctx := context.Background()
+	app.New(ctx, *config).
+		OpenDB().
+		OpenCacheDB().
+		RunHttp(api.Router)
 }

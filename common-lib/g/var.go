@@ -9,7 +9,7 @@ import (
 )
 
 // Conf All 配置
-var Conf config.Configuration
+var Conf *config.Configuration
 
 // Log 打印日志
 var Log *zap.SugaredLogger

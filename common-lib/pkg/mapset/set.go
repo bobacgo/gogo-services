@@ -1,6 +1,6 @@
 package mapset
 
-// Set no-safe
+// Set no-safe、unordered
 type Set[T comparable] struct {
 	m map[T]struct{}
 }

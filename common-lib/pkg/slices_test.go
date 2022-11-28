@@ -1,8 +1,9 @@
 package pkg_test
 
 import (
-	"github.com/gogoclouds/gogo-services/common-lib/pkg"
 	"testing"
+
+	"github.com/gogoclouds/gogo-services/common-lib/pkg"
 )
 
 type person struct {
@@ -12,7 +13,7 @@ type person struct {
 
 func TestDistinct(t *testing.T) {
 	arr := []string{"mysql", "redis", "mysql"}
-	sd := pkg.Slices[string]{}.Distinct(arr)
+	sd := pkg.StreamSlice(arr).Distinct().List()
 	t.Log(sd) // [mysql redis]
 
 	p := []person{
@@ -20,6 +21,6 @@ func TestDistinct(t *testing.T) {
 		{"fei.zhang", 18},
 		{"bei.liu", 22},
 	}
-	pd := pkg.Slices[person]{}.Distinct(p)
+	pd := pkg.StreamSlice(p).Distinct().List()
 	t.Log(pd) // [{fei.zhang 18} {bei.liu 22}]
 }

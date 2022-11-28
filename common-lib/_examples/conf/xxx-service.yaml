@@ -9,5 +9,4 @@ app:
       addr: 0.0.0.0:9000
       timeout: 1s
   serviceKV: # 应用的业务自定义配置
-    authenticationKey: xxxx.xxx.xx
-
+    authenticationKey: xxx-xxx-xx

@@ -1,17 +1,31 @@
 package orm
 
 import (
+	"context"
+	"fmt"
+	"github.com/gogoclouds/gogo-services/common-lib/dns/config"
+	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 	"log"
 	"os"
 	"time"
 )
 
-var Gorm = &gorm{}
+var Server = &server{}
 
-type gorm struct{}
+type server struct{}
 
-func (gorm) Logger() logger.Interface {
+func (server) NewDB(ctx context.Context, conf *config.Configuration) (*gorm.DB, error) {
+	driver := conf.Database().Driver
+	switch driver {
+	case "mysql":
+		return mysqlServer{}.Open(ctx, conf)
+	default:
+		return nil, fmt.Errorf("no dirver: %s", driver)
+	}
+}
+
+func (server) Logger() logger.Interface {
 	return logger.New(
 		log.New(os.Stdout, "\r\n", log.LstdFlags), // io writer（日志输出的目标，前缀和日志包含的内容——译者注）
 		logger.Config{
