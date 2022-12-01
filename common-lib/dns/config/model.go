@@ -65,6 +65,7 @@ type Database struct {
 
 type Redis struct {
 	Addr         []string // [127.0.0.1:6379, 127.0.0.1:7000]
-	ReadTimeout  string   `yaml:"readTimeout"`  // 0.2s
-	WriteTimeout string   `yaml:"writeTimeout"` // 0.2s
+	Password     string
+	ReadTimeout  string `yaml:"readTimeout"`  // 0.2s
+	WriteTimeout string `yaml:"writeTimeout"` // 0.2s
 }

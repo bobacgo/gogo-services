@@ -18,7 +18,7 @@ var Log *zap.SugaredLogger
 var CacheLocal sync.Map
 
 // CacheDB 二级缓存 容量大，有网络IO延迟
-var CacheDB *redis.ClusterClient
+var CacheDB redis.Cmdable
 
 // DB gorm 关系型数据库 -- 持久化
 var DB *gorm.DB
