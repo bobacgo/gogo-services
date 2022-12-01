@@ -2,7 +2,7 @@ package dns
 
 import (
 	"fmt"
-	"github.com/gogoclouds/gogo-services/common-lib/pkg"
+	"github.com/gogoclouds/gogo-services/common-lib/pkg/stream"
 	"gopkg.in/yaml.v3"
 	"log"
 
@@ -22,7 +22,7 @@ func (sc serverCenter) LoadConfig(dnsConfigFilePath string, remoteConfigFile *co
 	}
 
 	g.Conf = config.New()
-	pkg.StreamSlice(remoteConfigFile.Filenames).Distinct(). // 有序去重
+	stream.New(remoteConfigFile.Filenames).Distinct(). // 有序去重
 		Each(func(idx int, filename string) {
 			// 获取远程的配置文件
 			configFile, err := configApi.GetConfigFile(remoteConfigFile.Namespace, remoteConfigFile.Group, filename)
