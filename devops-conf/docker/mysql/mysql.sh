@@ -1,0 +1,2 @@
+# mysql v8
+docker run -it -v C:/docker/mysql/data:/var/lib/mysql -v C:/docker/mysql/my.cnf:/etc/mysql/my.cnf -v C:/docker/mysql/mysql-files:/var/lib/mysql-files --restart=always --name mysql8 -e MYSQL_ROOT_PASSWORD=root -p 3306:3306 -d mysql
