@@ -31,9 +31,15 @@ func New(ctx context.Context, configFilePath string) *app {
 	return &app{ctx: ctx, conf: g.Conf}
 }
 
-func (s *app) OpenDB() *app {
+// OpenDB connect DB
+//
+// tableModel struct 数据库表
+func (s *app) OpenDB(tableModel []any) *app {
 	var err error
 	if g.DB, err = orm.Server.NewDB(s.ctx, s.conf); err != nil {
+		panic(err)
+	}
+	if err = orm.Server.AutoMigrate(g.DB, tableModel...); err != nil {
 		panic(err)
 	}
 	return s

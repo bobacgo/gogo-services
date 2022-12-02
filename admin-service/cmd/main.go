@@ -4,6 +4,7 @@ import (
 	"context"
 	"flag"
 	"github.com/gogoclouds/gogo-services/admin-service/api"
+	"github.com/gogoclouds/gogo-services/admin-service/internal/model"
 	"github.com/gogoclouds/gogo-services/common-lib/app"
 )
 
@@ -13,7 +14,7 @@ func main() {
 	flag.Parse()
 	ctx := context.Background()
 	app.New(ctx, *config).
-		OpenDB().
+		OpenDB(model.Tables).
 		OpenCacheDB().
 		RunHttp(api.Router)
 }

@@ -2,10 +2,11 @@
 
 ### 项目组件依赖
 
-- polaris -- dns 注册中心、配置中心
-- gin -- web framework
-- gorm -- orm framework，操作关系型数据库
-- go-redis -- redis
+- [PolarisMesh](https://polarismesh.cn) DNS 注册中心、配置中心
+- [Gin](https://gin-gonic.com) Web Framework
+- [gRPC](https://grpc.io) RPC Framework
+- [GORM](https://gorm.io) ORM library，操作关系型数据库
+- [go-redis](https://redis.uptrace.dev) Golang Redis client for Redis Server and Redis Cluster
 
 ```text
 gogo-services
@@ -45,3 +46,7 @@ polaris、mysql、redis
 ```shell
 127.0.0.1 polaris-headless
 ```
+
+### Reference
+
+- [https://microservices.io](https://microservices.io)
