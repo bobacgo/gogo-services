@@ -73,7 +73,7 @@ func New(code StatusCode, msg string) *Resp {
 // NewWithData 自定义 code 和提示信息，并携带数据
 func NewWithData[T any](code StatusCode, msg string, data T) *RespData[T] {
 	return &RespData[T]{
-		Resp{code, msg},
-		data,
+		Resp: Resp{code, msg},
+		Data: data,
 	}
 }

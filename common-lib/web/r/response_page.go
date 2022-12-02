@@ -29,7 +29,7 @@ type PageMetaResp[T any, M any] struct {
 func NewPage[T any](list []T, currPage, totalPage, pageSize int) *PageResp[T] {
 	return &PageResp[T]{
 		PageReq: PageReq{currPage, pageSize},
-		Page:    Page[T]{totalPage, list},
+		Page:    Page[T]{TotalPage: totalPage, List: list},
 	}
 }
 
@@ -42,7 +42,7 @@ func NewPage[T any](list []T, currPage, totalPage, pageSize int) *PageResp[T] {
 func NewPageMeta[T any, M any](list []T, currPage, totalPage, pageSize int, meta M) *PageMetaResp[T, M] {
 	return &PageMetaResp[T, M]{
 		PageReq: PageReq{currPage, pageSize},
-		Page:    Page[T]{totalPage, list},
+		Page:    Page[T]{TotalPage: totalPage, List: list},
 		Meta:    meta,
 	}
 }

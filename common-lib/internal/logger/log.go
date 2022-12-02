@@ -2,12 +2,12 @@ package logger
 
 import (
 	"fmt"
+	"github.com/gogoclouds/gogo-services/common-lib/internal/dns/config"
 	"log"
 	"os"
 	"strings"
 	"time"
 
-	"github.com/gogoclouds/gogo-services/common-lib/dns/config"
 	"github.com/natefinch/lumberjack"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"

@@ -2,7 +2,7 @@ package orm
 
 import (
 	"context"
-	"github.com/gogoclouds/gogo-services/common-lib/dns/config"
+	"github.com/gogoclouds/gogo-services/common-lib/internal/dns/config"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )

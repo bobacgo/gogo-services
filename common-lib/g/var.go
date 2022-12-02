@@ -2,7 +2,7 @@ package g
 
 import (
 	redis "github.com/go-redis/redis/v8"
-	"github.com/gogoclouds/gogo-services/common-lib/dns/config"
+	"github.com/gogoclouds/gogo-services/common-lib/internal/dns/config"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 	"sync"

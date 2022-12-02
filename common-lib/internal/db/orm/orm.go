@@ -3,7 +3,7 @@ package orm
 import (
 	"context"
 	"fmt"
-	"github.com/gogoclouds/gogo-services/common-lib/dns/config"
+	"github.com/gogoclouds/gogo-services/common-lib/internal/dns/config"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 	"log"

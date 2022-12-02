@@ -1,7 +1,7 @@
 package server_test
 
 import (
-	"github.com/gogoclouds/gogo-services/common-lib/server"
+	"github.com/gogoclouds/gogo-services/common-lib/internal/server"
 	"io"
 	"net/http"
 	"testing"

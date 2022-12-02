@@ -4,9 +4,7 @@ import (
 	"encoding/json"
 	"github.com/gogoclouds/common-lib/web/r"
 	"log"
-	"sync"
 	"testing"
-	"time"
 )
 
 func TestResp(t *testing.T) {
@@ -48,11 +46,4 @@ func TestPage(t *testing.T) {
 		log.Println("json.Unmarshal", err)
 	}
 	log.Printf("%+v", *p)
-}
-
-func TestTime(t *testing.T) {
-	local := time.Now().Local()
-	log.Println(local)
-	wg := sync.WaitGroup{}
-	wg.Done()
 }

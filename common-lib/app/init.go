@@ -2,13 +2,13 @@ package app
 
 import (
 	"context"
-	"github.com/gogoclouds/gogo-services/common-lib/db"
-	"github.com/gogoclouds/gogo-services/common-lib/db/orm"
-	"github.com/gogoclouds/gogo-services/common-lib/dns"
-	"github.com/gogoclouds/gogo-services/common-lib/dns/config"
 	"github.com/gogoclouds/gogo-services/common-lib/g"
-	"github.com/gogoclouds/gogo-services/common-lib/logger"
-	"github.com/gogoclouds/gogo-services/common-lib/server"
+	"github.com/gogoclouds/gogo-services/common-lib/internal/db"
+	"github.com/gogoclouds/gogo-services/common-lib/internal/db/orm"
+	"github.com/gogoclouds/gogo-services/common-lib/internal/dns"
+	"github.com/gogoclouds/gogo-services/common-lib/internal/dns/config"
+	"github.com/gogoclouds/gogo-services/common-lib/internal/logger"
+	server2 "github.com/gogoclouds/gogo-services/common-lib/internal/server"
 )
 
 type app struct {
@@ -47,12 +47,12 @@ func (s *app) OpenCacheDB() *app {
 	return s
 }
 
-func (s *app) RunHttp(router server.RegisterHttpFn) {
+func (s *app) RunHttp(router server2.RegisterHttpFn) {
 	httpConf := s.conf.App().Server.Http
-	server.RunHttpServer(httpConf.Addr, router)
+	server2.RunHttpServer(httpConf.Addr, router)
 }
 
-func (s *app) RunRPC(router server.RegisterRpcFn) {
+func (s *app) RunRPC(router server2.RegisterRpcFn) {
 	rpcConf := s.conf.App().Server.Rpc
-	server.RunRpcServer(rpcConf.Addr, router)
+	server2.RunRpcServer(rpcConf.Addr, router)
 }
