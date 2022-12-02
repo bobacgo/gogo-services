@@ -2,8 +2,10 @@ package server
 
 import (
 	"context"
-	"github.com/gogoclouds/gogo-services/common-lib/_examples/api/v1/demo"
+	"net/http"
 	"testing"
+
+	"github.com/gogoclouds/gogo-services/common-lib/_examples/api/v1/demo"
 
 	"google.golang.org/grpc"
 )
@@ -56,6 +58,7 @@ func Test_RPCDialHi(t *testing.T) {
 	t.Log(res.Data)
 }
 
-func handle(server *grpc.Server) {
+func handle(h http.Handler) {
+	server := h.(*grpc.Server)
 	demo.RegisterDemoServiceServer(server, &demo.DemoHandler{})
 }

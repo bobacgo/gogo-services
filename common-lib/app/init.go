@@ -2,13 +2,14 @@ package app
 
 import (
 	"context"
+
 	"github.com/gogoclouds/gogo-services/common-lib/g"
 	"github.com/gogoclouds/gogo-services/common-lib/internal/db"
 	"github.com/gogoclouds/gogo-services/common-lib/internal/db/orm"
 	"github.com/gogoclouds/gogo-services/common-lib/internal/dns"
 	"github.com/gogoclouds/gogo-services/common-lib/internal/dns/config"
 	"github.com/gogoclouds/gogo-services/common-lib/internal/logger"
-	server2 "github.com/gogoclouds/gogo-services/common-lib/internal/server"
+	"github.com/gogoclouds/gogo-services/common-lib/internal/server"
 )
 
 type app struct {
@@ -16,7 +17,7 @@ type app struct {
 	conf *config.Configuration
 }
 
-// New().OpenDB().OpenCacheDB.RunXxx()
+// New().OpenDB().OpenCacheDB().RunXxx()
 
 // New 这个函数调用之后会阻塞
 // 1. 从配置中心拉取配置文件
@@ -39,7 +40,7 @@ func (s *app) OpenDB(tableModel []any) *app {
 	if g.DB, err = orm.Server.NewDB(s.ctx, s.conf); err != nil {
 		panic(err)
 	}
-	if err = orm.Server.AutoMigrate(g.DB, tableModel...); err != nil {
+	if err = orm.Server.AutoMigrate(g.DB, tableModel); err != nil {
 		panic(err)
 	}
 	return s
@@ -53,12 +54,19 @@ func (s *app) OpenCacheDB() *app {
 	return s
 }
 
-func (s *app) RunHttp(router server2.RegisterHttpFn) {
+func (s *app) CreateHttpServer(router server.HttpHandlerFn) *app {
 	httpConf := s.conf.App().Server.Http
-	server2.RunHttpServer(httpConf.Addr, router)
+	go server.RunHttpServer(httpConf.Addr, router)
+	return s
 }
 
-func (s *app) RunRPC(router server2.RegisterRpcFn) {
+func (s *app) CreateRpcServer(router server.HttpHandlerFn) *app {
 	rpcConf := s.conf.App().Server.Rpc
-	server2.RunRpcServer(rpcConf.Addr, router)
+	go server.RunRpcServer(rpcConf.Addr, router)
+	return s
+}
+
+func (s *app) Run() {
+	// TODO 注册服务到注册中心
+	select {}
 }

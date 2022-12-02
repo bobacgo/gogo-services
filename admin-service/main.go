@@ -8,7 +8,7 @@ import (
 	"github.com/gogoclouds/gogo-services/common-lib/app"
 )
 
-var config = flag.String("config", "./configs/polaris.yaml", "config file path")
+var config = flag.String("config", "./polaris.yaml", "config file path")
 
 func main() {
 	flag.Parse()
@@ -16,5 +16,6 @@ func main() {
 	app.New(ctx, *config).
 		OpenDB(model.Tables).
 		OpenCacheDB().
-		RunHttp(api.Router)
+		CreateRpcServer(api.Router).
+		Run()
 }

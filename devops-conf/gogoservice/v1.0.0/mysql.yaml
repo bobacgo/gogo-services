@@ -1,0 +1,4 @@
+data:
+  database:
+    driver: mysql
+    source: root:root@tcp(mysql-svc:3306)/gogo

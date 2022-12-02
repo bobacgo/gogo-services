@@ -37,15 +37,13 @@ go work use ./xxx-service
 
 ### Develop Env
 
-部署文档参考 devops-conf 模块
+部署文档参考 [devops-conf](./devops-conf) 模块
 
 polaris、mysql、redis
 
-#### hosts
+#### local hosts config file
 
-```shell
-127.0.0.1 polaris-headless
-```
+[hosts](./devops-conf/hosts)
 
 ### Reference
 

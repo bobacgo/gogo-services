@@ -1,0 +1,7 @@
+data:
+  redis:
+    # 1.集群模式，可以填写多个地址
+    # 2.单机模式，一个地址
+    addr: ["redis-svc:6379"]
+    readTimeout: 0.2s
+    writeTimeout: 0.2s

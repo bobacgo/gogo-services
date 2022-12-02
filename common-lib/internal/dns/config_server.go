@@ -2,10 +2,11 @@ package dns
 
 import (
 	"fmt"
-	config2 "github.com/gogoclouds/gogo-services/common-lib/internal/dns/config"
+	"log"
+
+	"github.com/gogoclouds/gogo-services/common-lib/internal/dns/config"
 	"github.com/gogoclouds/gogo-services/common-lib/pkg/stream"
 	"gopkg.in/yaml.v3"
-	"log"
 
 	"github.com/gogoclouds/gogo-services/common-lib/g"
 	"github.com/polarismesh/polaris-go"
@@ -15,13 +16,13 @@ import (
 // LoadConfig
 //
 // eg: dnsConfigFilePath = "./configs/polaris.yaml"
-func (sc serverCenter) LoadConfig(dnsConfigFilePath string, remoteConfigFile *config2.FileMetadata) {
+func (sc serverCenter) LoadConfig(dnsConfigFilePath string, remoteConfigFile *config.FileMetadata) {
 	configApi, err := polaris.NewConfigAPIByFile(dnsConfigFilePath)
 	if err != nil {
 		panic(err)
 	}
 
-	g.Conf = config2.New()
+	g.Conf = config.New()
 	stream.New(remoteConfigFile.Filenames).Distinct(). // 有序去重
 								Each(func(idx int, filename string) {
 			// 获取远程的配置文件

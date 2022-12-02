@@ -1,0 +1,4 @@
+# gogo
+127.0.0.1 polaris-headless
+127.0.0.1 mysql-svc
+127.0.0.1 redis-svc

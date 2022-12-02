@@ -1,18 +1,15 @@
 package server
 
 import (
-	"net"
-
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/connectivity"
 	"google.golang.org/grpc/credentials/insecure"
+	"net"
 )
 
 // RPC server
 
-type RegisterRpcFn func(server *grpc.Server)
-
-func RunRpcServer(addr string, register RegisterRpcFn) {
+func RunRpcServer(addr string, register HttpHandlerFn) {
 	lis, err := net.Listen("tcp", addr)
 	if err != nil {
 		panic(err)

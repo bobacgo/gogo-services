@@ -8,9 +8,7 @@ import (
 	"net/http"
 )
 
-type RegisterHttpFn func(e *gin.Engine)
-
-func RunHttpServer(addr string, register RegisterHttpFn) {
+func RunHttpServer(addr string, register HttpHandlerFn) {
 	e := gin.New()
 	e.Use(gin.Logger()) // TODO -> zap.Logger
 	e.Use(gin.Recovery())

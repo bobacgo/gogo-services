@@ -1,12 +1,12 @@
 package api
 
 import (
-	"github.com/gin-gonic/gin"
-	"github.com/gogoclouds/gogo-services/common-lib/web/r"
+	"github.com/gogoclouds/gogo-services/common-lib/_examples/api/v1/demo"
+	"google.golang.org/grpc"
+	"net/http"
 )
 
-func Router(e *gin.Engine) {
-	e.GET("/ping", func(c *gin.Context) {
-		c.JSON(200, r.SuccessMsg("pong"))
-	})
+func Router(h http.Handler) {
+	server := h.(*grpc.Server)
+	demo.RegisterDemoServiceServer(server, &demo.DemoHandler{})
 }

@@ -2,11 +2,12 @@ package db
 
 import (
 	"fmt"
+	"time"
+
 	"github.com/go-redis/redis/v8"
-	config2 "github.com/gogoclouds/gogo-services/common-lib/internal/dns/config"
+	"github.com/gogoclouds/gogo-services/common-lib/internal/dns/config"
 	"github.com/gogoclouds/gogo-services/common-lib/pkg/stream"
 	"golang.org/x/net/context"
-	"time"
 )
 
 var Redis = redisServer{}
@@ -16,7 +17,7 @@ type redisServer struct {
 	rTimeout, wTimeout time.Duration
 }
 
-func (s *redisServer) Open(ctx context.Context, conf *config2.Configuration) (cmd redis.Cmdable, err error) {
+func (s *redisServer) Open(ctx context.Context, conf *config.Configuration) (cmd redis.Cmdable, err error) {
 	rConf := conf.Redis()
 	if s.rTimeout, err = time.ParseDuration(rConf.ReadTimeout); err != nil {
 		return nil, err
@@ -32,7 +33,7 @@ func (s *redisServer) Open(ctx context.Context, conf *config2.Configuration) (cm
 	return s.standaloneMode(ctx, rConf)
 }
 
-func (s *redisServer) standaloneMode(ctx context.Context, conf config2.Redis) (redis.Cmdable, error) {
+func (s *redisServer) standaloneMode(ctx context.Context, conf config.Redis) (redis.Cmdable, error) {
 	if len(s.addrs) == 0 {
 		return nil, fmt.Errorf("addr number is zero")
 	}

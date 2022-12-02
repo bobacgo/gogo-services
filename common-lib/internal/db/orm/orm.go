@@ -26,8 +26,8 @@ func (server) NewDB(ctx context.Context, conf *config.Configuration) (*gorm.DB, 
 }
 
 // AutoMigrate create db table
-func (server) AutoMigrate(db *gorm.DB, model ...any) error {
-	return db.AutoMigrate(model)
+func (server) AutoMigrate(db *gorm.DB, model []any) error {
+	return db.AutoMigrate(model...)
 }
 
 func (server) Logger() logger.Interface {

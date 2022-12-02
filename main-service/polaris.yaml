@@ -12,4 +12,4 @@ config:
 _config:
   namespace: default
   group: gogo_v1.0.0
-  filenames: ['main-service.yaml', 'common.yaml']
+  filenames: ['main-service.yaml', 'common.yaml', 'mysql.yaml', 'redis.yaml']
