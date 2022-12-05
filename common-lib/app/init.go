@@ -2,6 +2,8 @@ package app
 
 import (
 	"context"
+	"strconv"
+	"strings"
 
 	"github.com/gogoclouds/gogo-services/common-lib/g"
 	"github.com/gogoclouds/gogo-services/common-lib/internal/db"
@@ -10,11 +12,13 @@ import (
 	"github.com/gogoclouds/gogo-services/common-lib/internal/dns/config"
 	"github.com/gogoclouds/gogo-services/common-lib/internal/logger"
 	"github.com/gogoclouds/gogo-services/common-lib/internal/server"
+	"github.com/polarismesh/polaris-go"
 )
 
 type app struct {
-	ctx  context.Context
-	conf *config.Configuration
+	ctx      context.Context
+	conf     *config.Configuration
+	configMD *config.FileMetadata
 }
 
 // New().OpenDB().OpenCacheDB().RunXxx()
@@ -26,10 +30,11 @@ type app struct {
 // 4. 初始必要的全局参数
 func New(ctx context.Context, configFilePath string) *app {
 	configMD := config.Bootstrap.Unmarshal(configFilePath)
+	server := new(dns.ConfigServer)
 	// 拉取配置
-	dns.Server.LoadConfig(configFilePath, configMD)
+	server.LoadConfig(configFilePath, configMD)
 	g.Log = logger.New(g.Conf.App().Name, g.Conf.Log())
-	return &app{ctx: ctx, conf: g.Conf}
+	return &app{ctx: ctx, conf: g.Conf, configMD: configMD}
 }
 
 // OpenDB connect DB
@@ -67,6 +72,39 @@ func (s *app) CreateRpcServer(router server.HttpHandlerFn) *app {
 }
 
 func (s *app) Run() {
-	// TODO 注册服务到注册中心
-	select {}
+	pa, err := polaris.NewProviderAPI()
+	if err != nil {
+		panic(err)
+	}
+	pa.Destroy()
+
+	// TODO
+	_, port := addrSplitHostPort(s.conf.App().Server.Rpc.Addr)
+	server := &dns.DiscoverServer{
+		Provider:  pa,
+		Namespace: s.configMD.Namespace,
+		Service:   s.conf.App().Name,
+		Host:      "127.0.0.1", // TODO
+		Port:      port,
+	}
+
+	server.Register()
+	// block
+	server.RunMainLoop()
+}
+
+// TODO
+func addrSplitHostPort(addr string) (string, uint16) {
+	if addr != "" {
+		return "", 0
+	}
+	ipAndPort := strings.Split(addr, ":")
+	if len(ipAndPort) < 1 {
+		return "", 0
+	}
+	port, err := strconv.Atoi(ipAndPort[1])
+	if err != nil {
+		return "", 0
+	}
+	return ipAndPort[0], uint16(port)
 }

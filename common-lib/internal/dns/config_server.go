@@ -16,7 +16,7 @@ import (
 // LoadConfig
 //
 // eg: dnsConfigFilePath = "./configs/polaris.yaml"
-func (sc serverCenter) LoadConfig(dnsConfigFilePath string, remoteConfigFile *config.FileMetadata) {
+func (c ConfigServer) LoadConfig(dnsConfigFilePath string, remoteConfigFile *config.FileMetadata) {
 	configApi, err := polaris.NewConfigAPIByFile(dnsConfigFilePath)
 	if err != nil {
 		panic(err)
@@ -33,13 +33,13 @@ func (sc serverCenter) LoadConfig(dnsConfigFilePath string, remoteConfigFile *co
 			if err = g.Conf.Sync([]byte(configFile.GetContent())); err != nil {
 				panic(err)
 			}
-			configFile.AddChangeListener(sc.changeListener)
+			configFile.AddChangeListener(c.changeListener)
 		})
 	// 打印读取到的配置信息
-	sc.printConfInfo()
+	c.printConfInfo()
 }
 
-func (sc serverCenter) changeListener(event model.ConfigFileChangeEvent) {
+func (c ConfigServer) changeListener(event model.ConfigFileChangeEvent) {
 	log.Printf("config change: %+v\n", event.ConfigFileMetadata)
 	log.Printf("change type : %d\n", event.ChangeType)
 	fmt.Println("-------------------------------------------- ")
@@ -53,7 +53,7 @@ func (sc serverCenter) changeListener(event model.ConfigFileChangeEvent) {
 	}
 }
 
-func (sc serverCenter) printConfInfo() {
+func (c ConfigServer) printConfInfo() {
 	// 打印读取到的配置信息
 	printConf, _ := yaml.Marshal(g.Conf.Config())
 	log.Println("======================= config info ========================")
