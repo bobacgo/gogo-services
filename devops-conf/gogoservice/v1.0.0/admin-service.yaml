@@ -7,3 +7,7 @@ app:
       timeout: 1s
   serviceKV: # 应用的业务自定义配置
     authenticationKey: xxx-xxx-xx
+data:
+  database:
+    driver: mysql
+    source: root:root@tcp(mysql-svc:3306)/gogo_admin
