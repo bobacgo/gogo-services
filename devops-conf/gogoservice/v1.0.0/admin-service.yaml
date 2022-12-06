@@ -3,7 +3,7 @@ app:
   version: v1.0.0
   server:
     rpc:
-      addr: 0.0.0.0:9001
+      addr: 0.0.0.0:9002
       timeout: 1s
   serviceKV: # 应用的业务自定义配置
     authenticationKey: xxx-xxx-xx

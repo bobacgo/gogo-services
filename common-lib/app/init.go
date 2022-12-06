@@ -2,8 +2,6 @@ package app
 
 import (
 	"context"
-	"strconv"
-	"strings"
 
 	"github.com/gogoclouds/gogo-services/common-lib/g"
 	"github.com/gogoclouds/gogo-services/common-lib/internal/db"
@@ -12,6 +10,7 @@ import (
 	"github.com/gogoclouds/gogo-services/common-lib/internal/dns/config"
 	"github.com/gogoclouds/gogo-services/common-lib/internal/logger"
 	"github.com/gogoclouds/gogo-services/common-lib/internal/server"
+	"github.com/gogoclouds/gogo-services/common-lib/pkg"
 	"github.com/polarismesh/polaris-go"
 )
 
@@ -78,33 +77,20 @@ func (s *app) Run() {
 	}
 	defer pa.Destroy()
 
-	// TODO
-	_, port := addrSplitHostPort(s.conf.App().Server.Rpc.Addr)
+	_, port := pkg.Addr.Parse((s.conf.App().Server.Rpc.Addr))
+	ip, err := pkg.Addr.GetOutBoundIP()
+	if err != nil {
+		panic(err)
+	}
 	server := &dns.DiscoverServer{
 		Provider:  pa,
 		Namespace: s.configMD.Namespace,
 		Service:   s.conf.App().Name,
-		Host:      "127.0.0.1", // TODO
+		Host:      ip,
 		Port:      port,
 	}
 
 	server.Register()
 	// block
 	server.RunMainLoop()
-}
-
-// TODO
-func addrSplitHostPort(addr string) (string, uint16) {
-	if addr != "" {
-		return "", 0
-	}
-	ipAndPort := strings.Split(addr, ":")
-	if len(ipAndPort) < 1 {
-		return "", 0
-	}
-	port, err := strconv.Atoi(ipAndPort[1])
-	if err != nil {
-		return "", 0
-	}
-	return ipAndPort[0], uint16(port)
 }
