@@ -76,7 +76,7 @@ func (s *app) Run() {
 	if err != nil {
 		panic(err)
 	}
-	pa.Destroy()
+	defer pa.Destroy()
 
 	// TODO
 	_, port := addrSplitHostPort(s.conf.App().Server.Rpc.Addr)
