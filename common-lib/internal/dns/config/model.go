@@ -36,14 +36,6 @@ type App struct {
 	ServiceKV map[string]any `yaml:"serviceKV"` // 业务自定义kv
 }
 
-func (a App) IsEnabledRPC() bool {
-	return a.Server.Rpc.Addr != ""
-}
-
-func (a App) IsEnabledHttp() bool {
-	return a.Server.Http.Addr != ""
-}
-
 // --------------- log ----------------
 
 // Log config model

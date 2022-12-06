@@ -15,9 +15,11 @@ import (
 )
 
 type app struct {
-	ctx      context.Context
-	conf     *config.Configuration
-	configMD *config.FileMetadata
+	ctx        context.Context
+	conf       *config.Configuration
+	configMD   *config.FileMetadata
+	enableRpc  bool
+	enableHttp bool
 }
 
 // New().OpenDB().OpenCacheDB().RunXxx()
@@ -60,28 +62,40 @@ func (s *app) OpenCacheDB() *app {
 
 func (s *app) CreateHttpServer(router server.RegisterHttpFn) *app {
 	httpConf := s.conf.App().Server.Http
+	s.enableHttp = true
 	go server.RunHttpServer(httpConf.Addr, router)
 	return s
 }
 
 func (s *app) CreateRpcServer(router server.RegisterRpcFn) *app {
 	rpcConf := s.conf.App().Server.Rpc
+	s.enableRpc = true
 	go server.RunRpcServer(rpcConf.Addr, router)
 	return s
 }
 
 func (s *app) Run() {
+	var port uint16
+	if s.enableHttp {
+		_, port = pkg.Addr.Parse((s.conf.App().Server.Http.Addr))
+	} else if s.enableRpc { // rpc > http
+		_, port = pkg.Addr.Parse((s.conf.App().Server.Rpc.Addr))
+	} else { // no server run
+		return
+	}
+	ip, err := pkg.Addr.GetOutBoundIP()
+	if err != nil {
+		panic(err)
+	}
+	s.registerServer(ip, port)
+}
+
+func (s *app) registerServer(ip string, port uint16) {
 	pa, err := polaris.NewProviderAPI()
 	if err != nil {
 		panic(err)
 	}
 	defer pa.Destroy()
-
-	_, port := pkg.Addr.Parse((s.conf.App().Server.Rpc.Addr))
-	ip, err := pkg.Addr.GetOutBoundIP()
-	if err != nil {
-		panic(err)
-	}
 	server := &dns.DiscoverServer{
 		Provider:  pa,
 		Namespace: s.configMD.Namespace,
