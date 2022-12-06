@@ -58,13 +58,13 @@ func (s *app) OpenCacheDB() *app {
 	return s
 }
 
-func (s *app) CreateHttpServer(router server.HttpHandlerFn) *app {
+func (s *app) CreateHttpServer(router server.RegisterHttpFn) *app {
 	httpConf := s.conf.App().Server.Http
 	go server.RunHttpServer(httpConf.Addr, router)
 	return s
 }
 
-func (s *app) CreateRpcServer(router server.HttpHandlerFn) *app {
+func (s *app) CreateRpcServer(router server.RegisterRpcFn) *app {
 	rpcConf := s.conf.App().Server.Rpc
 	go server.RunRpcServer(rpcConf.Addr, router)
 	return s

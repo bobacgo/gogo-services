@@ -7,13 +7,14 @@ package demo
 
 import (
 	context "context"
+	reflect "reflect"
+	sync "sync"
+
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
-	reflect "reflect"
-	sync "sync"
 )
 
 const (
@@ -334,7 +335,7 @@ func NewDemoServiceClient(cc grpc.ClientConnInterface) DemoServiceClient {
 
 func (c *demoServiceClient) Ping(ctx context.Context, in *PingRequest, opts ...grpc.CallOption) (*DemoResponse, error) {
 	out := new(DemoResponse)
-	err := c.cc.Invoke(ctx, "/sample.DemoService/Ping", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/api.DemoService/Ping", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -343,7 +344,7 @@ func (c *demoServiceClient) Ping(ctx context.Context, in *PingRequest, opts ...g
 
 func (c *demoServiceClient) Hi(ctx context.Context, in *HiRequest, opts ...grpc.CallOption) (*DemoResponse, error) {
 	out := new(DemoResponse)
-	err := c.cc.Invoke(ctx, "/sample.DemoService/Hi", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/api.DemoService/Hi", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -381,7 +382,7 @@ func _DemoService_Ping_Handler(srv interface{}, ctx context.Context, dec func(in
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/sample.DemoService/Ping",
+		FullMethod: "/api.DemoService/Ping",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(DemoServiceServer).Ping(ctx, req.(*PingRequest))
@@ -399,7 +400,7 @@ func _DemoService_Hi_Handler(srv interface{}, ctx context.Context, dec func(inte
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/sample.DemoService/Hi",
+		FullMethod: "/api.DemoService/Hi",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(DemoServiceServer).Hi(ctx, req.(*HiRequest))
@@ -408,7 +409,7 @@ func _DemoService_Hi_Handler(srv interface{}, ctx context.Context, dec func(inte
 }
 
 var _DemoService_serviceDesc = grpc.ServiceDesc{
-	ServiceName: "sample.DemoService",
+	ServiceName: "api.DemoService",
 	HandlerType: (*DemoServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{

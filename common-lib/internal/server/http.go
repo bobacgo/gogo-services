@@ -2,13 +2,16 @@ package server
 
 import (
 	"fmt"
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	"github.com/gogoclouds/gogo-services/common-lib/g"
 	"github.com/gogoclouds/gogo-services/common-lib/web/r"
-	"net/http"
 )
 
-func RunHttpServer(addr string, register HttpHandlerFn) {
+type RegisterHttpFn func(e *gin.Engine)
+
+func RunHttpServer(addr string, register RegisterHttpFn) {
 	e := gin.New()
 	e.Use(gin.Logger()) // TODO -> zap.Logger
 	e.Use(gin.Recovery())
@@ -19,6 +22,7 @@ func RunHttpServer(addr string, register HttpHandlerFn) {
 	}
 }
 
+// healthApi http check-up API
 func healthApi(e *gin.Engine) {
 	e.GET("/health", func(c *gin.Context) {
 		appConf := g.Conf.App()

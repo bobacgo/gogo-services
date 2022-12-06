@@ -8,8 +8,9 @@ import (
 )
 
 // RPC server
+type RegisterRpcFn func(server *grpc.Server)
 
-func RunRpcServer(addr string, register HttpHandlerFn) {
+func RunRpcServer(addr string, register RegisterRpcFn) {
 	lis, err := net.Listen("tcp", addr)
 	if err != nil {
 		panic(err)

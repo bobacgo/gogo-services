@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/gogoclouds/gogo-services/common-lib/internal/server"
-	"github.com/gogoclouds/gogo-services/common-lib/web/r"
 
 	"github.com/gin-gonic/gin"
 )
@@ -21,19 +20,21 @@ func Test_HttpApi(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer r.Body.Close()
-	if r.StatusCode != http.StatusOK {
+	if r.StatusCode != 200 {
 		t.Fatalf("http status: %s", r.Status)
 	}
-	b, err := io.ReadAll(r.Body)
-	if err != nil {
-		t.Fatal(err)
+	b, err2 := io.ReadAll(r.Body)
+	if err2 != nil {
+		t.Fatal(err2)
 	}
 	t.Logf("%s", b)
 }
 
-func router(h http.Handler) {
-	e := h.(*gin.Engine)
+func router(e *gin.Engine) {
 	e.GET("/ping", func(c *gin.Context) {
-		c.JSON(http.StatusOK, r.Success())
+		c.JSON(200, map[string]interface{}{
+			"code": 0,
+			"msg":  "ok",
+		})
 	})
 }
