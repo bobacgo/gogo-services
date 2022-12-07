@@ -9,6 +9,7 @@ require (
 
 require (
 	github.com/gogoclouds/gogo-services/common-lib v0.0.0-20221127140942-18ac924bcb79
+	github.com/pkg/errors v0.9.1
 	google.golang.org/grpc v1.46.2
 )
 

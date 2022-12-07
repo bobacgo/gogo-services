@@ -28,7 +28,7 @@ var DictBiz IDict = bDict{}
 func (b bDict) CreateDict(ctx context.Context, c *model.SysDict) (*r.Resp, error) {
 	repo := data.NewDictRepo(g.DB.WithContext(ctx))
 	dict := &model.SysDict{}
-	_, _ = repo.CreateDict(ctx, dict)
+	_, _ = repo.CreateDict(dict)
 	panic("implement me")
 }
 

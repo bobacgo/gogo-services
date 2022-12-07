@@ -19,7 +19,7 @@ func (server) NewDB(ctx context.Context, conf *config.Configuration) (*gorm.DB, 
 	driver := conf.Database().Driver
 	switch driver {
 	case "mysql":
-		return mysqlServer{}.Open(ctx, conf)
+		return mysqlServer{}.Open(conf)
 	default:
 		return nil, fmt.Errorf("no dirver: %s", driver)
 	}

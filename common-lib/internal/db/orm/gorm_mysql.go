@@ -1,7 +1,6 @@
 package orm
 
 import (
-	"context"
 	"github.com/gogoclouds/gogo-services/common-lib/internal/dns/config"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -9,7 +8,7 @@ import (
 
 type mysqlServer struct{}
 
-func (mysqlServer) Open(ctx context.Context, conf *config.Configuration) (*gorm.DB, error) {
+func (mysqlServer) Open(conf *config.Configuration) (*gorm.DB, error) {
 	source := conf.Database().Source
 	return gorm.Open(mysql.Open(source), &gorm.Config{
 		CreateBatchSize: 1000, // 批量插入每次拆成 1k 条
