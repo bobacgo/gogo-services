@@ -2,7 +2,6 @@ package app
 
 import (
 	"context"
-
 	"github.com/gogoclouds/gogo-services/common-lib/g"
 	"github.com/gogoclouds/gogo-services/common-lib/internal/db"
 	"github.com/gogoclouds/gogo-services/common-lib/internal/db/orm"

@@ -22,3 +22,12 @@ var Status = map[StatusCode]string{
 	4013: "参数不合法",
 	5000: "系统内部错误",
 }
+
+const (
+	CreateSuccess string = "创建成功"
+	CreateFail    string = "创建失败"
+	UpdateSuccess string = "更新成功"
+	UpdateFail    string = "更新失败"
+	DeleteSuccess string = "删除成功"
+	DeleteFail    string = "删除失败"
+)
