@@ -1,0 +1,5 @@
+* Go 编码工具 [Visual Studio Code - Code Editing. Redefined](https://code.visualstudio.com/)
+* DBeaver 数据库UI工具 [DBeaver Community | Free Universal Database Tool](https://dbeaver.io/)
+* Elasticsearch-head (ES 浏览器插件) [https://files.cnblogs.com/files/sanduzxcvbnm/elasticsearch-head.7z](https://files.cnblogs.com/files/sanduzxcvbnm/elasticsearch-head.7z)
+* gRPC 接口调试 [Releases · bloomrpc/bloomrpc (github.com)](https://github.com/bloomrpc/bloomrpc/releases)
+* Redis UI [RedisInsight | The Best Redis GUI](https://redis.com/redis-enterprise/redis-insight/)

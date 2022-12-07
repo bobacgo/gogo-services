@@ -36,7 +36,7 @@ func (c ConfigServer) LoadConfig(dnsConfigFilePath string, remoteConfigFile *con
 			configFile.AddChangeListener(c.changeListener)
 		})
 	// 打印读取到的配置信息
-	c.printConfInfo()
+	go c.printConfInfo()
 }
 
 func (c ConfigServer) changeListener(event model.ConfigFileChangeEvent) {
@@ -56,7 +56,6 @@ func (c ConfigServer) changeListener(event model.ConfigFileChangeEvent) {
 func (c ConfigServer) printConfInfo() {
 	// 打印读取到的配置信息
 	printConf, _ := yaml.Marshal(g.Conf.Config())
-	log.Println("======================= config info ========================")
+	log.Println("======================= load config info ========================")
 	fmt.Println(string(printConf))
-	log.Println("======================= config info end ====================")
 }
