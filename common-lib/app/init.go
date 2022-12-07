@@ -11,18 +11,19 @@ import (
 	"github.com/gogoclouds/gogo-services/common-lib/internal/logger"
 	"github.com/gogoclouds/gogo-services/common-lib/internal/server"
 	"github.com/gogoclouds/gogo-services/common-lib/pkg"
-	"github.com/polarismesh/polaris-go"
+	"github.com/polarismesh/polaris-go/api"
 )
 
 type app struct {
 	ctx        context.Context
+	dnsAPI     *dns.Server
 	conf       *config.Configuration
 	configMD   *config.FileMetadata
 	enableRpc  bool
 	enableHttp bool
 }
 
-// New().OpenDB().OpenCacheDB().RunXxx()
+// New().OpenDB().OpenCacheDB().CreateXxxServer().Run()
 
 // New 这个函数调用之后会阻塞
 // 1. 从配置中心拉取配置文件
@@ -31,11 +32,15 @@ type app struct {
 // 4. 初始必要的全局参数
 func New(ctx context.Context, configFilePath string) *app {
 	configMD := config.Bootstrap.Unmarshal(configFilePath)
-	server := new(dns.ConfigServer)
-	// 拉取配置
-	server.LoadConfig(configFilePath, configMD)
+	sdkContext, err := api.InitContextByFile(configFilePath)
+	if err != nil {
+		panic(err)
+	}
+	dnsAPI := &dns.Server{Ctx: sdkContext}
+	// 拉取远程配置
+	dnsAPI.Config().Load(configMD)
 	g.Log = logger.New(g.Conf.App().Name, g.Conf.Log())
-	return &app{ctx: ctx, conf: g.Conf, configMD: configMD}
+	return &app{ctx: ctx, dnsAPI: dnsAPI, conf: g.Conf, configMD: configMD}
 }
 
 // OpenDB connect DB
@@ -91,20 +96,10 @@ func (s *app) Run() {
 }
 
 func (s *app) registerServer(ip string, port uint16) {
-	pa, err := polaris.NewProviderAPI()
-	if err != nil {
-		panic(err)
-	}
-	defer pa.Destroy()
-	server := &dns.DiscoverServer{
-		Provider:  pa,
-		Namespace: s.configMD.Namespace,
-		Service:   s.conf.App().Name,
-		Host:      ip,
-		Port:      port,
-	}
-
-	server.Register()
+	namespace := s.configMD.Namespace
+	providerServer := s.dnsAPI.Provider(namespace, s.conf.App().Name, ip, port)
+	providerServer.Register()
+	g.Service = s.dnsAPI.Consumer(namespace)
 	// block
-	server.RunMainLoop()
+	providerServer.RunMainLoop()
 }

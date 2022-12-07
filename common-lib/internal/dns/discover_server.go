@@ -10,35 +10,32 @@ import (
 	"github.com/polarismesh/polaris-go"
 )
 
-func (c DiscoverServer) Register() {
+// register server
+
+type providerServer struct {
+	provider  polaris.ProviderAPI
+	namespace string
+	service   string
+	host      string
+	port      uint16
+}
+
+func (c providerServer) Register() {
 	g.Log.Info("start to invoke register operation")
 	registerRequest := new(polaris.InstanceRegisterRequest)
-	registerRequest.Service = c.Service
-	registerRequest.Namespace = c.Namespace
-	registerRequest.Host = c.Host
-	registerRequest.Port = int(c.Port)
+	registerRequest.Service = c.service
+	registerRequest.Namespace = c.namespace
+	registerRequest.Host = c.host
+	registerRequest.Port = int(c.port)
 	registerRequest.SetTTL(10)
-	resp, err := c.Provider.RegisterInstance(registerRequest)
+	resp, err := c.provider.RegisterInstance(registerRequest)
 	if err != nil {
 		g.Log.Infof("fail to register instance, err is %v", err)
 	}
 	g.Log.Infof("register response: instanceId %s", resp.InstanceID)
 }
 
-func (c DiscoverServer) deregisterService() {
-	g.Log.Info("start to invoke deregister operation")
-	deregisterRequest := &polaris.InstanceDeRegisterRequest{}
-	deregisterRequest.Service = c.Service
-	deregisterRequest.Namespace = c.Namespace
-	deregisterRequest.Host = c.Host
-	deregisterRequest.Port = int(c.Port)
-	if err := c.Provider.Deregister(deregisterRequest); err != nil {
-		log.Fatalf("fail to deregister instance, err is %v", err)
-	}
-	g.Log.Info("deregister successfully.")
-}
-
-func (c DiscoverServer) RunMainLoop() {
+func (c providerServer) RunMainLoop() {
 	ch := make(chan os.Signal, 1)
 	signal.Notify(ch, []os.Signal{
 		syscall.SIGINT, syscall.SIGTERM,
@@ -50,4 +47,17 @@ func (c DiscoverServer) RunMainLoop() {
 		c.deregisterService()
 		return
 	}
+}
+
+func (c providerServer) deregisterService() {
+	g.Log.Info("start to invoke deregister operation")
+	deregisterRequest := new(polaris.InstanceDeRegisterRequest)
+	deregisterRequest.Service = c.service
+	deregisterRequest.Namespace = c.namespace
+	deregisterRequest.Host = c.host
+	deregisterRequest.Port = int(c.port)
+	if err := c.provider.Deregister(deregisterRequest); err != nil {
+		log.Fatalf("fail to deregister instance, err is %v", err)
+	}
+	g.Log.Info("deregister successfully.")
 }

@@ -4,27 +4,28 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/gogoclouds/gogo-services/common-lib/g"
 	"github.com/gogoclouds/gogo-services/common-lib/internal/dns/config"
 	"github.com/gogoclouds/gogo-services/common-lib/pkg/stream"
 	"gopkg.in/yaml.v3"
 
-	"github.com/gogoclouds/gogo-services/common-lib/g"
 	"github.com/polarismesh/polaris-go"
+	"github.com/polarismesh/polaris-go/api"
 	"github.com/polarismesh/polaris-go/pkg/model"
 )
 
-// LoadConfig
-//
-// eg: dnsConfigFilePath = "./configs/polaris.yaml"
-func (c ConfigServer) LoadConfig(dnsConfigFilePath string, remoteConfigFile *config.FileMetadata) {
-	configApi, err := polaris.NewConfigAPIByFile(dnsConfigFilePath)
-	if err != nil {
-		panic(err)
-	}
+// ConfigServer 配置中心
+type configServer struct {
+	ctx api.SDKContext
+}
 
+// Load load remote config to g.Conf
+func (c configServer) Load(remoteConfigFile *config.FileMetadata) {
+	configApi := polaris.NewConfigAPIByContext(c.ctx)
 	g.Conf = config.New()
-	stream.New(remoteConfigFile.Filenames).Distinct(). // 有序去重
-								Each(func(idx int, filename string) {
+	stream.New(remoteConfigFile.Filenames).
+		Distinct(). // 有序去重
+		Each(func(idx int, filename string) {
 			// 获取远程的配置文件
 			configFile, err := configApi.GetConfigFile(remoteConfigFile.Namespace, remoteConfigFile.Group, filename)
 			if err != nil {
@@ -39,7 +40,7 @@ func (c ConfigServer) LoadConfig(dnsConfigFilePath string, remoteConfigFile *con
 	go c.printConfInfo()
 }
 
-func (c ConfigServer) changeListener(event model.ConfigFileChangeEvent) {
+func (c configServer) changeListener(event model.ConfigFileChangeEvent) {
 	log.Printf("config change: %+v\n", event.ConfigFileMetadata)
 	log.Printf("change type : %d\n", event.ChangeType)
 	fmt.Println("-------------------------------------------- ")
@@ -53,7 +54,7 @@ func (c ConfigServer) changeListener(event model.ConfigFileChangeEvent) {
 	}
 }
 
-func (c ConfigServer) printConfInfo() {
+func (c configServer) printConfInfo() {
 	// 打印读取到的配置信息
 	printConf, _ := yaml.Marshal(g.Conf.Config())
 	log.Println("======================= load config info ========================")

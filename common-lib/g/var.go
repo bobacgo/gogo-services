@@ -5,6 +5,7 @@ import (
 
 	"github.com/go-redis/redis/v8"
 	"github.com/gogoclouds/gogo-services/common-lib/internal/dns/config"
+	"github.com/gogoclouds/gogo-services/common-lib/internal/dns/discover"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 )
@@ -23,3 +24,6 @@ var CacheDB redis.Cmdable
 
 // DB gorm 关系型数据库 -- 持久化
 var DB *gorm.DB
+
+// 获取注册表
+var Service *discover.ConsumerServer
