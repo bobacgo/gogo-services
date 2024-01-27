@@ -3,9 +3,9 @@ package main
 import (
 	"context"
 	"flag"
-
-	"github.com/gogoclouds/gogo-services/admin-service/api"
 	"github.com/gogoclouds/gogo-services/admin-service/internal/model"
+	"github.com/gogoclouds/gogo-services/admin-service/internal/router"
+
 	"github.com/gogoclouds/gogo-services/common-lib/app"
 )
 
@@ -16,6 +16,7 @@ func main() {
 	app.New(context.Background(), *config).
 		OpenDB(model.Tables).
 		OpenCacheDB().
-		CreateRpcServer(api.Router).
+		CreateHttpServer(router.Registers).
+		//CreateRpcServer(api.Router).
 		Run()
 }
