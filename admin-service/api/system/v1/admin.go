@@ -1,8 +1,20 @@
 package v1
 
-import "github.com/gin-gonic/gin"
+import (
+	"github.com/gin-gonic/gin"
+	"github.com/gogoclouds/gogo-services/admin-service/internal/model"
+)
 
 type AdminServer interface {
+
+	// Register
+	// @Summary 注册
+	// @Description 注册
+	// @Tags 用户
+	// @Param {object} AdminRequest
+	// @Success 200 {object} AdminResponse
+	// @Router /api/v1/sys-user [get]
+	// @Security Bearer
 	Register(ctx *gin.Context)
 	Login(ctx *gin.Context)
 	Logout(ctx *gin.Context)
@@ -27,4 +39,5 @@ type AdminRequest struct {
 }
 
 type AdminResponse struct {
+	model.Admin
 }

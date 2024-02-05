@@ -2,6 +2,9 @@ app:
   name: admin-service
   version: v1.0.0
   server:
+    http:
+      addr: 0.0.0.0:8002
+      timeout: 1s
     rpc:
       addr: 0.0.0.0:9002
       timeout: 1s

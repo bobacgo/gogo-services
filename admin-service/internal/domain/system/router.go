@@ -2,7 +2,7 @@ package system
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/gogoclouds/gogo-services/admin-service/internal/system/handler"
+	"github.com/gogoclouds/gogo-services/admin-service/internal/domain/system/handler"
 )
 
 func Register(r gin.IRouter) {

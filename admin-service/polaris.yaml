@@ -2,11 +2,11 @@
 global:
   serverConnector:
     addresses:
-      - polaris-headless:48091
+      - polaris-headless:8091
 config:
   configConnector:
     addresses:
-      - polaris-headless:48093
+      - polaris-headless:8093
 
 # 自己服务本身需要的配置数据
 _config:

@@ -14,6 +14,7 @@ gogo-services
     ├─common-lib    -- 基础库
     ├─devops-conf   -- 部署相关
     ├─gateway       -- 后端网关
+    ├─gen           -- 代码生成
     └─main-service  -- 主服务
 ```
 
