@@ -1,77 +1,160 @@
 package handler
 
 import (
+	"errors"
 	"github.com/gin-gonic/gin"
+	ierrs "github.com/gogoclouds/gogo-services/admin-service/api/system/errs"
 	v1 "github.com/gogoclouds/gogo-services/admin-service/api/system/v1"
+	"github.com/gogoclouds/gogo-services/admin-service/internal/domain/system/service"
+	"github.com/gogoclouds/gogo-services/admin-service/internal/model"
+	"github.com/gogoclouds/gogo-services/common-lib/web/r"
+	"github.com/gogoclouds/gogo-services/common-lib/web/r/errs"
+	"gorm.io/gorm"
 )
 
-type adminServer struct{}
+type adminServer struct {
+	svc *service.AdminService
+}
 
-func NewAdminServer() v1.AdminServer {
-	return &adminServer{}
+func NewAdminServer(svc *service.AdminService) v1.AdminServer {
+	return &adminServer{svc: svc}
 }
 
 func (h *adminServer) Register(ctx *gin.Context) {
-	//TODO implement me
-	panic("implement me")
+	req := new(v1.AdminRegisterRequest)
+	if err := ctx.ShouldBind(req); err != nil {
+		r.Reply(ctx, errs.BadRequest.WithDetails(err))
+		return
+	}
+	err := h.svc.Register(ctx, req)
+	r.Reply(ctx, err)
 }
 
 func (h *adminServer) Login(ctx *gin.Context) {
-	//TODO implement me
-	panic("implement me")
+	req := new(v1.AdminLoginRequest)
+	if err := ctx.ShouldBind(req); err != nil {
+		r.Reply(ctx, errs.BadRequest.WithDetails(err))
+		return
+	}
+	data, err := h.svc.Login(ctx, req)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			err = ierrs.AdminLoginFail
+		}
+		r.Reply(ctx, err)
+		return
+	}
+	r.Reply(ctx, data)
 }
 
 func (h *adminServer) Logout(ctx *gin.Context) {
-	//TODO implement me
-	panic("implement me")
+	// TODO get username
+	err := h.svc.Logout(ctx, "admin")
+	r.Reply(ctx, err)
 }
 
 func (h *adminServer) RefreshToken(ctx *gin.Context) {
-	//TODO implement me
-	panic("implement me")
+	// TODO get token
+	data, err := h.svc.RefreshToken(ctx, "")
+	if err != nil {
+		r.Reply(ctx, err)
+		return
+	}
+	r.Reply(ctx, data)
 }
 
 func (h *adminServer) GetAdminInfo(ctx *gin.Context) {
-	//TODO implement me
-	panic("implement me")
+	// TODO get username
+	data, err := h.svc.GetAdminInfo(ctx, "")
+	if err != nil {
+		r.Reply(ctx, err)
+		return
+	}
+	r.Reply(ctx, data)
 }
 
 func (h *adminServer) List(ctx *gin.Context) {
-	//TODO implement me
-	panic("implement me")
+	req := new(v1.ListRequest)
+	if err := ctx.ShouldBind(req); err != nil {
+		r.Reply(ctx, errs.BadRequest.WithDetails(err))
+		return
+	}
+	data, err := h.svc.List(ctx, req)
+	if err != nil {
+		r.Reply(ctx, err)
+		return
+	}
+	r.Reply(ctx, data)
 }
 
 func (h *adminServer) GetItem(ctx *gin.Context) {
-	//TODO implement me
-	panic("implement me")
+	// TODO ID
+	data, err := h.svc.GetItem(ctx, 0)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			err = ierrs.AdminLoginFail
+		}
+		r.Reply(ctx, err)
+		return
+	}
+	r.Reply(ctx, data)
 }
 
 func (h *adminServer) Update(ctx *gin.Context) {
-	//TODO implement me
-	panic("implement me")
+	req := new(model.Admin)
+	if err := ctx.ShouldBind(req); err != nil {
+		r.Reply(ctx, errs.BadRequest.WithDetails(err))
+		return
+	}
+	err := h.svc.Update(ctx, req)
+	r.Reply(ctx, err)
 }
 
 func (h *adminServer) UpdatePassword(ctx *gin.Context) {
-	//TODO implement me
-	panic("implement me")
+	req := new(v1.UpdatePasswordRequest)
+	if err := ctx.ShouldBind(req); err != nil {
+		r.Reply(ctx, errs.BadRequest.WithDetails(err))
+		return
+	}
+	err := h.svc.UpdatePassword(ctx, req)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		err = ierrs.AdminNotFound
+	}
+	r.Reply(ctx, err)
 }
 
 func (h *adminServer) Delete(ctx *gin.Context) {
-	//TODO implement me
-	panic("implement me")
+	// TODO ID
+	err := h.svc.Delete(ctx, 0)
+	r.Reply(ctx, err)
 }
 
 func (h *adminServer) UpdateStatus(ctx *gin.Context) {
-	//TODO implement me
-	panic("implement me")
+	req := new(v1.UpdateStatusRequest)
+	if err := ctx.ShouldBind(req); err != nil {
+		r.Reply(ctx, errs.BadRequest.WithDetails(err))
+		return
+	}
+	err := h.svc.UpdateStatus(ctx, req.ID, req.Status)
+	r.Reply(ctx, err)
 }
 
 func (h *adminServer) UpdateRole(ctx *gin.Context) {
-	//TODO implement me
-	panic("implement me")
+	req := new(v1.UpdateRoleRequest)
+	if err := ctx.ShouldBind(req); err != nil {
+		r.Reply(ctx, errs.BadRequest.WithDetails(err))
+		return
+	}
+	err := h.svc.UpdateRole(ctx, req.ID, req.Roles)
+	r.Reply(ctx, err)
 }
 
 func (h *adminServer) GetRoleList(ctx *gin.Context) {
-	//TODO implement me
-	panic("implement me")
+	// TODO ID
+	data, err := h.svc.GetRoleList(ctx, 0)
+	if err != nil {
+		r.Reply(ctx, err)
+		return
+	}
+	r.Reply(ctx, data)
 }

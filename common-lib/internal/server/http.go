@@ -2,12 +2,13 @@ package server
 
 import (
 	"fmt"
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	"github.com/gogoclouds/gogo-services/common-lib/g"
-	"github.com/gogoclouds/gogo-services/common-lib/web/r"
+	"github.com/gogoclouds/gogo/web/r"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
-	"net/http"
 )
 
 type RegisterHttpFn func(e *gin.Engine)

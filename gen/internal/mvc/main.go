@@ -24,9 +24,8 @@ func main() {
 		Project:  "github.com/gogoclouds/gogo-services",
 		Service:  "admin-service",
 		Module:   "system",
-		Struct:   "User",
+		Struct:   "Menu",
 		Domain:   "internal/domain",
-		Model:    "SysUser",
 	}
 	if module.ApiVersion == "" {
 		module.ApiVersion = "v1"

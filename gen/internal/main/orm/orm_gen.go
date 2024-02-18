@@ -2,14 +2,16 @@ package main
 
 import (
 	"context"
+	"log"
+	"os"
+	"time"
+
+	"github.com/gogoclouds/gogo-services/common-lib/pkg/word"
 	"gorm.io/driver/mysql"
 	"gorm.io/gen"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 	"gorm.io/gorm/schema"
-	"log"
-	"os"
-	"time"
 )
 
 var db *gorm.DB
@@ -57,6 +59,9 @@ func main() {
 		FieldNullable:     true,
 		FieldSignable:     true,
 		FieldWithIndexTag: true,
+	})
+	g.WithJSONTagNameStrategy(func(columnName string) (tagContent string) {
+		return word.UderscoreToLowerCamelCase(columnName)
 	})
 	g.UseDB(db)
 	g.ApplyBasic(

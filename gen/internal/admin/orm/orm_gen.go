@@ -2,14 +2,16 @@ package main
 
 import (
 	"context"
+	"github.com/gogoclouds/gogo-services/common-lib/pkg/word"
+	"log"
+	"os"
+	"time"
+
 	"gorm.io/driver/mysql"
 	"gorm.io/gen"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 	"gorm.io/gorm/schema"
-	"log"
-	"os"
-	"time"
 )
 
 var db *gorm.DB
@@ -58,9 +60,15 @@ func main() {
 		FieldSignable:     true,
 		FieldWithIndexTag: true,
 	})
+	g.WithJSONTagNameStrategy(func(columnName string) (tagContent string) {
+		return word.UderscoreToLowerCamelCase(columnName)
+	})
 	g.UseDB(db)
 	g.ApplyBasic(
-		g.GenerateModel("admin", gen.FieldJSONTag("password", "-")),
+		g.GenerateModel("menu"),
+		g.GenerateModel("admin", gen.FieldJSONTag("password", "-"), gen.FieldType("is_del", "soft_delete.DeletedAt"), gen.FieldJSONTag("is_del", "-")),
+		g.GenerateModel("role"),
+		g.GenerateModel("admin_role_relation"),
 	)
 	g.Execute()
 }

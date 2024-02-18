@@ -1,4 +1,4 @@
-package pkg
+package word
 
 import (
 	"strings"
@@ -16,7 +16,6 @@ func UderscoreToUpperCamelCase(s string) string {
 func UderscoreToLowerCamelCase(s string) string {
 	s = UderscoreToUpperCamelCase(s)
 	return string(unicode.ToLower(rune(s[0]))) + s[1:]
-	return s
 }
 
 // 驼峰单词转下划线单词

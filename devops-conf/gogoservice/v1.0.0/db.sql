@@ -21,4 +21,31 @@ CREATE TABLE `admin`  (
       `create_time` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
       `update_time` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
       PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 11 CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT = '后台用户表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT = '后台用户表' ROW_FORMAT = DYNAMIC;
+
+
+-- ----------------------------
+-- Table structure for admin_role_relation
+-- ----------------------------
+DROP TABLE IF EXISTS `admin_role_relation`;
+CREATE TABLE `admin_role_relation`  (
+    `id` bigint(20) NOT NULL AUTO_INCREMENT,
+    `admin_id` bigint(20) NULL DEFAULT NULL,
+    `role_id` bigint(20) NULL DEFAULT NULL,
+    PRIMARY KEY (`id`) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT = '后台用户和角色关系表' ROW_FORMAT = DYNAMIC;
+
+-- ----------------------------
+-- Table structure for role
+-- ----------------------------
+DROP TABLE IF EXISTS `role`;
+CREATE TABLE `role`  (
+     `id` bigint(20) NOT NULL AUTO_INCREMENT,
+     `name` varchar(100) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '名称',
+     `description` varchar(500) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '描述',
+     `admin_count` int(11) NULL DEFAULT NULL COMMENT '后台用户数量',
+     `create_time` datetime NULL DEFAULT NULL COMMENT '创建时间',
+     `status` int(1) NULL DEFAULT 1 COMMENT '启用状态：0->禁用；1->启用',
+     `sort` int(11) NULL DEFAULT 0,
+     PRIMARY KEY (`id`) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT = '后台用户角色表' ROW_FORMAT = DYNAMIC;

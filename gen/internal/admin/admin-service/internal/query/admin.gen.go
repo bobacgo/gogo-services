@@ -16,7 +16,7 @@ import (
 
 	"gorm.io/plugin/dbresolver"
 
-	"github.com/gogoclouds/gogo-services/admin-service/internal/model"
+	"github.com/gogoclouds/gogo-services/gen/internal/admin/admin-service/internal/model"
 )
 
 func newAdmin(db *gorm.DB, opts ...gen.DOOption) admin {

@@ -23,7 +23,7 @@ type {{.Struct}}ListResponse struct {
 }
 
 type {{.Struct}}Request struct {
-	ID uint32 `json:"id"`
+	ID int64 `json:"id"`
 }
 
 type {{.Struct}}Response struct {
@@ -37,14 +37,14 @@ type {{.Struct}}CreateResponse struct {
 }
 
 type {{.Struct}}UpdateRequest struct {
-	ID uint32 `json:"id"`
+	ID int64 `json:"id"`
 }
 
 type {{.Struct}}UpdateResponse struct {
 }
 
 type {{.Struct}}DeleteRequest struct {
-	ID uint32 `json:"id"`
+	ID int64 `json:"id"`
 }
 
 type {{.Struct}}DeleteResponse struct {

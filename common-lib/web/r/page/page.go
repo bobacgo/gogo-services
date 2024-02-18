@@ -5,9 +5,9 @@ type Query struct {
 	// 当前数据是第几页
 	// 1. PageNum = 0 -> PageNum = 1
 	// 2. PageNum < 0 -> PageNum = -1 （不分页）
-	PageNum int `json:"page_num"`
+	PageNum int `json:"pageNum" form:"pageNum"`
 	// 每一页多少条数据
-	PageSize int `json:"page_size"`
+	PageSize int `json:"pageSize" form:"pageSize"`
 }
 
 func NewQuery(pageNum, pageSize int) Query {

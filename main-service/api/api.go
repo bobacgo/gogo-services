@@ -2,9 +2,10 @@ package api
 
 import (
 	"fmt"
+
 	"github.com/gin-gonic/gin"
 	"github.com/gogoclouds/gogo-services/common-lib/g"
-	"github.com/gogoclouds/gogo-services/common-lib/web/gin/reply"
+	"github.com/gogoclouds/gogo/web/gin/reply"
 )
 
 const AdminService = "admin-service"

@@ -19,7 +19,7 @@ func New{{.Struct}}Repo(db *gorm.DB) *{{.Struct}}Repo {
 
 func (repo *{{.Struct}}Repo) Find(ctx context.Context, req *{{.ApiVersion}}.{{.Struct}}ListRequest) (result []*model.{{.Model}}, count int64, err error) {
 	q := repo.q.{{.Model}}
-	return q.WithContext(ctx).FindByPage(req.ToOffset(), req.ToLimit())
+	return q.WithContext(ctx).FindByPage(req.Offset(), req.Limit())
 }
 
 func (repo *{{.Struct}}Repo) FindOne(ctx context.Context, req *{{.ApiVersion}}.{{.Struct}}Request) (*model.{{.Model}}, error) {
