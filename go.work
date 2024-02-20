@@ -1,9 +1,9 @@
-go 1.19
+go 1.22
 
 use (
 	./admin-service
 	./common-lib
 	./gateway
-	./main-service
 	./gen
+	./main-service
 )

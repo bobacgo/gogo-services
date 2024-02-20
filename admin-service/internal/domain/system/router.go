@@ -5,12 +5,13 @@ import (
 	"github.com/gogoclouds/gogo-services/admin-service/internal/domain/system/handler"
 	"github.com/gogoclouds/gogo-services/admin-service/internal/domain/system/repo"
 	"github.com/gogoclouds/gogo-services/admin-service/internal/domain/system/service"
+	"gorm.io/gorm"
 )
 
-func Register(r gin.IRouter) {
+func Register(db *gorm.DB, r gin.IRouter) {
 	{
 		r := r.Group("/admin")
-		adminRepo := repo.NewAdminRepo(nil)
+		adminRepo := repo.NewAdminRepo(db)
 		adminServer := handler.NewAdminServer(service.NewAdminService(adminRepo, adminRepo))
 		r.POST("/register", adminServer.Register)              // 用户注册
 		r.POST("/login", adminServer.Login)                    // 登录以后返回token
@@ -28,7 +29,7 @@ func Register(r gin.IRouter) {
 	}
 	{
 		r := r.Group("/role")
-		roleHandler := handler.NewRoleServer(service.NewRoleService(repo.NewRoleRepo(nil)))
+		roleHandler := handler.NewRoleServer(service.NewRoleService(repo.NewRoleRepo(db)))
 		r.POST("/create", roleHandler.Add)                     // 添加角色
 		r.POST("/update/{id}", roleHandler.Update)             // 修改角色
 		r.POST("/delete", roleHandler.Delete)                  // 批量删除角色
@@ -42,7 +43,7 @@ func Register(r gin.IRouter) {
 	}
 	{
 		r := r.Group("/menu")
-		menuHandler := handler.NewMenuServer(service.NewMenuService(repo.NewMenuRepo(nil)))
+		menuHandler := handler.NewMenuServer(service.NewMenuService(repo.NewMenuRepo(db)))
 		r.GET("/list/{parentId}", menuHandler.List)
 		r.GET("/treeList", menuHandler.TreeList)
 		r.GET("/{id}", menuHandler.Details)

@@ -1,6 +1,6 @@
 module github.com/gogoclouds/gogo-services/admin-service
 
-go 1.19
+go 1.22
 
 require (
 	gorm.io/gorm v1.24.2

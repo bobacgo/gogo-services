@@ -1,3 +1,3 @@
 module github.com/gogoclouds/gogo-services/gateway
 
-go 1.19
+go 1.22

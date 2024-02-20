@@ -1,6 +1,6 @@
 module github.com/gogoclouds/gogo-services/main-service
 
-go 1.19
+go 1.22
 
 require github.com/gogoclouds/gogo v0.0.71
 
