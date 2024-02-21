@@ -87,6 +87,7 @@ func WithLogger() Option {
 		o.conf.Logger.Filename = o.conf.Name
 		o.conf.Logger.TimeFormat = o.conf.TimeFormat
 		logger.InitZapLogger(o.conf.Logger)
+		logger.Info("logger init done...")
 	}
 }
 
@@ -97,6 +98,7 @@ func WithDB(tables ...[]string) Option {
 		if err != nil {
 			logger.Panic(err.Error())
 		}
+		logger.Info("mysql init done...")
 		o.DB = newDB
 	}
 }
@@ -107,6 +109,7 @@ func WithRedis() Option {
 		if err != nil {
 			logger.Panic(err.Error())
 		}
+		logger.Info("redis init done...")
 		o.Redis = newRedis
 	}
 }
