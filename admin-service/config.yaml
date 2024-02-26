@@ -4,10 +4,10 @@ env: dev
 timeFormat: '2006-01-02 15:04:05'
 server:
   http:
-    addr: '0.0.0.0:8081'
+    addr: '0.0.0.0:8080'
     timeout: 1s
   rpc:
-    addr: '0.0.0.0:9081'
+    addr: '0.0.0.0:9080'
     timeout: 1s
 
 # 业务相关

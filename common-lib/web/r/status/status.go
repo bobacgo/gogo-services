@@ -1,7 +1,6 @@
 package status
 
 import (
-	"errors"
 	"fmt"
 	"github.com/gogoclouds/gogo-services/common-lib/web/r/codes"
 )
@@ -80,10 +79,4 @@ func (s *Status) String() string {
 
 func (s *Status) Error() string {
 	return s.String()
-}
-
-// Is implements future error.Is functionality.
-// A Error is equivalent if the code and message are identical.
-func (s *Status) Is(target error) bool {
-	return errors.Is(s, target)
 }

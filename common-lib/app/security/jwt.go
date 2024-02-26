@@ -28,7 +28,7 @@ func NewJWT(conf *Config) *JWToken {
 }
 
 // Generate 颁发token access token 和 refresh token
-func (t *JWToken) Generate(claims Claims) (atoken, rtoken string, err error) {
+func (t *JWToken) Generate(claims *Claims) (atoken, rtoken string, err error) {
 	if claims.ExpiresAt == 0 {
 		if t.AccessTokenExpired == 0 {
 			t.AccessTokenExpired = ATokenExpiredDuration
@@ -83,7 +83,7 @@ func (t *JWToken) Refresh(atoken, rtoken string) (newAToken, newRToken, key stri
 	// 判断错误是不是因为access token 正常过期导致的
 	v, _ := err.(*jwt.ValidationError)
 	if v.Errors == jwt.ValidationErrorExpired {
-		at, rt, err := t.Generate(*claim)
+		at, rt, err := t.Generate(claim)
 		return at, rt, key, err
 	}
 	return

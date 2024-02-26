@@ -3,11 +3,19 @@ package service
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/gogoclouds/gogo-services/admin-service/api/system/errs"
 	v1 "github.com/gogoclouds/gogo-services/admin-service/api/system/v1"
 	"github.com/gogoclouds/gogo-services/admin-service/internal/model"
+	"github.com/gogoclouds/gogo-services/common-lib/app/logger"
+	"github.com/gogoclouds/gogo-services/common-lib/app/security"
+	"github.com/gogoclouds/gogo-services/common-lib/pkg/utime"
 	"github.com/gogoclouds/gogo-services/common-lib/web/r/page"
+	"github.com/golang-jwt/jwt"
+	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
+	"strconv"
+	"time"
 )
 
 type IAdminRoleRepo interface {
@@ -30,13 +38,19 @@ type IAdminRepo interface {
 	Delete(ctx context.Context, ID int64) error
 }
 
+const LoginLimitKey = "admin:login_limit:%s"
+
 type AdminService struct {
+	jwt           *security.JWToken
+	rdb           redis.UniversalClient
 	repo          IAdminRepo
 	adminRoleRepo IAdminRoleRepo
 }
 
-func NewAdminService(repo IAdminRepo, adminRoleRepo IAdminRoleRepo) *AdminService {
+func NewAdminService(jwtConf *security.Config, rdb redis.UniversalClient, repo IAdminRepo, adminRoleRepo IAdminRoleRepo) *AdminService {
 	return &AdminService{
+		jwt:           security.NewJWT(jwtConf),
+		rdb:           rdb,
 		repo:          repo,
 		adminRoleRepo: adminRoleRepo,
 	}
@@ -54,10 +68,10 @@ func (svc *AdminService) Register(ctx context.Context, data *v1.AdminRegisterReq
 	if isDel == 1 { // 已注销
 		return errs.AdminUnUsernameDuplicated
 	}
-	// TODO 将密码进行加密操作
+
 	return svc.repo.Insert(ctx, &model.Admin{
 		Username: data.Username,
-		Password: data.Password,
+		Password: new(security.PasswdHelper).BcryptHash(data.Password),
 		Icon:     &data.Icon,
 		Email:    &data.Email,
 		Note:     &data.Note,
@@ -71,14 +85,27 @@ func (svc *AdminService) Login(ctx context.Context, data *v1.AdminLoginRequest) 
 	if err != nil {
 		return nil, err
 	}
-	if admin.Password != data.Password {
-		return nil, errs.AdminLoginFail
-	}
-	if admin.Status {
+
+	if !admin.Status {
 		return nil, errs.AdminLoginForbidden
 	}
-	// TODO 生成 token
-	return &v1.AdminLoginResponse{Token: ""}, nil
+
+	pwdHelper := svc.newPasswdHelper(ctx, admin)
+	if !pwdHelper.BcryptVerify(ctx, admin.Password, data.Password) {
+		return &v1.AdminLoginResponse{ErrCount: pwdHelper.GetErrCount()}, errs.AdminLoginFail
+	}
+	atoken, _, err := svc.jwt.Generate(&security.Claims{
+		StandardClaims: jwt.StandardClaims{},
+		UserID:         strconv.FormatInt(admin.ID, 10),
+		Username:       admin.Username,
+		Nickname:       *admin.NickName,
+		Roles:          nil,
+	})
+	if err != nil {
+		return nil, err // TODO 定义err
+	}
+	// TODO redis 缓存 Token
+	return &v1.AdminLoginResponse{Token: atoken}, nil
 }
 
 func (svc *AdminService) Logout(ctx context.Context, username string) error {
@@ -141,4 +168,21 @@ func (svc *AdminService) UpdateRole(ctx context.Context, ID int64, role []int64)
 
 func (svc *AdminService) GetRoleList(ctx context.Context, ID int64) ([]*model.Role, error) {
 	return svc.adminRoleRepo.FindAdminRole(ctx, ID)
+}
+
+func (svc *AdminService) newPasswdHelper(ctx context.Context, admin *model.Admin) *security.PasswdHelper {
+	pwdHelper := security.NewPasswdHelper(svc.rdb, 5)
+	// 第二天0点清零
+	remain := utime.ZeroHour(1).Unix() - time.Now().Unix()
+	pwdHelper.SetKey(fmt.Sprintf(LoginLimitKey, admin.Username), time.Duration(remain)*time.Second)
+	pwdHelper.OnErr = func(err error) {
+		if errors.Is(err, security.ErrPasswdLimit) && admin.Status {
+			if err = svc.UpdateStatus(ctx, admin.ID, false); err != nil {
+				logger.Error("update status:", "id", admin.ID, "err", err)
+			}
+			return
+		}
+		logger.Error("verify password err:", "username", admin.Username, "err", err)
+	}
+	return pwdHelper
 }

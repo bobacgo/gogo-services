@@ -45,7 +45,8 @@ type AdminLoginRequest struct {
 }
 
 type AdminLoginResponse struct {
-	Token string `json:"token"`
+	Token    string `json:"token"`
+	ErrCount int64  `json:"errCount,omitempty"`
 }
 
 type UserInfo struct {

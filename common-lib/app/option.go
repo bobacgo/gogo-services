@@ -22,22 +22,21 @@ import (
 type Option func(o *options)
 
 type options struct {
-	conf *Config
+	Conf  *Config
+	DB    *gorm.DB
+	Redis redis.UniversalClient
 
-	appid     string
-	endpoints []*url.URL
-
+	appid           string
+	endpoints       []*url.URL
 	sigs            []os.Signal
 	registrar       registry.ServiceRegistrar
 	registryTimeout time.Duration
-	httpServer      func(a *App, e *gin.Engine)
-	rpcServer       func(a *App, s *grpc.Server)
 
+	httpServer func(a *App, e *gin.Engine)
+
+	rpcServer func(a *App, s *grpc.Server)
 	// Before and After hook
 	beforeStart, beforeStop, afterStart, afterStop []func(context.Context) error
-
-	DB    *gorm.DB
-	Redis redis.UniversalClient
 }
 
 func WithAppId(id string) Option {
@@ -73,7 +72,7 @@ func WithRegistrarTimeout(rt time.Duration) Option {
 func WithConfig(filename string) Option {
 	return func(o *options) {
 		var err error
-		o.conf, err = conf.Load[Config](filename, func(e fsnotify.Event) {
+		o.Conf, err = conf.Load[Config](filename, func(e fsnotify.Event) {
 			//logger.S(config.Conf.Logger.Level)
 		})
 		if err != nil {
@@ -84,9 +83,9 @@ func WithConfig(filename string) Option {
 
 func WithLogger() Option {
 	return func(o *options) {
-		o.conf.Logger.Filename = o.conf.Name
-		o.conf.Logger.TimeFormat = o.conf.TimeFormat
-		logger.InitZapLogger(o.conf.Logger)
+		o.Conf.Logger.Filename = o.Conf.Name
+		o.Conf.Logger.TimeFormat = o.Conf.TimeFormat
+		logger.InitZapLogger(o.Conf.Logger)
 		logger.Info("logger init done...")
 	}
 }
@@ -94,7 +93,7 @@ func WithLogger() Option {
 func WithDB(tables ...[]string) Option {
 	// TODO gorm.AutoMerge
 	return func(o *options) {
-		newDB, err := db.NewDB(mysql.Open(o.conf.DB.Source), o.conf.DB)
+		newDB, err := db.NewDB(mysql.Open(o.Conf.DB.Source), o.Conf.DB)
 		if err != nil {
 			logger.Panic(err.Error())
 		}
@@ -105,7 +104,7 @@ func WithDB(tables ...[]string) Option {
 
 func WithRedis() Option {
 	return func(o *options) {
-		newRedis, err := cache.NewRedis(o.conf.Redis)
+		newRedis, err := cache.NewRedis(o.Conf.Redis)
 		if err != nil {
 			logger.Panic(err.Error())
 		}

@@ -5,14 +5,17 @@ import (
 	"github.com/gogoclouds/gogo-services/admin-service/internal/domain/system/handler"
 	"github.com/gogoclouds/gogo-services/admin-service/internal/domain/system/repo"
 	"github.com/gogoclouds/gogo-services/admin-service/internal/domain/system/service"
-	"gorm.io/gorm"
+	"github.com/gogoclouds/gogo-services/common-lib/app"
 )
 
-func Register(db *gorm.DB, r gin.IRouter) {
+func Register(app *app.App, r gin.IRouter) {
+	db := app.Opts.DB
+	rdb := app.Opts.Redis
+	conf := app.Opts.Conf
 	{
 		r := r.Group("/admin")
 		adminRepo := repo.NewAdminRepo(db)
-		adminServer := handler.NewAdminServer(service.NewAdminService(adminRepo, adminRepo))
+		adminServer := handler.NewAdminServer(service.NewAdminService(&conf.Jwt, rdb, adminRepo, adminRepo))
 		r.POST("/register", adminServer.Register)              // 用户注册
 		r.POST("/login", adminServer.Login)                    // 登录以后返回token
 		r.POST("/logout", adminServer.Logout)                  // 登出功能

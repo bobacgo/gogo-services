@@ -6,32 +6,29 @@ import (
 	"github.com/gogoclouds/gogo-services/common-lib/web/r/status"
 	"net/http"
 	"strconv"
-	"time"
 )
 
 type Response[T any] struct {
 	Code codes.Code `json:"code"`
 	Data T          `json:"data"`
-	Msg  string     `json:"msg"`
-	Time int64      `json:"time"`
+	Msg  string     `json:"message"`
 }
 
 func Reply(c *gin.Context, data any) {
 	httpCode := http.StatusOK
-	resp := Response[any]{
-		Code: codes.OK,
-		Time: time.Now().Unix(),
-	}
+	resp := Response[any]{Code: codes.OK}
 	if data == nil {
 		resp.Data = struct{}{}
 	} else if s, ok := data.(*status.Status); ok {
-		httpCode = codesToHttpCode(s.Code)
+		//httpCode = codesToHttpCode(s.Code)
 		resp.Code = s.GetCode()
 		resp.Msg = s.GetMessage()
+		resp.Data = struct{}{}
 	} else if _, ok := data.(error); ok {
-		httpCode = http.StatusInternalServerError
+		//httpCode = http.StatusInternalServerError
 		resp.Code = 5e5
 		resp.Msg = "内部错误"
+		resp.Data = struct{}{}
 	} else {
 		resp.Data = data
 	}

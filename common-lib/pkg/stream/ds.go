@@ -8,7 +8,7 @@ package stream
 // Distinct
 // Filter
 // Reverse
-// Limit
+// limit
 // Skip
 
 // Each
