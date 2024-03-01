@@ -10,20 +10,25 @@ import (
 
 var ErrPasswdLimit = errors.New("password error limit")
 
-type PasswdHelper struct {
-	rdb        redis.UniversalClient
-	key        string
-	expiration time.Duration
-	limit      int64
-	errCount   int64
+// PasswdVerifier 登录密码验证器
+// 1.对密码进行hash加密
+// 2.随机生成盐
+// 3.密码错误次数限制(依赖Redis)
+type PasswdVerifier struct {
+	rdb        redis.Cmdable
+	key        string        // 错误密码存放的key
+	expiration time.Duration // 限制时长(在有效的错误次数范围内,每次错误都会刷新)
+	limit      int64         // 错误次数限制
+	errCount   int64         // 尝试次数
 	OnErr      func(error)
 }
 
-func NewPasswdHelper(rdb redis.UniversalClient, limit int64) *PasswdHelper {
-	return &PasswdHelper{rdb: rdb, limit: limit, expiration: 24 * time.Hour}
+func NewPasswdVerifier(rdb redis.Cmdable, limit int64) *PasswdVerifier {
+	return &PasswdVerifier{rdb: rdb, limit: limit, expiration: 24 * time.Hour}
 }
 
-func (h *PasswdHelper) BcryptVerify(ctx context.Context, hash, password string) bool {
+// BcryptVerify 验证密码
+func (h *PasswdVerifier) BcryptVerify(ctx context.Context, hash, password string) bool {
 	var err error
 	h.errCount, err = h.rdb.Get(ctx, h.key).Int64()
 	if err != nil {
@@ -45,21 +50,33 @@ func (h *PasswdHelper) BcryptVerify(ctx context.Context, hash, password string) 
 	return true
 }
 
-func (h *PasswdHelper) BcryptHash(passwd string) string {
+// BcryptHash 密码加密
+func (h *PasswdVerifier) BcryptHash(passwd string) string {
 	hash, salt := util.BcryptHash(passwd)
 	return hash + salt
 }
 
-func (h *PasswdHelper) GetErrCount() int64 {
+// GetErrCount 获取密码错误的次数
+func (h *PasswdVerifier) GetErrCount() int64 {
 	return h.errCount
 }
 
-func (h *PasswdHelper) SetKey(key string, expiration time.Duration) {
+// GetRemainCount 获取密码剩余的错误次数
+func (h *PasswdVerifier) GetRemainCount() int64 {
+	remainCount := h.limit - h.errCount
+	if remainCount < 0 {
+		remainCount = 0
+	}
+	return remainCount
+}
+
+// SetKey 设置key
+func (h *PasswdVerifier) SetKey(key string, expiration time.Duration) {
 	h.key = key
 	h.expiration = expiration
 }
 
-func (h *PasswdHelper) fail(ctx context.Context) {
+func (h *PasswdVerifier) fail(ctx context.Context) {
 	var err error
 	h.errCount, err = h.rdb.Incr(ctx, h.key).Result()
 	if err != nil {
@@ -75,7 +92,7 @@ func (h *PasswdHelper) fail(ctx context.Context) {
 	}
 }
 
-func (h *PasswdHelper) delIncr(ctx context.Context) {
+func (h *PasswdVerifier) delIncr(ctx context.Context) {
 	if err := h.rdb.Del(ctx, h.key).Err(); err != nil {
 		h.OnErr(err)
 	}

@@ -42,12 +42,12 @@ const LoginLimitKey = "admin:login_limit:%s"
 
 type AdminService struct {
 	jwt           *security.JWToken
-	rdb           redis.UniversalClient
+	rdb           redis.Cmdable
 	repo          IAdminRepo
 	adminRoleRepo IAdminRoleRepo
 }
 
-func NewAdminService(jwtConf *security.Config, rdb redis.UniversalClient, repo IAdminRepo, adminRoleRepo IAdminRoleRepo) *AdminService {
+func NewAdminService(jwtConf *security.Config, rdb redis.Cmdable, repo IAdminRepo, adminRoleRepo IAdminRoleRepo) *AdminService {
 	return &AdminService{
 		jwt:           security.NewJWT(jwtConf),
 		rdb:           rdb,
@@ -71,7 +71,7 @@ func (svc *AdminService) Register(ctx context.Context, data *v1.AdminRegisterReq
 
 	return svc.repo.Insert(ctx, &model.Admin{
 		Username: data.Username,
-		Password: new(security.PasswdHelper).BcryptHash(data.Password),
+		Password: new(security.PasswdVerifier).BcryptHash(data.Password),
 		Icon:     &data.Icon,
 		Email:    &data.Email,
 		Note:     &data.Note,
@@ -90,20 +90,21 @@ func (svc *AdminService) Login(ctx context.Context, data *v1.AdminLoginRequest) 
 		return nil, errs.AdminLoginForbidden
 	}
 
-	pwdHelper := svc.newPasswdHelper(ctx, admin)
+	pwdHelper := svc.newPasswdVerifier(ctx, admin)
 	if !pwdHelper.BcryptVerify(ctx, admin.Password, data.Password) {
-		return &v1.AdminLoginResponse{ErrCount: pwdHelper.GetErrCount()}, errs.AdminLoginFail
+		return nil, errs.AdminLoginFail.WithDetails(v1.AdminPwdErr{DecrCount: pwdHelper.GetRemainCount()})
 	}
 	atoken, _, err := svc.jwt.Generate(&security.Claims{
 		StandardClaims: jwt.StandardClaims{},
 		UserID:         strconv.FormatInt(admin.ID, 10),
 		Username:       admin.Username,
 		Nickname:       *admin.NickName,
-		Roles:          nil,
+		Roles:          nil, // TODO
 	})
 	if err != nil {
-		return nil, err // TODO 定义err
+		return nil, errs.AdminTokenGenerateErr
 	}
+
 	// TODO redis 缓存 Token
 	return &v1.AdminLoginResponse{Token: atoken}, nil
 }
@@ -147,7 +148,7 @@ func (svc *AdminService) UpdatePassword(ctx context.Context, req *v1.UpdatePassw
 		return err
 	}
 	if admin.Password != req.Password {
-		return errs.AdminOldPwdError
+		return errs.AdminOldPwdErr
 	}
 	return svc.repo.UpdatePwd(ctx, admin.ID, req.NewPassword)
 }
@@ -170,8 +171,8 @@ func (svc *AdminService) GetRoleList(ctx context.Context, ID int64) ([]*model.Ro
 	return svc.adminRoleRepo.FindAdminRole(ctx, ID)
 }
 
-func (svc *AdminService) newPasswdHelper(ctx context.Context, admin *model.Admin) *security.PasswdHelper {
-	pwdHelper := security.NewPasswdHelper(svc.rdb, 5)
+func (svc *AdminService) newPasswdVerifier(ctx context.Context, admin *model.Admin) *security.PasswdVerifier {
+	pwdHelper := security.NewPasswdVerifier(svc.rdb, 5)
 	// 第二天0点清零
 	remain := utime.ZeroHour(1).Unix() - time.Now().Unix()
 	pwdHelper.SetKey(fmt.Sprintf(LoginLimitKey, admin.Username), time.Duration(remain)*time.Second)

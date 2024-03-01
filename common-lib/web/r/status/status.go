@@ -22,7 +22,7 @@ type Status struct {
 
 // New returns a Status representing c and msg.
 func New(c uint32, msg string) *Status {
-	return &Status{Code: codes.Code(c), Message: msg}
+	return &Status{Code: c, Message: msg}
 }
 
 // Newf returns New(c, fmt.Sprintf(format, a...)).
@@ -68,9 +68,9 @@ func (s *Status) WithDetails(details ...any) *Status {
 	if s.GetCode() == codes.OK {
 		return s
 	}
-
-	s.Details = append(s.Details, details...)
-	return s
+	cp := *s
+	cp.Details = append(cp.Details, details...)
+	return &cp
 }
 
 func (s *Status) String() string {

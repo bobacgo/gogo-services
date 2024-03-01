@@ -45,8 +45,11 @@ type AdminLoginRequest struct {
 }
 
 type AdminLoginResponse struct {
-	Token    string `json:"token"`
-	ErrCount int64  `json:"errCount,omitempty"`
+	Token string `json:"token"`
+}
+
+type AdminPwdErr struct {
+	DecrCount int64 `json:"decrCount"` // 剩余次数
 }
 
 type UserInfo struct {

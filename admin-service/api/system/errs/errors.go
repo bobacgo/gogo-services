@@ -12,7 +12,8 @@ var (
 	AdminLoginFail            = status.New(400003, "登录名或密码不正确")
 	AdminNotFound             = status.New(400004, "找不到该用户")
 	AdminLoginForbidden       = status.New(400005, "帐号已被禁用")
-	AdminOldPwdError          = status.New(400006, "旧密码错误")
+	AdminOldPwdErr            = status.New(400006, "旧密码错误")
+	AdminTokenGenerateErr     = status.New(400007, "令牌生成出错")
 )
 
 // menu
