@@ -5,6 +5,7 @@ import (
 	v1 "github.com/gogoclouds/gogo-services/admin-service/api/system/v1"
 	"github.com/gogoclouds/gogo-services/admin-service/internal/domain/system/service"
 	"github.com/gogoclouds/gogo-services/admin-service/internal/model"
+	"github.com/gogoclouds/gogo-services/common-lib/web/gin/valid"
 	"github.com/gogoclouds/gogo-services/common-lib/web/r"
 	"github.com/gogoclouds/gogo-services/common-lib/web/r/errs"
 )
@@ -28,12 +29,12 @@ func (h *adminServer) Register(ctx *gin.Context) {
 }
 
 func (h *adminServer) Login(ctx *gin.Context) {
-	req := new(v1.AdminLoginRequest)
-	if err := ctx.ShouldBind(req); err != nil {
-		r.Reply(ctx, errs.BadRequest.WithDetails(err))
+	req, err := valid.ShouldBind[v1.AdminLoginRequest](ctx)
+	if err != nil {
+		r.Reply(ctx, errs.BadRequest.WithDetails(err.Error()))
 		return
 	}
-	data, err := h.svc.Login(ctx, req)
+	data, err := h.svc.Login(ctx, &req)
 	if err != nil {
 		r.Reply(ctx, err)
 		return

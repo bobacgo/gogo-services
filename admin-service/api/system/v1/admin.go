@@ -40,8 +40,8 @@ type AdminRegisterRequest struct {
 }
 
 type AdminLoginRequest struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
+	Username string `json:"username" binding:"required,lte=20"`
+	Password string `json:"password" binding:"required,lte=50"` // TODO 密码强度校验
 }
 
 type AdminLoginResponse struct {

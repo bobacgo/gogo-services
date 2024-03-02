@@ -27,7 +27,7 @@ func NewPasswdVerifier(rdb redis.Cmdable, limit int64) *PasswdVerifier {
 	return &PasswdVerifier{cache: rdb, limit: limit, expiration: 24 * time.Hour}
 }
 
-// BcryptVerifyWithCount 验证密码
+// BcryptVerifyWithCount 验证密码统计错误次数
 func (h *PasswdVerifier) BcryptVerifyWithCount(ctx context.Context, hash, password string) bool {
 	if len(hash) <= 8 {
 		h.fail(ctx)
@@ -42,6 +42,7 @@ func (h *PasswdVerifier) BcryptVerifyWithCount(ctx context.Context, hash, passwo
 	return true
 }
 
+// BcryptVerify 验证密码
 func (h *PasswdVerifier) BcryptVerify(hash, password string) bool {
 	hash, salt := h.parsePwd(hash)
 	return util.BcryptVerify(salt, hash, password)
