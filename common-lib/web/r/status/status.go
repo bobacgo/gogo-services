@@ -65,9 +65,9 @@ func (s *Status) Err() error {
 }
 
 func (s *Status) WithDetails(details ...any) *Status {
-	if s.GetCode() == codes.OK {
-		return s
-	}
+	//if s.GetCode() == codes.OK {
+	//	return s
+	//}
 	cp := *s
 	cp.Details = append(cp.Details, details...)
 	return &cp

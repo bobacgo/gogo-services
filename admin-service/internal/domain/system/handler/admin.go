@@ -1,15 +1,12 @@
 package handler
 
 import (
-	"errors"
 	"github.com/gin-gonic/gin"
-	ierrs "github.com/gogoclouds/gogo-services/admin-service/api/system/errs"
 	v1 "github.com/gogoclouds/gogo-services/admin-service/api/system/v1"
 	"github.com/gogoclouds/gogo-services/admin-service/internal/domain/system/service"
 	"github.com/gogoclouds/gogo-services/admin-service/internal/model"
 	"github.com/gogoclouds/gogo-services/common-lib/web/r"
 	"github.com/gogoclouds/gogo-services/common-lib/web/r/errs"
-	"gorm.io/gorm"
 )
 
 type adminServer struct {
@@ -38,9 +35,6 @@ func (h *adminServer) Login(ctx *gin.Context) {
 	}
 	data, err := h.svc.Login(ctx, req)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			err = ierrs.AdminLoginFail
-		}
 		r.Reply(ctx, err)
 		return
 	}
@@ -91,9 +85,6 @@ func (h *adminServer) GetItem(ctx *gin.Context) {
 	// TODO ID
 	data, err := h.svc.GetItem(ctx, 0)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			err = ierrs.AdminLoginFail
-		}
 		r.Reply(ctx, err)
 		return
 	}
@@ -117,14 +108,11 @@ func (h *adminServer) UpdatePassword(ctx *gin.Context) {
 		return
 	}
 	err := h.svc.UpdatePassword(ctx, req)
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		err = ierrs.AdminNotFound
-	}
 	r.Reply(ctx, err)
 }
 
 func (h *adminServer) Delete(ctx *gin.Context) {
-	// TODO ID
+	// TODO username, ID
 	err := h.svc.Delete(ctx, 0)
 	r.Reply(ctx, err)
 }

@@ -15,7 +15,7 @@ var ErrPasswdLimit = errors.New("password error limit")
 // 2.随机生成盐
 // 3.密码错误次数限制(依赖Redis)
 type PasswdVerifier struct {
-	rdb        redis.Cmdable
+	cache      redis.Cmdable
 	key        string        // 错误密码存放的key
 	expiration time.Duration // 限制时长(在有效的错误次数范围内,每次错误都会刷新)
 	limit      int64         // 错误次数限制
@@ -24,30 +24,27 @@ type PasswdVerifier struct {
 }
 
 func NewPasswdVerifier(rdb redis.Cmdable, limit int64) *PasswdVerifier {
-	return &PasswdVerifier{rdb: rdb, limit: limit, expiration: 24 * time.Hour}
+	return &PasswdVerifier{cache: rdb, limit: limit, expiration: 24 * time.Hour}
 }
 
-// BcryptVerify 验证密码
-func (h *PasswdVerifier) BcryptVerify(ctx context.Context, hash, password string) bool {
-	var err error
-	h.errCount, err = h.rdb.Get(ctx, h.key).Int64()
-	if err != nil {
-		h.OnErr(err)
+// BcryptVerifyWithCount 验证密码
+func (h *PasswdVerifier) BcryptVerifyWithCount(ctx context.Context, hash, password string) bool {
+	if len(hash) <= 8 {
+		h.fail(ctx)
 		return false
 	}
-	if h.errCount > h.limit {
-		h.OnErr(ErrPasswdLimit)
-		return false
-	}
-	if len(password) < 8 {
-		return false
-	}
-	if !util.BcryptVerify(hash[len(password)-8:], hash[:len(password)-8], password) {
+	hash, salt := h.parsePwd(hash)
+	if !util.BcryptVerify(salt, hash, password) {
 		h.fail(ctx)
 		return false
 	}
 	h.delIncr(ctx)
 	return true
+}
+
+func (h *PasswdVerifier) BcryptVerify(hash, password string) bool {
+	hash, salt := h.parsePwd(hash)
+	return util.BcryptVerify(salt, hash, password)
 }
 
 // BcryptHash 密码加密
@@ -78,22 +75,29 @@ func (h *PasswdVerifier) SetKey(key string, expiration time.Duration) {
 
 func (h *PasswdVerifier) fail(ctx context.Context) {
 	var err error
-	h.errCount, err = h.rdb.Incr(ctx, h.key).Result()
-	if err != nil {
+	h.errCount, err = h.cache.Incr(ctx, h.key).Result()
+	if err != nil && !errors.Is(err, redis.Nil) {
 		h.OnErr(err)
 		return
 	}
-	if err = h.rdb.Expire(ctx, h.key, h.expiration).Err(); err != nil {
+	if err = h.cache.Expire(ctx, h.key, h.expiration).Err(); err != nil && !errors.Is(err, redis.Nil) {
 		h.OnErr(err)
 		return
 	}
-	if h.errCount > h.limit {
+	if h.errCount >= h.limit {
 		h.OnErr(ErrPasswdLimit)
 	}
 }
 
 func (h *PasswdVerifier) delIncr(ctx context.Context) {
-	if err := h.rdb.Del(ctx, h.key).Err(); err != nil {
+	if err := h.cache.Del(ctx, h.key).Err(); err != nil && !errors.Is(err, redis.Nil) {
 		h.OnErr(err)
 	}
+}
+
+func (h *PasswdVerifier) parsePwd(hashPwd string) (hash, salt string) {
+	if len(hashPwd) <= 8 {
+		return
+	}
+	return hashPwd[:len(hashPwd)-8], hashPwd[len(hashPwd)-8:]
 }

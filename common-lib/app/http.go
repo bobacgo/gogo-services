@@ -27,7 +27,7 @@ func RunHttpServer(app *App, register func(a *App, e *gin.Engine)) {
 	healthApi(e)     // provide health API
 	register(app, e) // register router
 
-	srv := &http.Server{Addr: app.Opts.conf.Server.Http.Addr, Handler: e}
+	srv := &http.Server{Addr: app.Opts.Conf.Server.Http.Addr, Handler: e}
 
 	// Initializing the server in a goroutine so that
 	// it won't block the graceful shutdown handling below

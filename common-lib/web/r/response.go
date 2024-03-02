@@ -23,7 +23,11 @@ func Reply(c *gin.Context, data any) {
 		//httpCode = codesToHttpCode(s.Code)
 		resp.Code = s.GetCode()
 		resp.Msg = s.GetMessage()
-		resp.Data = struct{}{}
+		if s.Details != nil {
+			resp.Data = s.Details
+		} else {
+			resp.Data = struct{}{}
+		}
 	} else if _, ok := data.(error); ok {
 		//httpCode = http.StatusInternalServerError
 		resp.Code = 5e5

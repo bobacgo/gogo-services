@@ -149,14 +149,14 @@ func (a *App) buildInstance() (*registry.ServiceInstance, error) {
 		endpoints = append(endpoints, e.String())
 	}
 	if !httpScheme {
-		if rUrl, err := getRegistryUrl("http", opts.conf.Server.Http.Addr); err == nil {
+		if rUrl, err := getRegistryUrl("http", opts.Conf.Server.Http.Addr); err == nil {
 			endpoints = append(endpoints, rUrl)
 		} else {
 			logger.Errorf("get http registry err:%v", err)
 		}
 	}
 	if !grpcScheme {
-		if rUrl, err := getRegistryUrl("grpc", opts.conf.Server.Rpc.Addr); err == nil {
+		if rUrl, err := getRegistryUrl("grpc", opts.Conf.Server.Rpc.Addr); err == nil {
 			endpoints = append(endpoints, rUrl)
 		} else {
 			logger.Errorf("get grpc registry err:%v", err)
@@ -164,8 +164,8 @@ func (a *App) buildInstance() (*registry.ServiceInstance, error) {
 	}
 	return &registry.ServiceInstance{
 		ID:        opts.appid,
-		Name:      opts.conf.Name,
-		Version:   opts.conf.Version,
+		Name:      opts.Conf.Name,
+		Version:   opts.Conf.Version,
 		Metadata:  nil,
 		Endpoints: endpoints,
 	}, nil

@@ -38,19 +38,23 @@ type IAdminRepo interface {
 	Delete(ctx context.Context, ID int64) error
 }
 
-const LoginLimitKey = "admin:login_limit:%s"
+const (
+	LoginTokenKeyPrefix = "admin:login_token"
+	LoginLimitKeyPrefix = "admin:login_limit"
+	PwdAttemptErrCount  = 5
+)
 
 type AdminService struct {
 	jwt           *security.JWToken
-	rdb           redis.Cmdable
+	cache         redis.Cmdable
 	repo          IAdminRepo
 	adminRoleRepo IAdminRoleRepo
 }
 
 func NewAdminService(jwtConf *security.Config, rdb redis.Cmdable, repo IAdminRepo, adminRoleRepo IAdminRoleRepo) *AdminService {
 	return &AdminService{
-		jwt:           security.NewJWT(jwtConf),
-		rdb:           rdb,
+		jwt:           security.NewJWT(jwtConf, rdb, LoginTokenKeyPrefix),
+		cache:         rdb,
 		repo:          repo,
 		adminRoleRepo: adminRoleRepo,
 	}
@@ -83,6 +87,9 @@ func (svc *AdminService) Login(ctx context.Context, data *v1.AdminLoginRequest) 
 	// 2.每一个平台只能登录同时在线一个
 	admin, err := svc.repo.FindByUsername(ctx, data.Username)
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errs.AdminLoginFail
+		}
 		return nil, err
 	}
 
@@ -91,10 +98,10 @@ func (svc *AdminService) Login(ctx context.Context, data *v1.AdminLoginRequest) 
 	}
 
 	pwdHelper := svc.newPasswdVerifier(ctx, admin)
-	if !pwdHelper.BcryptVerify(ctx, admin.Password, data.Password) {
+	if !pwdHelper.BcryptVerifyWithCount(ctx, admin.Password, data.Password) {
 		return nil, errs.AdminLoginFail.WithDetails(v1.AdminPwdErr{DecrCount: pwdHelper.GetRemainCount()})
 	}
-	atoken, _, err := svc.jwt.Generate(&security.Claims{
+	atoken, _, err := svc.jwt.Generate(ctx, &security.Claims{
 		StandardClaims: jwt.StandardClaims{},
 		UserID:         strconv.FormatInt(admin.ID, 10),
 		Username:       admin.Username,
@@ -104,14 +111,11 @@ func (svc *AdminService) Login(ctx context.Context, data *v1.AdminLoginRequest) 
 	if err != nil {
 		return nil, errs.AdminTokenGenerateErr
 	}
-
-	// TODO redis 缓存 Token
 	return &v1.AdminLoginResponse{Token: atoken}, nil
 }
 
 func (svc *AdminService) Logout(ctx context.Context, username string) error {
-	// TODO 移除 token
-	return nil
+	return svc.jwt.RemoveToken(ctx, username)
 }
 
 func (svc *AdminService) RefreshToken(ctx context.Context, oldToken string) (*v1.AdminLoginResponse, error) {
@@ -134,7 +138,11 @@ func (svc *AdminService) List(ctx context.Context, req *v1.ListRequest) (*page.D
 }
 
 func (svc *AdminService) GetItem(ctx context.Context, ID int64) (*model.Admin, error) {
-	return svc.repo.FindByID(ctx, ID)
+	admin, err := svc.repo.FindByID(ctx, ID)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, errs.AdminNotFound
+	}
+	return admin, err
 }
 
 func (svc *AdminService) Update(ctx context.Context, data *model.Admin) error {
@@ -142,29 +150,53 @@ func (svc *AdminService) Update(ctx context.Context, data *model.Admin) error {
 }
 
 func (svc *AdminService) UpdatePassword(ctx context.Context, req *v1.UpdatePasswordRequest) error {
-	// TODO 移除 token
 	admin, err := svc.repo.FindByUsername(ctx, req.Username)
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return errs.AdminNotFound
+		}
 		return err
 	}
 	if admin.Password != req.Password {
 		return errs.AdminOldPwdErr
 	}
-	return svc.repo.UpdatePwd(ctx, admin.ID, req.NewPassword)
+	if err = svc.repo.UpdatePwd(ctx, admin.ID, req.NewPassword); err != nil {
+		return err
+	}
+	return svc.jwt.RemoveToken(ctx, admin.Username)
 }
 
 func (svc *AdminService) Delete(ctx context.Context, ID int64) error {
-	// TODO 移除 token
-	return svc.repo.Delete(ctx, ID)
+	admin, err := svc.repo.FindByID(ctx, ID)
+	if err != nil {
+		return errs.AdminNotFound
+	}
+	if err = svc.repo.Delete(ctx, ID); err != nil {
+		return err
+	}
+	return svc.jwt.RemoveToken(ctx, admin.Username)
 }
 
 func (svc *AdminService) UpdateStatus(ctx context.Context, ID int64, status bool) error {
-	// TODO 移除 token
-	return svc.repo.UpdateStatus(ctx, ID, status)
+	admin, err := svc.repo.FindByID(ctx, ID)
+	if err != nil {
+		return errs.AdminNotFound
+	}
+	if err = svc.repo.UpdateStatus(ctx, ID, status); err != nil {
+		return err
+	}
+	return svc.jwt.RemoveToken(ctx, admin.Username)
 }
 
 func (svc *AdminService) UpdateRole(ctx context.Context, ID int64, role []int64) error {
-	return svc.adminRoleRepo.UpdateRole(ctx, ID, role)
+	admin, err := svc.repo.FindByID(ctx, ID)
+	if err != nil {
+		return errs.AdminNotFound
+	}
+	if err = svc.adminRoleRepo.UpdateRole(ctx, ID, role); err != nil {
+		return err
+	}
+	return svc.jwt.RemoveToken(ctx, admin.Username)
 }
 
 func (svc *AdminService) GetRoleList(ctx context.Context, ID int64) ([]*model.Role, error) {
@@ -172,10 +204,10 @@ func (svc *AdminService) GetRoleList(ctx context.Context, ID int64) ([]*model.Ro
 }
 
 func (svc *AdminService) newPasswdVerifier(ctx context.Context, admin *model.Admin) *security.PasswdVerifier {
-	pwdHelper := security.NewPasswdVerifier(svc.rdb, 5)
+	pwdHelper := security.NewPasswdVerifier(svc.cache, PwdAttemptErrCount)
 	// 第二天0点清零
 	remain := utime.ZeroHour(1).Unix() - time.Now().Unix()
-	pwdHelper.SetKey(fmt.Sprintf(LoginLimitKey, admin.Username), time.Duration(remain)*time.Second)
+	pwdHelper.SetKey(fmt.Sprintf("%s:%s", LoginLimitKeyPrefix, admin.Username), time.Duration(remain)*time.Second)
 	pwdHelper.OnErr = func(err error) {
 		if errors.Is(err, security.ErrPasswdLimit) && admin.Status {
 			if err = svc.UpdateStatus(ctx, admin.ID, false); err != nil {

@@ -13,7 +13,7 @@ import (
 func RunRpcServer(app *App, register func(app *App, server *grpc.Server)) {
 	app.wg.Add(1)
 	defer app.wg.Done()
-	lis, err := net.Listen("tcp", app.Opts.conf.Server.Rpc.Addr)
+	lis, err := net.Listen("tcp", app.Opts.Conf.Server.Rpc.Addr)
 	if err != nil {
 		panic(err)
 	}
