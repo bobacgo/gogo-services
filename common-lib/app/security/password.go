@@ -3,7 +3,7 @@ package security
 import (
 	"context"
 	"errors"
-	"github.com/gogoclouds/gogo/pkg/util"
+	"github.com/gogoclouds/gogo-services/common-lib/pkg/ucrypto"
 	"github.com/redis/go-redis/v9"
 	"time"
 )
@@ -23,8 +23,10 @@ type PasswdVerifier struct {
 	OnErr      func(error)
 }
 
-func NewPasswdVerifier(rdb redis.Cmdable, limit int64) *PasswdVerifier {
-	return &PasswdVerifier{cache: rdb, limit: limit, expiration: 24 * time.Hour}
+var DefaultPasswdVerifier = new(PasswdVerifier)
+
+func NewPasswdVerifier(rdb redis.Cmdable, limit int) *PasswdVerifier {
+	return &PasswdVerifier{cache: rdb, limit: int64(limit), expiration: 24 * time.Hour}
 }
 
 // BcryptVerifyWithCount 验证密码统计错误次数
@@ -34,7 +36,7 @@ func (h *PasswdVerifier) BcryptVerifyWithCount(ctx context.Context, hash, passwo
 		return false
 	}
 	hash, salt := h.parsePwd(hash)
-	if !util.BcryptVerify(salt, hash, password) {
+	if !ucrypto.BcryptVerify(hash, salt, password) {
 		h.fail(ctx)
 		return false
 	}
@@ -45,12 +47,12 @@ func (h *PasswdVerifier) BcryptVerifyWithCount(ctx context.Context, hash, passwo
 // BcryptVerify 验证密码
 func (h *PasswdVerifier) BcryptVerify(hash, password string) bool {
 	hash, salt := h.parsePwd(hash)
-	return util.BcryptVerify(salt, hash, password)
+	return ucrypto.BcryptVerify(hash, salt, password)
 }
 
 // BcryptHash 密码加密
 func (h *PasswdVerifier) BcryptHash(passwd string) string {
-	hash, salt := util.BcryptHash(passwd)
+	hash, salt := ucrypto.BcryptHash(passwd)
 	return hash + salt
 }
 

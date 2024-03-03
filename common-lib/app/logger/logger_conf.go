@@ -18,20 +18,20 @@ const (
 )
 
 type Config struct {
-	Level      string `yaml:"level"`
+	Level      string `mapstructure:"level"`
 	LevelCh    chan LogLevel
-	TimeFormat string `yaml:"timeFormat"`
+	TimeFormat string `mapstructure:"timeFormat"`
 
 	// 完整的文件路径名
-	Filepath        string `yaml:"filepath"`
-	Filename        string `yaml:"filename"`
-	FilenameSuffix  string `yaml:"filenameSuffix"`
-	FileExtension   string `yaml:"fileExtension"`
-	FileJsonEncoder bool   `yaml:"fileJsonEncoder"`
+	Filepath        string `mapstructure:"filepath"`
+	Filename        string `mapstructure:"filename"`
+	FilenameSuffix  string `mapstructure:"filenameSuffix"`
+	FileExtension   string `mapstructure:"fileExtension"`
+	FileJsonEncoder bool   `mapstructure:"fileJsonEncoder"`
 
-	FileMaxSize  uint16 `yaml:"fileSizeMax"`  // 单位是MB 默认值是 10MB
-	FileMaxAge   uint16 `yaml:"fileAgeMax"`   // 留存天数
-	FileCompress bool   `yaml:"fileCompress"` // 是否归档压缩
+	FileMaxSize  uint16 `mapstructure:"fileSizeMax"`  // 单位是MB 默认值是 10MB
+	FileMaxAge   uint16 `mapstructure:"fileAgeMax"`   // 留存天数
+	FileCompress bool   `mapstructure:"fileCompress"` // 是否归档压缩
 }
 
 func (c *Config) SetLevel(level LogLevel) {

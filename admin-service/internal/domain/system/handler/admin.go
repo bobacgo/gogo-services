@@ -24,6 +24,10 @@ func (h *adminServer) Register(ctx *gin.Context) {
 		r.Reply(ctx, errs.BadRequest.WithDetails(err))
 		return
 	}
+	if err := req.Password.Decrypt(); err != nil {
+		r.Reply(ctx, err)
+		return
+	}
 	err := h.svc.Register(ctx, req)
 	r.Reply(ctx, err)
 }
@@ -31,7 +35,11 @@ func (h *adminServer) Register(ctx *gin.Context) {
 func (h *adminServer) Login(ctx *gin.Context) {
 	req, err := valid.ShouldBind[v1.AdminLoginRequest](ctx)
 	if err != nil {
-		r.Reply(ctx, errs.BadRequest.WithDetails(err.Error()))
+		r.Reply(ctx, errs.BadRequest.WithDetails(err))
+		return
+	}
+	if err = req.Password.Decrypt(); err != nil {
+		r.Reply(ctx, err)
 		return
 	}
 	data, err := h.svc.Login(ctx, &req)
@@ -106,6 +114,11 @@ func (h *adminServer) UpdatePassword(ctx *gin.Context) {
 	req := new(v1.UpdatePasswordRequest)
 	if err := ctx.ShouldBind(req); err != nil {
 		r.Reply(ctx, errs.BadRequest.WithDetails(err))
+		return
+	}
+
+	if err := req.Password.Decrypt(); err != nil {
+		r.Reply(ctx, err)
 		return
 	}
 	err := h.svc.UpdatePassword(ctx, req)

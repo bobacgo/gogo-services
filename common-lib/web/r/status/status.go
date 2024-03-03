@@ -69,7 +69,16 @@ func (s *Status) WithDetails(details ...any) *Status {
 	//	return s
 	//}
 	cp := *s
-	cp.Details = append(cp.Details, details...)
+	for _, detail := range details {
+		switch v := detail.(type) {
+		case error:
+			cp.Details = append(cp.Details, v.Error())
+		default:
+			if v != nil {
+				cp.Details = append(cp.Details, v)
+			}
+		}
+	}
 	return &cp
 }
 

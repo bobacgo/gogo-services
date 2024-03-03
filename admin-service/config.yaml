@@ -9,10 +9,18 @@ server:
   rpc:
     addr: '0.0.0.0:9080'
     timeout: 1s
-
+security:
+  ciphertext:
+    isCiphertext: false
+    cipherKey: YpC5wIRf4ZuMvd4f
+  jwt:
+    secret: YpC5wIRf4ZuMvd4f
+    issuer: gogo-admin
 # 业务相关
-kv:
-  authenticationKey: gogo@1234
+service:
+  errAttemptLimit: 5
+
+#  authenticationKey: gogo@1234
 
 # ====================================
 # logger

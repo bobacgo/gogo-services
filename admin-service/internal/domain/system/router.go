@@ -11,11 +11,11 @@ import (
 func Register(app *app.App, r gin.IRouter) {
 	db := app.Opts.DB
 	rdb := app.Opts.Redis
-	conf := app.Opts.Conf
+
 	{
 		r := r.Group("/admin")
 		adminRepo := repo.NewAdminRepo(db)
-		adminServer := handler.NewAdminServer(service.NewAdminService(&conf.Jwt, rdb, adminRepo, adminRepo))
+		adminServer := handler.NewAdminServer(service.NewAdminService(rdb, adminRepo, adminRepo))
 		r.POST("/register", adminServer.Register)              // 用户注册
 		r.POST("/login", adminServer.Login)                    // 登录以后返回token
 		r.POST("/logout", adminServer.Logout)                  // 登出功能

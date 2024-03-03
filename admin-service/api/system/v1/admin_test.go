@@ -14,7 +14,7 @@ func TestLogin(t *testing.T) {
 	//w := httptest.NewRecorder()
 	request := v1.AdminLoginRequest{
 		Username: "admin",
-		Password: "",
+		Password: "admin123",
 	}
 	reqData, _ := json.Marshal(request)
 	reader := strings.NewReader(string(reqData))

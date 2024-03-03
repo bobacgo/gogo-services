@@ -3,6 +3,7 @@ package v1
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/gogoclouds/gogo-services/admin-service/internal/model"
+	"github.com/gogoclouds/gogo-services/common-lib/app/security"
 	"github.com/gogoclouds/gogo-services/common-lib/web/r/page"
 )
 
@@ -32,16 +33,16 @@ type AdminServer interface {
 }
 
 type AdminRegisterRequest struct {
-	Username string `json:"username"` // 用户名
-	Password string `json:"password"` // 密码
-	Icon     string `json:"icon"`     // 头像
-	Email    string `json:"email"`    // 邮箱
-	Note     string `json:"note"`     // 备注
+	Username string              `json:"username"` // 用户名
+	Password security.Ciphertext `json:"password"` // 密码
+	Icon     string              `json:"icon"`     // 头像
+	Email    string              `json:"email"`    // 邮箱
+	Note     string              `json:"note"`     // 备注
 }
 
 type AdminLoginRequest struct {
-	Username string `json:"username" binding:"required,lte=20"`
-	Password string `json:"password" binding:"required,lte=50"` // TODO 密码强度校验
+	Username string              `json:"username" binding:"required,lte=20"`
+	Password security.Ciphertext `json:"password" binding:"required"`
 }
 
 type AdminLoginResponse struct {
@@ -70,9 +71,9 @@ type ListResponse struct {
 }
 
 type UpdatePasswordRequest struct {
-	Username    string `json:"username"`    // 用户名
-	Password    string `json:"oldPassword"` // 密码
-	NewPassword string `json:"newPassword"` // 新密码
+	Username    string              `json:"username"`    // 用户名
+	Password    security.Ciphertext `json:"oldPassword"` // 密码
+	NewPassword security.Ciphertext `json:"newPassword"` // 新密码
 }
 
 type UpdateStatusRequest struct {

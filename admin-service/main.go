@@ -2,7 +2,7 @@ package main
 
 import (
 	"flag"
-
+	"github.com/gogoclouds/gogo-services/admin-service/config"
 	"github.com/gogoclouds/gogo-services/admin-service/internal/router"
 	"github.com/gogoclouds/gogo-services/common-lib/app"
 	"github.com/gogoclouds/gogo-services/common-lib/app/conf"
@@ -21,7 +21,9 @@ func init() {
 
 func main() {
 	newApp := app.New(
-		app.WithConfig(*filepath),
+		app.WithConfig(*filepath, func(cfg *conf.ServiceConfig[config.Service]) {
+			config.Conf = cfg
+		}),
 		app.WithLogger(),
 		app.WithDB(),
 		app.WithRedis(),

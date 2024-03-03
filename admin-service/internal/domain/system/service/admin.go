@@ -6,9 +6,11 @@ import (
 	"fmt"
 	"github.com/gogoclouds/gogo-services/admin-service/api/system/errs"
 	v1 "github.com/gogoclouds/gogo-services/admin-service/api/system/v1"
+	"github.com/gogoclouds/gogo-services/admin-service/config"
 	"github.com/gogoclouds/gogo-services/admin-service/internal/model"
 	"github.com/gogoclouds/gogo-services/common-lib/app/logger"
 	"github.com/gogoclouds/gogo-services/common-lib/app/security"
+	"github.com/gogoclouds/gogo-services/common-lib/pkg/uid"
 	"github.com/gogoclouds/gogo-services/common-lib/pkg/utime"
 	"github.com/gogoclouds/gogo-services/common-lib/web/r/page"
 	"github.com/golang-jwt/jwt"
@@ -41,7 +43,6 @@ type IAdminRepo interface {
 const (
 	LoginTokenKeyPrefix = "admin:login_token"
 	LoginLimitKeyPrefix = "admin:login_limit"
-	PwdAttemptErrCount  = 5
 )
 
 type AdminService struct {
@@ -51,9 +52,9 @@ type AdminService struct {
 	adminRoleRepo IAdminRoleRepo
 }
 
-func NewAdminService(jwtConf *security.Config, rdb redis.Cmdable, repo IAdminRepo, adminRoleRepo IAdminRoleRepo) *AdminService {
+func NewAdminService(rdb redis.Cmdable, repo IAdminRepo, adminRoleRepo IAdminRoleRepo) *AdminService {
 	return &AdminService{
-		jwt:           security.NewJWT(jwtConf, rdb, LoginTokenKeyPrefix),
+		jwt:           security.NewJWT(&config.Conf.Security.Jwt, rdb, LoginTokenKeyPrefix),
 		cache:         rdb,
 		repo:          repo,
 		adminRoleRepo: adminRoleRepo,
@@ -75,7 +76,7 @@ func (svc *AdminService) Register(ctx context.Context, data *v1.AdminRegisterReq
 
 	return svc.repo.Insert(ctx, &model.Admin{
 		Username: data.Username,
-		Password: new(security.PasswdVerifier).BcryptHash(data.Password),
+		Password: data.Password.BcryptHash(),
 		Icon:     &data.Icon,
 		Email:    &data.Email,
 		Note:     &data.Note,
@@ -98,11 +99,11 @@ func (svc *AdminService) Login(ctx context.Context, data *v1.AdminLoginRequest) 
 	}
 
 	pwdHelper := svc.newPasswdVerifier(ctx, admin)
-	if !pwdHelper.BcryptVerifyWithCount(ctx, admin.Password, data.Password) {
+	if !pwdHelper.BcryptVerifyWithCount(ctx, admin.Password, string(data.Password)) {
 		return nil, errs.AdminLoginFail.WithDetails(v1.AdminPwdErr{DecrCount: pwdHelper.GetRemainCount()})
 	}
 	atoken, _, err := svc.jwt.Generate(ctx, &security.Claims{
-		StandardClaims: jwt.StandardClaims{},
+		StandardClaims: jwt.StandardClaims{Id: uid.UUID()},
 		UserID:         strconv.FormatInt(admin.ID, 10),
 		Username:       admin.Username,
 		Nickname:       *admin.NickName,
@@ -157,10 +158,10 @@ func (svc *AdminService) UpdatePassword(ctx context.Context, req *v1.UpdatePassw
 		}
 		return err
 	}
-	if admin.Password != req.Password {
+	if admin.Password != string(req.Password) { // TODO
 		return errs.AdminOldPwdErr
 	}
-	if err = svc.repo.UpdatePwd(ctx, admin.ID, req.NewPassword); err != nil {
+	if err = svc.repo.UpdatePwd(ctx, admin.ID, string(req.NewPassword)); err != nil {
 		return err
 	}
 	return svc.jwt.RemoveToken(ctx, admin.Username)
@@ -204,7 +205,7 @@ func (svc *AdminService) GetRoleList(ctx context.Context, ID int64) ([]*model.Ro
 }
 
 func (svc *AdminService) newPasswdVerifier(ctx context.Context, admin *model.Admin) *security.PasswdVerifier {
-	pwdHelper := security.NewPasswdVerifier(svc.cache, PwdAttemptErrCount)
+	pwdHelper := security.NewPasswdVerifier(svc.cache, config.Conf.Service.ErrAttemptLimit)
 	// 第二天0点清零
 	remain := utime.ZeroHour(1).Unix() - time.Now().Unix()
 	pwdHelper.SetKey(fmt.Sprintf("%s:%s", LoginLimitKeyPrefix, admin.Username), time.Duration(remain)*time.Second)

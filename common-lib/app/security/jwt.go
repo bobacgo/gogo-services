@@ -3,6 +3,7 @@ package security
 import (
 	"context"
 	"fmt"
+	"github.com/gogoclouds/gogo-services/common-lib/app/security/config"
 	"github.com/golang-jwt/jwt"
 	"github.com/pkg/errors"
 	"github.com/redis/go-redis/v9"
@@ -23,7 +24,7 @@ type JWToken struct {
 	cacheKeyPrefix      string
 }
 
-func NewJWT(conf *Config, rdb redis.Cmdable, cacheKeyPrefix string) *JWToken {
+func NewJWT(conf *config.JwtConfig, rdb redis.Cmdable, cacheKeyPrefix string) *JWToken {
 	return &JWToken{
 		SigningKey:          []byte(conf.Secret),
 		Issuer:              conf.Issuer,

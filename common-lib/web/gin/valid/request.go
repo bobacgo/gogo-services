@@ -28,7 +28,7 @@ func ShouldBind[T any](ctx *gin.Context) (T, error) {
 		}
 		// validator.ValidationErrors类型错误则进行翻译
 		if trans == nil {
-			panic("Initialization required trans, please call InitRequestParamValidate func")
+			InitRequestParamValidate()
 		}
 		t, _ := trans.GetTranslator(DefaultGetLanguage(ctx))
 		msgErr := removeTopStruct(errs.Translate(t))

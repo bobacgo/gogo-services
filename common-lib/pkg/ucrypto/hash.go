@@ -1,4 +1,4 @@
-package security
+package ucrypto
 
 import (
 	"github.com/gogoclouds/gogo-services/common-lib/pkg/uid"
@@ -15,7 +15,7 @@ func BcryptHash(passwd string) (hash, salt string) {
 }
 
 // BcryptVerify 校验密文和明文
-func BcryptVerify(salt, hash, passwd string) bool {
+func BcryptVerify(hash, salt, passwd string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(passwd+salt))
 	return err == nil
 }

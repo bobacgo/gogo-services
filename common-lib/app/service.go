@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"github.com/gogoclouds/gogo-services/common-lib/pkg/uid"
 	"net"
 	"os"
 	"os/signal"
@@ -13,7 +14,6 @@ import (
 	"github.com/gogoclouds/gogo-services/common-lib/app/logger"
 	"github.com/gogoclouds/gogo-services/common-lib/app/registry"
 	"github.com/gogoclouds/gogo-services/common-lib/pkg/network"
-	"github.com/gogoclouds/gogo-services/common-lib/pkg/util"
 )
 
 type App struct {
@@ -28,7 +28,7 @@ type App struct {
 
 func New(opts ...Option) *App {
 	o := options{
-		appid:           util.UUID(),
+		appid:           uid.UUID(),
 		sigs:            []os.Signal{syscall.SIGTERM, syscall.SIGQUIT, syscall.SIGINT},
 		registryTimeout: 10 * time.Second,
 	}

@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"github.com/gogoclouds/gogo-services/common-lib/app/conf"
 	"net/url"
 	"os"
 	"time"
@@ -9,7 +10,6 @@ import (
 	"github.com/fsnotify/fsnotify"
 	"github.com/gin-gonic/gin"
 	"github.com/gogoclouds/gogo-services/common-lib/app/cache"
-	"github.com/gogoclouds/gogo-services/common-lib/app/conf"
 	"github.com/gogoclouds/gogo-services/common-lib/app/db"
 	"github.com/gogoclouds/gogo-services/common-lib/app/logger"
 	"github.com/gogoclouds/gogo-services/common-lib/app/registry"
@@ -22,7 +22,7 @@ import (
 type Option func(o *options)
 
 type options struct {
-	Conf  *Config
+	Conf  *conf.BasicConfig
 	DB    *gorm.DB
 	Redis redis.UniversalClient
 
@@ -69,15 +69,17 @@ func WithRegistrarTimeout(rt time.Duration) Option {
 	}
 }
 
-func WithConfig(filename string) Option {
+func WithConfig[T any](filename string, fn func(cfg *conf.ServiceConfig[T])) Option {
 	return func(o *options) {
-		var err error
-		o.Conf, err = conf.Load[Config](filename, func(e fsnotify.Event) {
+		cfg, err := conf.Load[conf.ServiceConfig[T]](filename, func(e fsnotify.Event) {
 			//logger.S(config.Conf.Logger.Level)
 		})
 		if err != nil {
 			panic(err)
 		}
+		fn(cfg)
+		o.Conf = &cfg.BasicConfig
+		conf.Conf = &cfg.BasicConfig
 	}
 }
 
