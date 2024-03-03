@@ -2,6 +2,9 @@ package r
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
+	"github.com/gogoclouds/gogo-services/common-lib/app/logger"
+	"github.com/gogoclouds/gogo-services/common-lib/web/gin/valid"
 	"github.com/gogoclouds/gogo-services/common-lib/web/r/codes"
 	"github.com/gogoclouds/gogo-services/common-lib/web/r/status"
 	"net/http"
@@ -17,26 +20,40 @@ type Response[T any] struct {
 func Reply(c *gin.Context, data any) {
 	httpCode := http.StatusOK
 	resp := Response[any]{Code: codes.OK}
-	if data == nil {
+	switch v := data.(type) {
+	case nil:
 		resp.Data = struct{}{}
-	} else if s, ok := data.(*status.Status); ok {
+	case *status.Status:
 		//httpCode = codesToHttpCode(s.Code)
-		resp.Code = s.GetCode()
-		resp.Msg = s.GetMessage()
-		if s.Details != nil {
-			resp.Data = s.Details
+		resp.Code = v.GetCode()
+		resp.Msg = v.GetMessage()
+		if v.Details != nil {
+			resp.Data = detailErrorType(c, v.Details)
 		} else {
 			resp.Data = struct{}{}
 		}
-	} else if _, ok := data.(error); ok {
+	case error:
 		//httpCode = http.StatusInternalServerError
 		resp.Code = 5e5
 		resp.Msg = "内部错误"
 		resp.Data = struct{}{}
-	} else {
+		logger.Error(v.Error())
+	default:
 		resp.Data = data
 	}
 	c.JSON(httpCode, resp)
+}
+
+// detailErrorType 处理 validator 的错误进行翻译
+func detailErrorType(ctx *gin.Context, ds []any) []any {
+	res := make([]any, 0, len(ds))
+	for _, d := range ds {
+		if err, ok := d.(validator.ValidationErrors); ok {
+			e := valid.TransErr(ctx, err)
+			res = append(res, e.Error())
+		}
+	}
+	return res
 }
 
 func codesToHttpCode(code codes.Code) int {

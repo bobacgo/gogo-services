@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"github.com/gogoclouds/gogo-services/admin-service/api/system/errs"
 	v1 "github.com/gogoclouds/gogo-services/admin-service/api/system/v1"
-	"github.com/gogoclouds/gogo-services/admin-service/config"
+	"github.com/gogoclouds/gogo-services/admin-service/internal/config"
 	"github.com/gogoclouds/gogo-services/admin-service/internal/model"
 	"github.com/gogoclouds/gogo-services/common-lib/app/logger"
 	"github.com/gogoclouds/gogo-services/common-lib/app/security"

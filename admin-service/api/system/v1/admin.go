@@ -41,8 +41,8 @@ type AdminRegisterRequest struct {
 }
 
 type AdminLoginRequest struct {
-	Username string              `json:"username" binding:"required,lte=20"`
-	Password security.Ciphertext `json:"password" binding:"required"`
+	Username string              `json:"username" validate:"required,lte=20"`
+	Password security.Ciphertext `json:"password" validate:"required"`
 }
 
 type AdminLoginResponse struct {

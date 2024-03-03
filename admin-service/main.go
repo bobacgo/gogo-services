@@ -2,7 +2,7 @@ package main
 
 import (
 	"flag"
-	"github.com/gogoclouds/gogo-services/admin-service/config"
+	"github.com/gogoclouds/gogo-services/admin-service/internal/config"
 	"github.com/gogoclouds/gogo-services/admin-service/internal/router"
 	"github.com/gogoclouds/gogo-services/common-lib/app"
 	"github.com/gogoclouds/gogo-services/common-lib/app/conf"
