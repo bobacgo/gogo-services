@@ -2,6 +2,7 @@ package conf
 
 import (
 	"flag"
+	"github.com/gogoclouds/gogo-services/common-lib/app/check"
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/gogoclouds/gogo-services/common-lib/app/logger"
@@ -23,15 +24,26 @@ func Load[T any](filepath string, onChange func(e fsnotify.Event)) (*T, error) {
 	}
 	cf := new(T)
 	if err := vpr.ReadInConfig(); err != nil {
-		return cf, err
+		return nil, err
 	}
 	if err := vpr.Unmarshal(cf); err != nil {
-		return cf, err
+		return nil, err
 	}
+	if err := check.Struct(cf); err != nil {
+		return nil, err
+	}
+
 	vpr.OnConfigChange(func(e fsnotify.Event) {
-		if err := vpr.Unmarshal(cf); err != nil {
+		newCfg := new(T)
+		if err := vpr.Unmarshal(newCfg); err != nil {
 			logger.Error(err.Error())
+			return
 		}
+		if err := check.Struct(newCfg); err != nil {
+			logger.Error(err.Error())
+			return
+		}
+
 		onChange(e)
 	})
 	vpr.WatchConfig()

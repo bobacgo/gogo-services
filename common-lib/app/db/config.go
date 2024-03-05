@@ -6,5 +6,5 @@ type Config struct {
 	SlowThreshold int    `mapstructure:"slowThreshold"`
 	MaxLifeTime   int    `mapstructure:"maxLifeTime"`
 	MaxOpenConn   int    `mapstructure:"maxOpenConn"`
-	MaxIdleConn   int    `mapstructure:"maxIdleConn"`
+	MaxIdleConn   int    `mapstructure:"maxIdleConn" `
 }

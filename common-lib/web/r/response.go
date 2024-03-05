@@ -3,8 +3,8 @@ package r
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
+	"github.com/gogoclouds/gogo-services/common-lib/app/check"
 	"github.com/gogoclouds/gogo-services/common-lib/app/logger"
-	"github.com/gogoclouds/gogo-services/common-lib/web/gin/valid"
 	"github.com/gogoclouds/gogo-services/common-lib/web/r/codes"
 	"github.com/gogoclouds/gogo-services/common-lib/web/r/status"
 	"net/http"
@@ -49,7 +49,7 @@ func detailErrorType(ctx *gin.Context, ds []any) []any {
 	res := make([]any, 0, len(ds))
 	for _, d := range ds {
 		if err, ok := d.(validator.ValidationErrors); ok {
-			e := valid.TransErr(ctx, err)
+			e := check.TransErrCtx(ctx, err)
 			res = append(res, e.Error())
 		}
 	}

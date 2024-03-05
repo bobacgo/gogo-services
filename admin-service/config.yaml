@@ -20,8 +20,6 @@ security:
 service:
   errAttemptLimit: 5
 
-#  authenticationKey: gogo@1234
-
 # ====================================
 # logger
 

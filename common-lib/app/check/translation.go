@@ -1,8 +1,6 @@
-package valid
+package check
 
 import (
-	"strings"
-
 	"github.com/go-playground/locales"
 	"github.com/go-playground/locales/en"
 	"github.com/go-playground/locales/zh"
@@ -40,14 +38,4 @@ func registerTrans(validate *validator.Validate, multipleTrans ...TranslationLan
 			panic(err)
 		}
 	}
-}
-
-// 去掉结构体名称前缀
-func removeTopStruct(fields map[string]string) string {
-	msgErrs := strings.Builder{}
-	for _, err := range fields {
-		msgErrs.WriteString(err)
-		msgErrs.WriteString(", ")
-	}
-	return strings.TrimRight(msgErrs.String(), ", ")
 }

@@ -23,9 +23,9 @@ type ServiceConfig[T any] struct {
 }
 
 type BasicConfig struct {
-	Name       string  `mapstructure:"name"`    // 服务名
-	Version    string  `mapstructure:"version"` // 版本号
-	Env        EnvType `mapstructure:"env"`
+	Name       string  `mapstructure:"name" validate:"required"`    // 服务名
+	Version    string  `mapstructure:"version" validate:"required"` // 版本号
+	Env        EnvType `mapstructure:"env" validate:"required"`
 	TimeFormat string  `mapstructure:"timeFormat"`
 	Server     struct {
 		Http Transport `mapstructure:"http"`
