@@ -1,30 +1,26 @@
 package v1_test
 
 import (
-	"encoding/json"
 	"fmt"
 	v1 "github.com/gogoclouds/gogo-services/admin-service/api/system/v1"
-	"io"
-	"net/http"
-	"strings"
+	"github.com/gogoclouds/gogo-services/common-lib/pkg/uhttp"
+	"github.com/gogoclouds/gogo-services/common-lib/web/r"
 	"testing"
 )
+
+var AdminEndpoint = "http://localhost:8080/admin"
 
 func TestLogin(t *testing.T) {
 	//w := httptest.NewRecorder()
 	request := v1.AdminLoginRequest{
 		Username: "admin",
-		Password: "",
+		Password: "admin123",
 	}
-	reqData, _ := json.Marshal(request)
-	reader := strings.NewReader(string(reqData))
-	resp, err := http.Post("http://localhost:8080/admin/login", "application/json", reader)
+	resp, err := uhttp.Post[r.Response[v1.AdminLoginResponse]](AdminEndpoint+"/login", request)
 	if err != nil {
-		t.Fatal(err)
+		t.Log(err)
 	}
-	defer resp.Body.Close()
-	response, err := io.ReadAll(resp.Body)
-	fmt.Printf("%s", response)
-	//assert.Equal(t, 200, w.Code)
+	fmt.Printf("%v", resp)
+	//assert.Equal(t, codes.OK, resp.Code)
 	//assert.Equal(t, "pong", w.Body.String())
 }

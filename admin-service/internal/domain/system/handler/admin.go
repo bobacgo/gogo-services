@@ -37,6 +37,7 @@ func (h *adminServer) Login(ctx *gin.Context) {
 		r.Reply(ctx, errs.BadRequest.WithDetails(err))
 		return
 	}
+
 	if err := req.Password.Decrypt(); err != nil {
 		r.Reply(ctx, err)
 		return

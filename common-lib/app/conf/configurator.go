@@ -2,10 +2,9 @@ package conf
 
 import (
 	"flag"
-	"github.com/gogoclouds/gogo-services/common-lib/app/check"
-
 	"github.com/fsnotify/fsnotify"
 	"github.com/gogoclouds/gogo-services/common-lib/app/logger"
+	"github.com/gogoclouds/gogo-services/common-lib/app/validator"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 )
@@ -29,7 +28,7 @@ func Load[T any](filepath string, onChange func(e fsnotify.Event)) (*T, error) {
 	if err := vpr.Unmarshal(cf); err != nil {
 		return nil, err
 	}
-	if err := check.Struct(cf); err != nil {
+	if err := validator.Struct(cf); err != nil {
 		return nil, err
 	}
 
@@ -39,11 +38,11 @@ func Load[T any](filepath string, onChange func(e fsnotify.Event)) (*T, error) {
 			logger.Error(err.Error())
 			return
 		}
-		if err := check.Struct(newCfg); err != nil {
+		if err := validator.Struct(newCfg); err != nil {
 			logger.Error(err.Error())
 			return
 		}
-
+		cf = newCfg
 		onChange(e)
 	})
 	vpr.WatchConfig()

@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/gin-gonic/gin/binding"
+	"github.com/gogoclouds/gogo-services/common-lib/web/gin/validator"
 	"net/http"
 	"time"
 
@@ -24,6 +26,7 @@ func RunHttpServer(app *App, register func(a *App, e *gin.Engine)) {
 	e.Use(middleware.Recovery())
 	e.Use(middleware.LoggerResponseFail())
 
+	binding.Validator = new(validator.DefaultValidator)
 	healthApi(e)     // provide health API
 	register(app, e) // register router
 
@@ -36,7 +39,7 @@ func RunHttpServer(app *App, register func(a *App, e *gin.Engine)) {
 			logger.Panicf("listen: %s\n", err)
 		}
 	}()
-
+	logger.Infof("http server running %s", app.Opts.Conf.Server.Http.Addr)
 	<-app.exit
 	logger.Info("Shutting down http server...")
 	// The context is used to inform the server it has 5 seconds to finish

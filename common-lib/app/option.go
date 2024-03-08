@@ -85,8 +85,9 @@ func WithConfig[T any](filename string, fn func(cfg *conf.ServiceConfig[T])) Opt
 
 func WithLogger() Option {
 	return func(o *options) {
+		o.Conf.Logger = logger.NewConfig()
 		o.Conf.Logger.Filename = o.Conf.Name
-		o.Conf.Logger.TimeFormat = o.Conf.TimeFormat
+		//o.Conf.Logger.TimeFormat = o.Conf.TimeFormat
 		logger.InitZapLogger(o.Conf.Logger)
 		logger.Info("logger init done...")
 	}
