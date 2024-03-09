@@ -32,17 +32,20 @@ type AdminServer interface {
 	GetRoleList(ctx *gin.Context)
 }
 
+type UsernamePasswd struct {
+	Username string              `json:"username" validate:"required,lte=20"` // 用户名
+	Password security.Ciphertext `json:"password" validate:"required"`        // 密码
+}
+
 type AdminRegisterRequest struct {
-	Username string              `json:"username"` // 用户名
-	Password security.Ciphertext `json:"password"` // 密码
-	Icon     string              `json:"icon"`     // 头像
-	Email    string              `json:"email"`    // 邮箱
-	Note     string              `json:"note"`     // 备注
+	UsernamePasswd
+	Icon  string `json:"icon"`                                // 头像
+	Email string `json:"email" validate:"omitempty,required"` // 邮箱
+	Note  string `json:"note"`                                // 备注
 }
 
 type AdminLoginRequest struct {
-	Username string              `json:"username" validate:"required,lte=20"`
-	Password security.Ciphertext `json:"password" validate:"required"`
+	UsernamePasswd
 }
 
 type AdminLoginResponse struct {
@@ -71,9 +74,9 @@ type ListResponse struct {
 }
 
 type UpdatePasswordRequest struct {
-	Username    string              `json:"username"`    // 用户名
-	Password    security.Ciphertext `json:"oldPassword"` // 密码
-	NewPassword security.Ciphertext `json:"newPassword"` // 新密码
+	UsernamePasswd
+	Password    security.Ciphertext `json:"oldPassword" validate:"required"` // 密码
+	NewPassword security.Ciphertext `json:"newPassword" validate:"required"` // 新密码
 }
 
 type UpdateStatusRequest struct {

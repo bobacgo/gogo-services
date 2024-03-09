@@ -76,7 +76,7 @@ func (repo *AdminRepo) Find(ctx context.Context, req *v1.ListRequest) (*page.Dat
 	if req.Keyword == "" {
 		conds = append(conds,
 			q.Username.Like("%"+req.Keyword+"%"),
-			q.NickName.Like("%"+req.Keyword+"%"),
+			q.Nickname.Like("%"+req.Keyword+"%"),
 		)
 	}
 	list, count, err := q.WithContext(ctx).Where(conds...).FindByPage(req.Offset(), req.Limit())

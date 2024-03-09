@@ -64,7 +64,7 @@ func NewAdminService(rdb redis.Cmdable, repo IAdminRepo, adminRoleRepo IAdminRol
 func (svc *AdminService) Register(ctx context.Context, data *v1.AdminRegisterRequest) error {
 	// 查询是否有相同的用户名
 	exist, isDel, err := svc.repo.HasUsername(ctx, data.Username)
-	if err != nil || !errors.Is(err, gorm.ErrRecordNotFound) {
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return err
 	}
 	if exist {
@@ -102,13 +102,19 @@ func (svc *AdminService) Login(ctx context.Context, data *v1.AdminLoginRequest) 
 	if !pwdHelper.BcryptVerifyWithCount(ctx, admin.Password, string(data.Password)) {
 		return nil, errs.AdminLoginFail.WithDetails(v1.AdminPwdErr{DecrCount: pwdHelper.GetRemainCount()})
 	}
-	atoken, _, err := svc.jwt.Generate(ctx, &security.Claims{
+
+	claims := &security.Claims{
 		StandardClaims: jwt.StandardClaims{Id: uid.UUID()},
 		UserID:         strconv.FormatInt(admin.ID, 10),
 		Username:       admin.Username,
-		Nickname:       *admin.NickName,
 		Roles:          nil, // TODO
-	})
+	}
+	if admin.Nickname != nil {
+		claims.Nickname = *admin.Nickname
+	} else {
+		claims.Nickname = admin.Username
+	}
+	atoken, _, err := svc.jwt.Generate(ctx, claims)
 	if err != nil {
 		return nil, errs.AdminTokenGenerateErr
 	}
