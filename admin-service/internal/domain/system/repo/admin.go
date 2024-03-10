@@ -60,6 +60,18 @@ func (repo *AdminRepo) HasUsername(ctx context.Context, username string) (exist 
 	return true, uint8(admin.IsDel), nil
 }
 
+func (repo *AdminRepo) HasEmail(ctx context.Context, email string) (exist bool, isDel uint8, err error) {
+	q := repo.q.Admin
+	admin, err := q.WithContext(ctx).Unscoped().Select(q.IsDel).Where(q.Email.Eq(email)).First()
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return false, 0, nil
+		}
+		return false, 0, err
+	}
+	return true, uint8(admin.IsDel), nil
+}
+
 func (repo *AdminRepo) FindByUsername(ctx context.Context, username string) (*model.Admin, error) {
 	q := repo.q.Admin
 	return q.WithContext(ctx).Where(q.Username.Eq(username)).First()

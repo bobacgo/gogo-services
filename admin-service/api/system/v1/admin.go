@@ -39,9 +39,9 @@ type UsernamePasswd struct {
 
 type AdminRegisterRequest struct {
 	UsernamePasswd
-	Icon  string `json:"icon"`                                // 头像
-	Email string `json:"email" validate:"omitempty,required"` // 邮箱
-	Note  string `json:"note"`                                // 备注
+	Icon  string `json:"icon"`                             // 头像
+	Email string `json:"email" validate:"omitempty,email"` // 邮箱
+	Note  string `json:"note"`                             // 备注
 }
 
 type AdminLoginRequest struct {

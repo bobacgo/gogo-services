@@ -14,6 +14,7 @@ var (
 	AdminLoginForbidden       = status.New(400005, "帐号已被禁用")
 	AdminOldPwdErr            = status.New(400006, "旧密码错误")
 	AdminTokenGenerateErr     = status.New(400007, "令牌生成出错")
+	AdminEmailDuplicated      = status.New(400008, "邮箱已经存在")
 )
 
 // menu

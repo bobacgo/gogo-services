@@ -30,6 +30,7 @@ type IAdminRepo interface {
 	// 1.查询字段少。
 	// 2.不能通过
 	HasUsername(ctx context.Context, username string) (exist bool, isDel uint8, err error)
+	HasEmail(ctx context.Context, email string) (exist bool, isDel uint8, err error)
 	FindByUsername(ctx context.Context, username string) (*model.Admin, error)
 	FindByID(ctx context.Context, ID int64) (*model.Admin, error)
 	Find(ctx context.Context, req *v1.ListRequest) (*page.Data[*model.Admin], error)
@@ -64,16 +65,23 @@ func NewAdminService(rdb redis.Cmdable, repo IAdminRepo, adminRoleRepo IAdminRol
 func (svc *AdminService) Register(ctx context.Context, data *v1.AdminRegisterRequest) error {
 	// 查询是否有相同的用户名
 	exist, isDel, err := svc.repo.HasUsername(ctx, data.Username)
-	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) { // 其他错误(非用户未找到)
 		return err
-	}
-	if exist {
-		return errs.AdminUsernameDuplicated
 	}
 	if isDel == 1 { // 已注销
 		return errs.AdminUnUsernameDuplicated
 	}
-
+	if exist {
+		return errs.AdminUsernameDuplicated
+	}
+	exist, isDel, err = svc.repo.HasEmail(ctx, data.Email)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) { // 其他错误(非邮箱未找到)
+		return err
+	}
+	if exist && isDel == 0 { // 邮箱已存在(不包括已注销的)
+		// 重新启用已注销的账户, 需要校验邮箱是否重复,如果重复就清空该账户的邮箱号.
+		return errs.AdminEmailDuplicated
+	}
 	return svc.repo.Insert(ctx, &model.Admin{
 		Username: data.Username,
 		Password: data.Password.BcryptHash(),
