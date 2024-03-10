@@ -30,6 +30,7 @@ func main() {
 		app.WithGinServer(router.Init),
 		// app.WithGrpcServer(domain.RegisterServer),
 		// app.WithRegistrar(etcd.New(etcdClient)),
+		//app.WithAfterStart()
 	)
 	if err := newApp.Run(); err != nil {
 		logger.Panic(err.Error())

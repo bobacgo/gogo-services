@@ -19,8 +19,8 @@ import (
 type App struct {
 	Opts options
 
-	wg   sync.WaitGroup
-	exit chan struct{}
+	Wg   sync.WaitGroup
+	Exit chan struct{}
 
 	mu       sync.Mutex
 	instance *registry.ServiceInstance
@@ -38,7 +38,7 @@ func New(opts ...Option) *App {
 	}
 	return &App{
 		Opts: o,
-		exit: make(chan struct{}),
+		Exit: make(chan struct{}),
 	}
 }
 
@@ -121,11 +121,11 @@ func (a *App) Stop(ctx context.Context) (err error) {
 		}
 	}
 
-	close(a.exit) // 通知http、rpc服务退出信号
+	close(a.Exit) // 通知http、rpc服务退出信号
 
 	// 1.等待 Http 服务结束退出
 	// 2.等待 RPC 服务结束退出
-	a.wg.Wait()
+	a.Wg.Wait()
 
 	for _, fn := range opts.afterStop {
 		err = fn(ctx)

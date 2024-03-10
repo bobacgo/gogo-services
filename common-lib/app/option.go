@@ -130,29 +130,29 @@ func WithGrpcServer(svr func(a *App, rpcServer *grpc.Server)) Option {
 
 // Before and Afters
 
-// BeforeStart run funcs before app starts
-func BeforeStart(fn func(context.Context) error) Option {
+// WithBeforeStart run funcs before app starts
+func WithBeforeStart(fn func(context.Context) error) Option {
 	return func(o *options) {
 		o.beforeStart = append(o.beforeStart, fn)
 	}
 }
 
-// BeforeStop run funcs before app stops
-func BeforeStop(fn func(context.Context) error) Option {
+// WithBeforeStop run funcs before app stops
+func WithBeforeStop(fn func(context.Context) error) Option {
 	return func(o *options) {
 		o.beforeStop = append(o.beforeStop, fn)
 	}
 }
 
-// AfterStart run funcs after app starts
-func AfterStart(fn func(context.Context) error) Option {
+// WithAfterStart run funcs after app starts
+func WithAfterStart(fn func(context.Context) error) Option {
 	return func(o *options) {
 		o.afterStart = append(o.afterStart, fn)
 	}
 }
 
-// AfterStop run funcs after app stops
-func AfterStop(fn func(context.Context) error) Option {
+// WithAfterStop run funcs after app stops
+func WithAfterStop(fn func(context.Context) error) Option {
 	return func(o *options) {
 		o.afterStop = append(o.afterStop, fn)
 	}

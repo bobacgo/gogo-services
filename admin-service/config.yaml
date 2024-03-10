@@ -16,6 +16,7 @@ security:
   jwt:
     secret: YpC5wIRf4ZuMvd4f
     issuer: gogo-admin
+    cacheKeyPrefix: "admin:login_token"
 # 业务相关
 service:
   errAttemptLimit: 5

@@ -1,0 +1,55 @@
+package middleware
+
+import (
+	"errors"
+	"fmt"
+	"github.com/gin-gonic/gin"
+	"github.com/go-kit/kit/auth/jwt"
+	"github.com/gogoclouds/gogo-services/admin-service/api/errs"
+	"github.com/gogoclouds/gogo-services/common-lib/app/security"
+	"github.com/gogoclouds/gogo-services/common-lib/web/r"
+	"strings"
+)
+
+const (
+	tokenPrefix = "Bearer "
+	AuthHeader  = "Authorization"
+)
+
+func Auth() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		bearerToken := c.GetHeader(AuthHeader)
+		if bearerToken == "" {
+			c.Abort()
+			r.Reply(c, errs.TokenMiss)
+			return
+		}
+		token, found := strings.CutPrefix(bearerToken, tokenPrefix)
+		if found {
+			c.Abort()
+			r.Reply(c, errs.TokenInvalid.WithDetails(fmt.Errorf("not have prefix [%s]", tokenPrefix)))
+			return
+		}
+
+		claims, err := security.JwtHelper.Verify(token)
+		if err != nil {
+			c.Abort()
+			if errors.Is(err, jwt.ErrTokenExpired) {
+				r.Reply(c, errs.TokenInvalid.WithDetails(err))
+				return
+			}
+			r.Reply(c, errs.TokenInvalid.WithDetails(err))
+			return
+		}
+		tokenID, err := security.JwtHelper.GetTokenID(c, claims.Username)
+		if err != nil || tokenID != claims.Id {
+			c.Abort()
+			r.Reply(c, errs.TokenOut.WithDetails(fmt.Errorf("token id not match")))
+			return
+		}
+
+		// TODO 权限校验
+		claims.SetCtx(c)
+		c.Next()
+	}
+}

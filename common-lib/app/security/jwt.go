@@ -7,10 +7,12 @@ import (
 	"github.com/golang-jwt/jwt"
 	"github.com/pkg/errors"
 	"github.com/redis/go-redis/v9"
+	"strings"
 	"time"
 )
 
 const (
+	CacheKeyPrefix        = "login_token:"
 	ATokenExpiredDuration = 2 * time.Hour
 	RTokenExpiredDuration = 30 * 24 * time.Hour
 )
@@ -24,14 +26,21 @@ type JWToken struct {
 	cacheKeyPrefix      string
 }
 
-func NewJWT(conf *config.JwtConfig, rdb redis.Cmdable, cacheKeyPrefix string) *JWToken {
+var JwtHelper = NewJWT(&config.JwtConfig{
+	Secret: "gogo",
+}, nil)
+
+func NewJWT(conf *config.JwtConfig, rdb redis.Cmdable) *JWToken {
+	if conf.CacheKeyPrefix == "" {
+		conf.CacheKeyPrefix = CacheKeyPrefix
+	}
 	return &JWToken{
 		SigningKey:          []byte(conf.Secret),
 		Issuer:              conf.Issuer,
 		AccessTokenExpired:  conf.GetAccessTokenExpired(),
 		RefreshTokenExpired: conf.GetRefreshTokenExpired(),
+		cacheKeyPrefix:      conf.CacheKeyPrefix,
 		cache:               rdb,
-		cacheKeyPrefix:      cacheKeyPrefix,
 	}
 }
 
@@ -59,7 +68,7 @@ func (t *JWToken) Generate(ctx context.Context, claims *Claims) (atoken, rtoken 
 	}
 	sc.ExpiresAt = time.Now().Add(t.RefreshTokenExpired).Unix()
 	rtoken, err = jwt.NewWithClaims(jwt.SigningMethodHS256, sc).SignedString(t.SigningKey)
-	err = t.cacheToken(ctx, claims.Username, atoken)
+	err = t.cacheToken(ctx, claims.Username, claims.Id, atoken)
 	return
 }
 
@@ -98,14 +107,56 @@ func (t *JWToken) Refresh(ctx context.Context, atoken, rtoken string) (newAToken
 	return
 }
 
-func (t *JWToken) key(username string) string {
-	return fmt.Sprintf("%s:%s", t.cacheKeyPrefix, username)
+func (t *JWToken) cacheToken(ctx context.Context, username, tokenID, token string) error {
+	value := fmt.Sprintf("%s|%s", tokenID, token)
+	if t.cache == nil {
+		return nil
+	}
+	return t.cache.Set(ctx, t.key(username), value, t.AccessTokenExpired).Err()
 }
 
-func (t *JWToken) cacheToken(ctx context.Context, username, token string) error {
-	return t.cache.Set(ctx, t.key(username), token, t.AccessTokenExpired).Err()
+// GetToken 获取 token
+func (t *JWToken) GetToken(ctx context.Context, username string) (string, error) {
+	tokenInfo, err := t.getToken(ctx, username)
+	if err != nil {
+		return "", err
+	}
+	if len(tokenInfo) < 2 {
+		return "", errors.New("token extract fail")
+	}
+	return tokenInfo[1], nil
+}
+
+func (t *JWToken) GetTokenID(ctx context.Context, username string) (string, error) {
+	tokenInfo, err := t.getToken(ctx, username)
+	if err != nil {
+		return "", err
+	}
+	if len(tokenInfo) < 2 {
+		return "", errors.New("tokenID extract fail")
+	}
+	return tokenInfo[0], nil
 }
 
 func (t *JWToken) RemoveToken(ctx context.Context, username string) error {
+	if t.cache == nil {
+		return nil
+	}
 	return t.cache.Del(ctx, t.key(username)).Err()
+}
+
+func (t *JWToken) getToken(ctx context.Context, username string) ([]string, error) {
+	if t.cache == nil {
+		return nil, errors.New("token not cache")
+	}
+	tokenStr, err := t.cache.Get(ctx, t.key(username)).Result()
+	if err != nil {
+		return nil, err
+	}
+	// 拆分 tokenID 和 token (tokenID|token)
+	return strings.SplitN(tokenStr, "|", 2), nil
+}
+
+func (t *JWToken) key(username string) string {
+	return fmt.Sprintf("%s:%s", t.cacheKeyPrefix, username)
 }

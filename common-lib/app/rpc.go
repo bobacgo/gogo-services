@@ -11,8 +11,8 @@ import (
 )
 
 func RunRpcServer(app *App, register func(app *App, server *grpc.Server)) {
-	app.wg.Add(1)
-	defer app.wg.Done()
+	app.Wg.Add(1)
+	defer app.Wg.Done()
 	lis, err := net.Listen("tcp", app.Opts.Conf.Server.Rpc.Addr)
 	if err != nil {
 		panic(err)
@@ -29,7 +29,7 @@ func RunRpcServer(app *App, register func(app *App, server *grpc.Server)) {
 		}
 	}()
 
-	<-app.exit       // 阻塞,等待被关闭
+	<-app.Exit       // 阻塞,等待被关闭
 	s.GracefulStop() // 优雅停止
 }
 

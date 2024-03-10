@@ -2,7 +2,7 @@ package v1_test
 
 import (
 	"fmt"
-	"github.com/gogoclouds/gogo-services/admin-service/api/system/errs"
+	"github.com/gogoclouds/gogo-services/admin-service/api/errs"
 	v1 "github.com/gogoclouds/gogo-services/admin-service/api/system/v1"
 	"github.com/gogoclouds/gogo-services/common-lib/pkg/uhttp"
 	"github.com/gogoclouds/gogo-services/common-lib/web/r"
@@ -106,4 +106,8 @@ func TestLogin(t *testing.T) {
 			t.Errorf("index:%d, codes: %d msg: %s, err: %v", i, resp.Code, resp.Msg, resp.Err)
 		}
 	}
+}
+
+func TestLogout(t *testing.T) {
+
 }

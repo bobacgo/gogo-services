@@ -66,7 +66,7 @@ func (h *adminServer) RefreshToken(ctx *gin.Context) {
 	r.Reply(ctx, data)
 }
 
-func (h *adminServer) GetAdminInfo(ctx *gin.Context) {
+func (h *adminServer) GetSelfInfo(ctx *gin.Context) {
 	// TODO get username
 	data, err := h.svc.GetAdminInfo(ctx, "")
 	if err != nil {

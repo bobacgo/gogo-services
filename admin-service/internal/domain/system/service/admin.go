@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/gogoclouds/gogo-services/admin-service/api/system/errs"
+	"github.com/gogoclouds/gogo-services/admin-service/api/errs"
 	v1 "github.com/gogoclouds/gogo-services/admin-service/api/system/v1"
 	"github.com/gogoclouds/gogo-services/admin-service/internal/config"
 	"github.com/gogoclouds/gogo-services/admin-service/internal/model"
@@ -42,12 +42,10 @@ type IAdminRepo interface {
 }
 
 const (
-	LoginTokenKeyPrefix = "admin:login_token"
 	LoginLimitKeyPrefix = "admin:login_limit"
 )
 
 type AdminService struct {
-	jwt           *security.JWToken
 	cache         redis.Cmdable
 	repo          IAdminRepo
 	adminRoleRepo IAdminRoleRepo
@@ -55,7 +53,6 @@ type AdminService struct {
 
 func NewAdminService(rdb redis.Cmdable, repo IAdminRepo, adminRoleRepo IAdminRoleRepo) *AdminService {
 	return &AdminService{
-		jwt:           security.NewJWT(&config.Conf.Security.Jwt, rdb, LoginTokenKeyPrefix),
 		cache:         rdb,
 		repo:          repo,
 		adminRoleRepo: adminRoleRepo,
@@ -122,15 +119,15 @@ func (svc *AdminService) Login(ctx context.Context, data *v1.AdminLoginRequest) 
 	} else {
 		claims.Nickname = admin.Username
 	}
-	atoken, _, err := svc.jwt.Generate(ctx, claims)
+	atoken, _, err := security.JwtHelper.Generate(ctx, claims)
 	if err != nil {
-		return nil, errs.AdminTokenGenerateErr
+		return nil, errs.TokenGenerateErr
 	}
 	return &v1.AdminLoginResponse{Token: atoken}, nil
 }
 
 func (svc *AdminService) Logout(ctx context.Context, username string) error {
-	return svc.jwt.RemoveToken(ctx, username)
+	return security.JwtHelper.RemoveToken(ctx, username)
 }
 
 func (svc *AdminService) RefreshToken(ctx context.Context, oldToken string) (*v1.AdminLoginResponse, error) {
@@ -178,7 +175,7 @@ func (svc *AdminService) UpdatePassword(ctx context.Context, req *v1.UpdatePassw
 	if err = svc.repo.UpdatePwd(ctx, admin.ID, string(req.NewPassword)); err != nil {
 		return err
 	}
-	return svc.jwt.RemoveToken(ctx, admin.Username)
+	return security.JwtHelper.RemoveToken(ctx, admin.Username)
 }
 
 func (svc *AdminService) Delete(ctx context.Context, ID int64) error {
@@ -189,7 +186,7 @@ func (svc *AdminService) Delete(ctx context.Context, ID int64) error {
 	if err = svc.repo.Delete(ctx, ID); err != nil {
 		return err
 	}
-	return svc.jwt.RemoveToken(ctx, admin.Username)
+	return security.JwtHelper.RemoveToken(ctx, admin.Username)
 }
 
 func (svc *AdminService) UpdateStatus(ctx context.Context, ID int64, status bool) error {
@@ -200,7 +197,7 @@ func (svc *AdminService) UpdateStatus(ctx context.Context, ID int64, status bool
 	if err = svc.repo.UpdateStatus(ctx, ID, status); err != nil {
 		return err
 	}
-	return svc.jwt.RemoveToken(ctx, admin.Username)
+	return security.JwtHelper.RemoveToken(ctx, admin.Username)
 }
 
 func (svc *AdminService) UpdateRole(ctx context.Context, ID int64, role []int64) error {
@@ -211,7 +208,7 @@ func (svc *AdminService) UpdateRole(ctx context.Context, ID int64, role []int64)
 	if err = svc.adminRoleRepo.UpdateRole(ctx, ID, role); err != nil {
 		return err
 	}
-	return svc.jwt.RemoveToken(ctx, admin.Username)
+	return security.JwtHelper.RemoveToken(ctx, admin.Username)
 }
 
 func (svc *AdminService) GetRoleList(ctx context.Context, ID int64) ([]*model.Role, error) {

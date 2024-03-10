@@ -17,6 +17,8 @@ type JwtConfig struct {
 	Issuer              string `mapstructure:"issuer"`              // jwt issuer
 	AccessTokenExpired  string `mapstructure:"accessTokenExpired"`  // jwt access token expired
 	RefreshTokenExpired string `mapstructure:"refreshTokenExpired"` // jwt refresh token expired
+	// 分布式共享token
+	CacheKeyPrefix string `mapstructure:"cacheKeyPrefix"` // jwt cache key prefix
 }
 
 func (c *JwtConfig) GetAccessTokenExpired() time.Duration {

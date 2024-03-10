@@ -2,6 +2,7 @@ package r
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/gogoclouds/gogo-services/common-lib/web/r/errs"
 
 	cvalidator "github.com/gogoclouds/gogo-services/common-lib/app/validator"
 
@@ -17,7 +18,7 @@ type Response[T any] struct {
 	Code codes.Code `json:"code"`
 	Data T          `json:"data"`
 	Msg  string     `json:"message"`
-	Err  any        `json:"omitempty,err"`
+	Err  any        `json:"err,omitempty"`
 }
 
 func Reply(c *gin.Context, data any) {
@@ -34,8 +35,8 @@ func Reply(c *gin.Context, data any) {
 		}
 	case error:
 		//httpCode = http.StatusInternalServerError
-		resp.Code = 5e5
-		resp.Msg = "内部错误" // TODO
+		resp.Code = errs.InternalError.Code
+		resp.Msg = errs.InternalError.Message
 		logger.Error(v.Error())
 	default:
 		resp.Data = data

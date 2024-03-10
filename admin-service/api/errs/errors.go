@@ -4,6 +4,16 @@ import (
 	"github.com/gogoclouds/gogo-services/common-lib/web/r/status"
 )
 
+// Token
+
+var (
+	TokenGenerateErr = status.New(401001, "令牌生成出错")
+	TokenMiss        = status.New(401002, "令牌缺失")
+	TokenInvalid     = status.New(401003, "令牌无效")
+	TokenExpired     = status.New(401004, "令牌过期")
+	TokenOut         = status.New(401005, "令牌过期") // Token 被覆盖(已登出)
+)
+
 // admin
 
 var (
@@ -13,8 +23,8 @@ var (
 	AdminNotFound             = status.New(400004, "找不到该用户")
 	AdminLoginForbidden       = status.New(400005, "帐号已被禁用")
 	AdminOldPwdErr            = status.New(400006, "旧密码错误")
-	AdminTokenGenerateErr     = status.New(400007, "令牌生成出错")
-	AdminEmailDuplicated      = status.New(400008, "邮箱已经存在")
+
+	AdminEmailDuplicated = status.New(400008, "邮箱已经存在")
 )
 
 // menu

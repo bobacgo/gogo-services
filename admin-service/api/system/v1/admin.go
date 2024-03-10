@@ -21,7 +21,7 @@ type AdminServer interface {
 	Login(ctx *gin.Context)
 	Logout(ctx *gin.Context)
 	RefreshToken(ctx *gin.Context)
-	GetAdminInfo(ctx *gin.Context)
+	GetSelfInfo(ctx *gin.Context)
 	List(ctx *gin.Context)
 	GetItem(ctx *gin.Context)
 	Update(ctx *gin.Context)

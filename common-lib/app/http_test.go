@@ -1,12 +1,12 @@
 package app_test
 
 import (
+	"github.com/gogoclouds/gogo-services/common-lib/app"
 	"io"
 	"net/http"
 	"testing"
 
 	"github.com/gin-gonic/gin"
-	"github.com/gogoclouds/gogo-services/common-lib/app"
 )
 
 func Test_HttpServer(t *testing.T) {
