@@ -25,7 +25,7 @@ func Auth() gin.HandlerFunc {
 			return
 		}
 		token, found := strings.CutPrefix(bearerToken, tokenPrefix)
-		if found {
+		if !found {
 			c.Abort()
 			r.Reply(c, errs.TokenInvalid.WithDetails(fmt.Errorf("not have prefix [%s]", tokenPrefix)))
 			return
@@ -35,14 +35,15 @@ func Auth() gin.HandlerFunc {
 		if err != nil {
 			c.Abort()
 			if errors.Is(err, jwt.ErrTokenExpired) {
-				r.Reply(c, errs.TokenInvalid.WithDetails(err))
+				r.Reply(c, errs.TokenExpired)
 				return
 			}
 			r.Reply(c, errs.TokenInvalid.WithDetails(err))
 			return
 		}
+
 		tokenID, err := security.JwtHelper.GetTokenID(c, claims.Username)
-		if err != nil || tokenID != claims.Id {
+		if err != nil || tokenID != claims.Id { // 只能单一登录(TODO支持配置可设置)
 			c.Abort()
 			r.Reply(c, errs.TokenOut.WithDetails(fmt.Errorf("token id not match")))
 			return

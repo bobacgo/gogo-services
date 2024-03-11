@@ -14,5 +14,5 @@ type Claims struct {
 }
 
 func (o *Claims) SetCtx(ctx context.Context) {
-	context.WithValue(ctx, ClaimsKey, o)
+	ctx = context.WithValue(ctx, ClaimsKey, o)
 }

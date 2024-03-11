@@ -74,44 +74,54 @@ func GracefulClose(resp *http.Response) {
 	resp.Body.Close()
 }
 
-type HttpClient struct {
+type HttpClient[T any] struct {
 	Endpoint string
 	Method   string
 	Header   http.Header
-	Query    map[string]string
+	Query    url.Values
 	Body     []byte
 	Timeout  time.Duration
 }
 
-func NewHttpClient(url string, method string, options ...HttpClientOption) *HttpClient {
-	return &HttpClient{
-		Endpoint: url,
+func NewHttpClient[T any](endpoint string, method string, options ...HttpClientOption[T]) *HttpClient[T] {
+	return &HttpClient[T]{
+		Endpoint: endpoint,
 		Method:   method,
 		Header:   make(http.Header),
-		Query:    make(map[string]string),
+		Query:    make(url.Values),
 		Body:     []byte{},
 		Timeout:  10 * time.Second,
 	}
 }
 
-func (c *HttpClient) Do(ctx context.Context) any {
-	//req, err := http.NewRequestWithContext(ctx, c.Method, c.Endpoint, nil)
-	//http.Get()
-	//
-	//url.ParseQuery()
-	return nil
+func (clt *HttpClient[T]) Do(ctx context.Context) (*T, error) {
+	if len(clt.Query) > 0 {
+		clt.Endpoint += "?" + clt.Query.Encode()
+	}
+	req, err := http.NewRequestWithContext(ctx, clt.Method, clt.Endpoint, bytes.NewBuffer(clt.Body))
+	if err != nil {
+		return nil, err
+	}
+	if len(clt.Header) > 0 {
+		req.Header = clt.Header
+	}
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	return ReadResponse[T](resp)
 }
 
-type HttpClientOption func(c *HttpClient)
+type HttpClientOption[T any] func(c *HttpClient[T])
 
-func WithTimeout(timeout time.Duration) HttpClientOption {
-	return func(c *HttpClient) {
+func WithTimeout[T any](timeout time.Duration) HttpClientOption[T] {
+	return func(c *HttpClient[T]) {
 		c.Timeout = timeout
 	}
 }
 
-func WithBody(data any) HttpClientOption {
-	return func(c *HttpClient) {
+func WithBody[T any](data any) HttpClientOption[T] {
+	return func(c *HttpClient[T]) {
 
 	}
 }

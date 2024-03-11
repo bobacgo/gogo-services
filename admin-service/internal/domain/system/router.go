@@ -12,7 +12,10 @@ import (
 func Register(app *app.App, r gin.IRouter) {
 	db := app.Opts.DB
 	rdb := app.Opts.Redis
-	authRouter := r.Use(middleware.Auth())
+
+	authRouter := r.Group("")
+	authRouter.Use(middleware.Auth())
+	//authRouter := r.Use(middleware.Auth())
 	{
 		adminRepo := repo.NewAdminRepo(db)
 		adminServer := handler.NewAdminServer(service.NewAdminService(rdb, adminRepo, adminRepo))

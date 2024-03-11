@@ -11,7 +11,7 @@ var (
 	TokenMiss        = status.New(401002, "令牌缺失")
 	TokenInvalid     = status.New(401003, "令牌无效")
 	TokenExpired     = status.New(401004, "令牌过期")
-	TokenOut         = status.New(401005, "令牌过期") // Token 被覆盖(已登出)
+	TokenOut         = status.New(401005, "令牌失效") // Token 被覆盖(已登出)
 )
 
 // admin

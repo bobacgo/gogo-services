@@ -1,12 +1,14 @@
 package v1_test
 
 import (
+	"context"
 	"fmt"
 	"github.com/gogoclouds/gogo-services/admin-service/api/errs"
 	v1 "github.com/gogoclouds/gogo-services/admin-service/api/system/v1"
 	"github.com/gogoclouds/gogo-services/common-lib/pkg/uhttp"
 	"github.com/gogoclouds/gogo-services/common-lib/web/r"
 	"github.com/gogoclouds/gogo-services/common-lib/web/r/codes"
+	"net/http"
 	"strconv"
 	"strings"
 	"testing"
@@ -109,5 +111,17 @@ func TestLogin(t *testing.T) {
 }
 
 func TestLogout(t *testing.T) {
-
+	token, err := GetToken(nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	client := uhttp.NewHttpClient[r.Response[any]](AdminEndpoint+"/logout", http.MethodGet)
+	client.Header.Add("Authorization", "Bearer "+token)
+	resp, err := client.Do(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if resp.Code != codes.OK {
+		t.Errorf("codes: %d msg: %s, err: %v", resp.Code, resp.Msg, resp.Err)
+	}
 }
