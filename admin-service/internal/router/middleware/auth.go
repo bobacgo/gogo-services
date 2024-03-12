@@ -1,10 +1,8 @@
 package middleware
 
 import (
-	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"github.com/go-kit/kit/auth/jwt"
 	"github.com/gogoclouds/gogo-services/admin-service/api/errs"
 	"github.com/gogoclouds/gogo-services/common-lib/app/security"
 	"github.com/gogoclouds/gogo-services/common-lib/web/r"
@@ -34,7 +32,7 @@ func Auth() gin.HandlerFunc {
 		claims, err := security.JwtHelper.Verify(token)
 		if err != nil {
 			c.Abort()
-			if errors.Is(err, jwt.ErrTokenExpired) {
+			if security.JwtHelper.ValidationErrorExpired(err) {
 				r.Reply(c, errs.TokenExpired)
 				return
 			}
@@ -50,7 +48,7 @@ func Auth() gin.HandlerFunc {
 		}
 
 		// TODO 权限校验
-		claims.SetCtx(c)
+		c.Set(security.ClaimsKey, claims)
 		c.Next()
 	}
 }

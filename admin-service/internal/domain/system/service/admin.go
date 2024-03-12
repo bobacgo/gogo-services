@@ -107,32 +107,38 @@ func (svc *AdminService) Login(ctx context.Context, data *v1.AdminLoginRequest) 
 	if !pwdHelper.BcryptVerifyWithCount(ctx, admin.Password, string(data.Password)) {
 		return nil, errs.AdminLoginFail.WithDetails(v1.AdminPwdErr{DecrCount: pwdHelper.GetRemainCount()})
 	}
-
-	claims := &security.Claims{
-		StandardClaims: jwt.StandardClaims{Id: uid.UUID()},
-		UserID:         strconv.FormatInt(admin.ID, 10),
-		Username:       admin.Username,
-		Roles:          nil, // TODO
-	}
-	if admin.Nickname != nil {
-		claims.Nickname = *admin.Nickname
-	} else {
-		claims.Nickname = admin.Username
-	}
-	atoken, _, err := security.JwtHelper.Generate(ctx, claims)
+	claims := svc.newClaims(admin)
+	atoken, rtoken, err := security.JwtHelper.Generate(ctx, claims)
 	if err != nil {
 		return nil, errs.TokenGenerateErr
 	}
-	return &v1.AdminLoginResponse{Token: atoken}, nil
+	return &v1.AdminLoginResponse{Token: atoken, RToken: rtoken}, nil
 }
 
 func (svc *AdminService) Logout(ctx context.Context, username string) error {
 	return security.JwtHelper.RemoveToken(ctx, username)
 }
 
-func (svc *AdminService) RefreshToken(ctx context.Context, oldToken string) (*v1.AdminLoginResponse, error) {
-	// TODO 生成新的 token
-	return &v1.AdminLoginResponse{Token: oldToken}, nil
+func (svc *AdminService) RefreshToken(ctx context.Context, req *v1.AdminRefreshTokenRequest) (*v1.AdminLoginResponse, error) {
+	claims, err := security.JwtHelper.Parse(req.AToken)
+	if !security.JwtHelper.ValidationErrorExpired(err) {
+		return nil, err
+	}
+
+	admin, err := svc.repo.FindByUsername(ctx, claims.Username)
+	if err != nil {
+		return nil, err
+	}
+
+	if !admin.Status {
+		return nil, errs.AdminLoginForbidden
+	}
+	claims = svc.newClaims(admin)
+	aToken, rToken, err := security.JwtHelper.Refresh(ctx, req.RToken, claims)
+	if err != nil {
+		return nil, err
+	}
+	return &v1.AdminLoginResponse{Token: aToken, RToken: rToken}, nil
 }
 
 func (svc *AdminService) GetAdminInfo(ctx context.Context, username string) (*v1.UserInfo, error) {
@@ -230,4 +236,19 @@ func (svc *AdminService) newPasswdVerifier(ctx context.Context, admin *model.Adm
 		logger.Error("verify password err:", "username", admin.Username, "err", err)
 	}
 	return pwdHelper
+}
+
+func (svc *AdminService) newClaims(admin *model.Admin) *security.Claims {
+	claims := security.Claims{
+		StandardClaims: jwt.StandardClaims{Id: uid.UUID()},
+		UserID:         strconv.FormatInt(admin.ID, 10),
+		Username:       admin.Username,
+		Roles:          nil, // TODO
+	}
+	if admin.Nickname != nil {
+		claims.Nickname = *admin.Nickname
+	} else {
+		claims.Nickname = admin.Username
+	}
+	return &claims
 }

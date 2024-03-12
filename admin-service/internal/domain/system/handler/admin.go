@@ -5,6 +5,8 @@ import (
 	v1 "github.com/gogoclouds/gogo-services/admin-service/api/system/v1"
 	"github.com/gogoclouds/gogo-services/admin-service/internal/domain/system/service"
 	"github.com/gogoclouds/gogo-services/admin-service/internal/model"
+	"github.com/gogoclouds/gogo-services/admin-service/internal/router/middleware"
+	"github.com/gogoclouds/gogo-services/common-lib/app/security"
 	"github.com/gogoclouds/gogo-services/common-lib/web/r"
 	"github.com/gogoclouds/gogo-services/common-lib/web/r/errs"
 )
@@ -51,14 +53,25 @@ func (h *adminServer) Login(ctx *gin.Context) {
 }
 
 func (h *adminServer) Logout(ctx *gin.Context) {
-	// TODO get username
-	err := h.svc.Logout(ctx, "admin")
+	username := security.GetUsername(ctx)
+	err := h.svc.Logout(ctx, username)
 	r.Reply(ctx, err)
 }
 
+// RefreshToken 请求头携带rToken
 func (h *adminServer) RefreshToken(ctx *gin.Context) {
-	// TODO get token
-	data, err := h.svc.RefreshToken(ctx, "")
+	req := new(v1.AdminRefreshTokenRequest)
+	if err := ctx.ShouldBind(req); err != nil {
+		r.Reply(ctx, errs.BadRequest.WithDetails(err))
+		return
+	}
+	auth := middleware.GetAuthHeader(ctx)
+	if auth == "" {
+		r.Reply(ctx, errs.BadRequest.WithDetails("Authorization header is empty"))
+		return
+	}
+	req.RToken = auth
+	data, err := h.svc.RefreshToken(ctx, req)
 	if err != nil {
 		r.Reply(ctx, err)
 		return
@@ -67,8 +80,8 @@ func (h *adminServer) RefreshToken(ctx *gin.Context) {
 }
 
 func (h *adminServer) GetSelfInfo(ctx *gin.Context) {
-	// TODO get username
-	data, err := h.svc.GetAdminInfo(ctx, "")
+	username := security.GetUsername(ctx)
+	data, err := h.svc.GetAdminInfo(ctx, username)
 	if err != nil {
 		r.Reply(ctx, err)
 		return
@@ -91,8 +104,8 @@ func (h *adminServer) List(ctx *gin.Context) {
 }
 
 func (h *adminServer) GetItem(ctx *gin.Context) {
-	// TODO ID
-	data, err := h.svc.GetItem(ctx, 0)
+	userID := security.GetUserIntID(ctx)
+	data, err := h.svc.GetItem(ctx, userID)
 	if err != nil {
 		r.Reply(ctx, err)
 		return
@@ -126,8 +139,8 @@ func (h *adminServer) UpdatePassword(ctx *gin.Context) {
 }
 
 func (h *adminServer) Delete(ctx *gin.Context) {
-	// TODO username, ID
-	err := h.svc.Delete(ctx, 0)
+	userID := security.GetUserIntID(ctx)
+	err := h.svc.Delete(ctx, userID)
 	r.Reply(ctx, err)
 }
 
@@ -152,8 +165,8 @@ func (h *adminServer) UpdateRole(ctx *gin.Context) {
 }
 
 func (h *adminServer) GetRoleList(ctx *gin.Context) {
-	// TODO ID
-	data, err := h.svc.GetRoleList(ctx, 0)
+	userID := security.GetUserIntID(ctx)
+	data, err := h.svc.GetRoleList(ctx, userID)
 	if err != nil {
 		r.Reply(ctx, err)
 		return

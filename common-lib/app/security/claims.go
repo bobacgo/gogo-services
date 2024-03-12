@@ -1,7 +1,6 @@
 package security
 
 import (
-	"context"
 	"github.com/golang-jwt/jwt"
 )
 
@@ -11,8 +10,4 @@ type Claims struct {
 	Username string   `json:"username"`
 	Nickname string   `json:"nickname"`
 	Roles    []string `json:"roles"`
-}
-
-func (o *Claims) SetCtx(ctx context.Context) {
-	ctx = context.WithValue(ctx, ClaimsKey, o)
 }

@@ -49,11 +49,17 @@ type AdminLoginRequest struct {
 }
 
 type AdminLoginResponse struct {
-	Token string `json:"token"`
+	Token  string `json:"token"`
+	RToken string `json:"rToken"`
 }
 
 type AdminPwdErr struct {
 	DecrCount int64 `json:"decrCount"` // 剩余次数
+}
+
+type AdminRefreshTokenRequest struct {
+	AToken string `json:"aToken"`
+	RToken string `json:"rToken" header:"authorization"`
 }
 
 type UserInfo struct {
