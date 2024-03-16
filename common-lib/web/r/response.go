@@ -6,12 +6,13 @@ import (
 
 	cvalidator "github.com/gogoclouds/gogo-services/common-lib/app/validator"
 
+	"net/http"
+	"strconv"
+
 	"github.com/go-playground/validator/v10"
 	"github.com/gogoclouds/gogo-services/common-lib/app/logger"
 	"github.com/gogoclouds/gogo-services/common-lib/web/r/codes"
 	"github.com/gogoclouds/gogo-services/common-lib/web/r/status"
-	"net/http"
-	"strconv"
 )
 
 type Response[T any] struct {
@@ -46,14 +47,16 @@ func Reply(c *gin.Context, data any) {
 
 // detailErrorType 处理 validator 的错误进行翻译
 func detailErrorType(ctx *gin.Context, ds []any) []any { // TODO key-value
-	res := make([]any, 0, len(ds))
-	for _, d := range ds {
-		if err, ok := d.(validator.ValidationErrors); ok {
-			e := cvalidator.TransErrCtx(ctx, err)
-			res = append(res, e.Error())
+	for i := 0; i < len(ds); i++ {
+		switch v := ds[i].(type) {
+		case validator.ValidationErrors:
+			e := cvalidator.TransErrCtx(ctx, v)
+			ds[i] = e.Error()
+		case error:
+			ds[i] = v.Error()
 		}
 	}
-	return res
+	return ds
 }
 
 func codesToHttpCode(code codes.Code) int {

@@ -4,6 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
+	"time"
+
 	"github.com/gogoclouds/gogo-services/admin-service/api/errs"
 	v1 "github.com/gogoclouds/gogo-services/admin-service/api/system/v1"
 	"github.com/gogoclouds/gogo-services/admin-service/internal/config"
@@ -16,8 +19,6 @@ import (
 	"github.com/golang-jwt/jwt"
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
-	"strconv"
-	"time"
 )
 
 type IAdminRoleRepo interface {
@@ -121,7 +122,7 @@ func (svc *AdminService) Logout(ctx context.Context, username string) error {
 
 func (svc *AdminService) RefreshToken(ctx context.Context, req *v1.AdminRefreshTokenRequest) (*v1.AdminLoginResponse, error) {
 	claims, err := security.JwtHelper.Parse(req.AToken)
-	if !security.JwtHelper.ValidationErrorExpired(err) {
+	if err != nil && !security.JwtHelper.ValidationErrorExpired(err) {
 		return nil, err
 	}
 
@@ -142,13 +143,24 @@ func (svc *AdminService) RefreshToken(ctx context.Context, req *v1.AdminRefreshT
 }
 
 func (svc *AdminService) GetAdminInfo(ctx context.Context, username string) (*v1.UserInfo, error) {
-	return &v1.UserInfo{
-		Username: username,
-		NickName: "nickName",
-		Roles:    []string{"admin"},
-		Menus:    "menus",
-		Icon:     "icon",
-	}, nil
+	admin, err := svc.repo.FindByUsername(ctx, username)
+	if err != nil {
+		return nil, errs.AdminNotFound
+	}
+	if admin.Nickname == nil {
+		admin.Nickname = &admin.Username
+	}
+	userInfo := &v1.UserInfo{
+		Username: admin.Username,
+		NickName: *admin.Nickname,
+		Roles:    []string{"admin"}, // TODO 获取用户角色
+		Menus:    []any{},           // TODO 获取角色菜单
+	}
+
+	if admin.Icon != nil {
+		userInfo.Icon = *admin.Icon
+	}
+	return userInfo, nil
 }
 
 func (svc *AdminService) List(ctx context.Context, req *v1.ListRequest) (*page.Data[*model.Admin], error) {

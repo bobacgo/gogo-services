@@ -1,8 +1,9 @@
 package middleware
 
 import (
-	"github.com/gin-gonic/gin"
 	"strings"
+
+	"github.com/gin-gonic/gin"
 )
 
 func GetAuthHeader(ctx *gin.Context) string {
@@ -10,6 +11,9 @@ func GetAuthHeader(ctx *gin.Context) string {
 	if bearerToken == "" {
 		return ""
 	}
-	token, _ := strings.CutPrefix(bearerToken, tokenPrefix)
+	token, found := strings.CutPrefix(bearerToken, tokenPrefix)
+	if !found {
+		return ""
+	}
 	return token
 }

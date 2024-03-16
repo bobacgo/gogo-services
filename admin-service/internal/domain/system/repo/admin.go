@@ -3,11 +3,11 @@ package repo
 import (
 	"context"
 	"errors"
+
 	v1 "github.com/gogoclouds/gogo-services/admin-service/api/system/v1"
 	"github.com/gogoclouds/gogo-services/admin-service/internal/model"
 	"github.com/gogoclouds/gogo-services/admin-service/internal/query"
 	"github.com/gogoclouds/gogo-services/common-lib/web/r/page"
-	"gorm.io/gen"
 	"gorm.io/gorm"
 )
 
@@ -84,14 +84,12 @@ func (repo *AdminRepo) FindByID(ctx context.Context, ID int64) (*model.Admin, er
 
 func (repo *AdminRepo) Find(ctx context.Context, req *v1.ListRequest) (*page.Data[*model.Admin], error) {
 	q := repo.q.Admin
-	var conds []gen.Condition
-	if req.Keyword == "" {
-		conds = append(conds,
-			q.Username.Like("%"+req.Keyword+"%"),
-			q.Nickname.Like("%"+req.Keyword+"%"),
-		)
+	do := q.WithContext(ctx)
+	if req.Keyword != "" {
+		do = do.Or(q.Username.Like("%" + req.Keyword + "%")).
+			Or(q.Nickname.Like("%" + req.Keyword + "%"))
 	}
-	list, count, err := q.WithContext(ctx).Where(conds...).FindByPage(req.Offset(), req.Limit())
+	list, count, err := do.FindByPage(req.Offset(), req.Limit())
 	if err != nil {
 		return nil, err
 	}

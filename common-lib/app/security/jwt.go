@@ -4,11 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
+	"time"
+
 	"github.com/gogoclouds/gogo-services/common-lib/app/security/config"
 	"github.com/golang-jwt/jwt"
 	"github.com/redis/go-redis/v9"
-	"strings"
-	"time"
 )
 
 const (
@@ -106,7 +107,7 @@ func (t *JWToken) Refresh(ctx context.Context, rtoken string, claims *Claims) (n
 
 func (t *JWToken) ValidationErrorExpired(err error) bool {
 	var v *jwt.ValidationError
-	return errors.As(err, v) && v.Errors == jwt.ValidationErrorExpired
+	return errors.As(err, &v) && v.Errors == jwt.ValidationErrorExpired
 }
 
 func (t *JWToken) cacheToken(ctx context.Context, username, tokenID, token string) error {

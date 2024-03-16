@@ -58,14 +58,14 @@ type AdminPwdErr struct {
 }
 
 type AdminRefreshTokenRequest struct {
-	AToken string `json:"aToken"`
+	AToken string `json:"aToken" form:"aToken" validate:"required"`
 	RToken string `json:"rToken" header:"authorization"`
 }
 
 type UserInfo struct {
 	Username string   `json:"username"`
 	NickName string   `json:"nickName"`
-	Menus    string   `json:"menus"`
+	Menus    []any    `json:"menus"`
 	Icon     string   `json:"icon"`
 	Roles    []string `json:"roles"`
 }

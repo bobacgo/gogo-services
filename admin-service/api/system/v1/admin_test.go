@@ -3,16 +3,18 @@ package v1_test
 import (
 	"context"
 	"fmt"
-	"github.com/gogoclouds/gogo-services/admin-service/api/errs"
-	v1 "github.com/gogoclouds/gogo-services/admin-service/api/system/v1"
-	"github.com/gogoclouds/gogo-services/common-lib/pkg/uhttp"
-	"github.com/gogoclouds/gogo-services/common-lib/web/r"
-	"github.com/gogoclouds/gogo-services/common-lib/web/r/codes"
 	"net/http"
 	"strconv"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/gogoclouds/gogo-services/admin-service/api/errs"
+	v1 "github.com/gogoclouds/gogo-services/admin-service/api/system/v1"
+	"github.com/gogoclouds/gogo-services/admin-service/internal/router/middleware"
+	"github.com/gogoclouds/gogo-services/common-lib/pkg/uhttp"
+	"github.com/gogoclouds/gogo-services/common-lib/web/r"
+	"github.com/gogoclouds/gogo-services/common-lib/web/r/codes"
 )
 
 var AdminEndpoint = "http://localhost:8080/admin"
@@ -24,19 +26,19 @@ var DefaultLoginRequest = &v1.AdminLoginRequest{
 	},
 }
 
-func GetToken(request *v1.AdminLoginRequest) (string, error) {
+func GetToken(request *v1.AdminLoginRequest) (*v1.AdminLoginResponse, error) {
 	if request == nil {
 		request = DefaultLoginRequest
 	}
 
 	resp, err := uhttp.Post[r.Response[v1.AdminLoginResponse]](AdminEndpoint+"/login", request)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	if resp.Code != codes.OK {
-		return "", fmt.Errorf("msg: %s, err: %v", resp.Msg, resp.Err)
+		return nil, fmt.Errorf("msg: %s, err: %v", resp.Msg, resp.Err)
 	}
-	return resp.Data.Token, nil
+	return &resp.Data, nil
 }
 
 func TestRegister(t *testing.T) {
@@ -100,7 +102,6 @@ func TestLogin(t *testing.T) {
 
 	for i, test := range tests {
 		resp, err := uhttp.Post[r.Response[v1.AdminLoginResponse]](AdminEndpoint+"/login", test.AdminLoginRequest)
-
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -116,7 +117,73 @@ func TestLogout(t *testing.T) {
 		t.Fatal(err)
 	}
 	client := uhttp.NewHttpClient[r.Response[any]](AdminEndpoint+"/logout", http.MethodGet)
-	client.Header.Add("Authorization", "Bearer "+token)
+	client.Header.Add(middleware.AuthHeader, "Bearer "+token.Token)
+	resp, err := client.Do(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if resp.Code != codes.OK {
+		t.Errorf("codes: %d msg: %s, err: %v", resp.Code, resp.Msg, resp.Err)
+	}
+}
+
+func TestRefreshToken(t *testing.T) {
+	token, err := GetToken(nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var tests = []struct {
+		v1.AdminRefreshTokenRequest
+		want codes.Code
+	}{
+		// 测试用例
+		// 1. 有 aToken 和 rToken
+		// 2. 没有 rToken
+		// 3. 没有 aToken
+		{AdminRefreshTokenRequest: v1.AdminRefreshTokenRequest{AToken: token.Token, RToken: token.RToken}, want: codes.OK},
+		{AdminRefreshTokenRequest: v1.AdminRefreshTokenRequest{AToken: token.Token, RToken: ""}, want: codes.BadRequest},
+		{AdminRefreshTokenRequest: v1.AdminRefreshTokenRequest{AToken: "", RToken: token.RToken}, want: codes.BadRequest},
+	}
+
+	for i, test := range tests {
+		client := uhttp.NewHttpClient[r.Response[v1.AdminLoginResponse]](AdminEndpoint+"/refreshToken", http.MethodGet)
+		client.Header.Add(middleware.AuthHeader, "Bearer "+test.RToken)
+		client.Query.Set("aToken", test.AToken)
+		resp, err := client.Do(context.Background())
+		if err != nil {
+			t.Fatal(err)
+		}
+		if resp.Code != test.want {
+			t.Errorf("index:%d, codes: %d msg: %s, err: %v", i, resp.Code, resp.Msg, resp.Err)
+		}
+	}
+}
+
+func TestGetSelfInfo(t *testing.T) {
+	token, err := GetToken(nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	client := uhttp.NewHttpClient[r.Response[v1.UserInfo]](AdminEndpoint+"/info", http.MethodGet)
+	client.Header.Add(middleware.AuthHeader, "Bearer "+token.Token)
+	resp, err := client.Do(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if resp.Code != codes.OK {
+		t.Errorf("codes: %d msg: %s, err: %v", resp.Code, resp.Msg, resp.Err)
+	}
+}
+
+func TestList(t *testing.T) {
+	token, err := GetToken(nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	client := uhttp.NewHttpClient[r.Response[v1.ListResponse]](AdminEndpoint+"/list", http.MethodGet)
+	client.Header.Add(middleware.AuthHeader, "Bearer "+token.Token)
+	client.Query.Set("keyword", "admin")
 	resp, err := client.Do(context.Background())
 	if err != nil {
 		t.Fatal(err)

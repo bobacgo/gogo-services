@@ -65,12 +65,12 @@ func (h *adminServer) RefreshToken(ctx *gin.Context) {
 		r.Reply(ctx, errs.BadRequest.WithDetails(err))
 		return
 	}
-	auth := middleware.GetAuthHeader(ctx)
-	if auth == "" {
+
+	req.RToken = middleware.GetAuthHeader(ctx)
+	if req.RToken == "" {
 		r.Reply(ctx, errs.BadRequest.WithDetails("Authorization header is empty"))
 		return
 	}
-	req.RToken = auth
 	data, err := h.svc.RefreshToken(ctx, req)
 	if err != nil {
 		r.Reply(ctx, err)
