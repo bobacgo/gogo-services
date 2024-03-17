@@ -33,3 +33,7 @@ func (ct *Ciphertext) BcryptHash() string {
 	hash := DefaultPasswdVerifier.BcryptHash(string(*ct))
 	return hash
 }
+
+func (ct *Ciphertext) BcryptVerify(hashPasswd string) bool {
+	return DefaultPasswdVerifier.BcryptVerify(hashPasswd, string(*ct))
+}

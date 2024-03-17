@@ -2,6 +2,8 @@ package v1_test
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -15,6 +17,8 @@ import (
 	"github.com/gogoclouds/gogo-services/common-lib/pkg/uhttp"
 	"github.com/gogoclouds/gogo-services/common-lib/web/r"
 	"github.com/gogoclouds/gogo-services/common-lib/web/r/codes"
+	"github.com/gogoclouds/gogo-services/common-lib/web/r/status"
+	"github.com/samber/lo"
 )
 
 var AdminEndpoint = "http://localhost:8080/admin"
@@ -36,6 +40,9 @@ func GetToken(request *v1.AdminLoginRequest) (*v1.AdminLoginResponse, error) {
 		return nil, err
 	}
 	if resp.Code != codes.OK {
+		if resp.Code == errs.AdminLoginFail.Code {
+			return nil, errs.AdminLoginFail
+		}
 		return nil, fmt.Errorf("msg: %s, err: %v", resp.Msg, resp.Err)
 	}
 	return &resp.Data, nil
@@ -181,7 +188,7 @@ func TestList(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	client := uhttp.NewHttpClient[r.Response[v1.ListResponse]](AdminEndpoint+"/list", http.MethodGet)
+	client := uhttp.NewHttpClient[r.Response[v1.AdminListResponse]](AdminEndpoint+"/list", http.MethodGet)
 	client.Header.Add(middleware.AuthHeader, "Bearer "+token.Token)
 	client.Query.Set("keyword", "admin")
 	resp, err := client.Do(context.Background())
@@ -190,5 +197,164 @@ func TestList(t *testing.T) {
 	}
 	if resp.Code != codes.OK {
 		t.Errorf("codes: %d msg: %s, err: %v", resp.Code, resp.Msg, resp.Err)
+	}
+}
+
+func TestGetItem(t *testing.T) {
+	token, err := GetToken(nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var tests = []struct {
+		v1.AdminRequest
+		want codes.Code
+	}{
+		// 测试用例
+		// 1.获取成功
+		// 2.获取失败(ID不存在)
+		{AdminRequest: v1.AdminRequest{ID: 1}, want: codes.OK},
+		{AdminRequest: v1.AdminRequest{ID: 0}, want: errs.AdminNotFound.Code},
+	}
+	for i, test := range tests {
+		client := uhttp.NewHttpClient[r.Response[v1.AdminResponse]](AdminEndpoint+"/"+strconv.FormatInt(test.ID, 10), http.MethodGet)
+		client.Header.Add(middleware.AuthHeader, "Bearer "+token.Token)
+		resp, err := client.Do(context.Background())
+		if err != nil {
+			t.Fatal(err)
+		}
+		if resp.Code != test.want {
+			t.Errorf("index:%d, codes: %d msg: %s, err: %v", i, resp.Code, resp.Msg, resp.Err)
+		}
+	}
+}
+
+func TestDelete(t *testing.T) {
+	token, err := GetToken(nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var tests = []struct {
+		v1.AdminRequest
+		want codes.Code
+	}{
+		// 测试用例
+		// 1.删除成功
+		// 2.删除失败(ID不存在)
+		{AdminRequest: v1.AdminRequest{ID: 4}, want: codes.OK},
+		{AdminRequest: v1.AdminRequest{ID: 0}, want: errs.AdminNotFound.Code},
+	}
+	for i, test := range tests {
+		client := uhttp.NewHttpClient[r.Response[v1.AdminResponse]](AdminEndpoint+"/delete/"+strconv.FormatInt(test.ID, 10), http.MethodPost)
+		client.Header.Set(middleware.AuthHeader, "Bearer "+token.Token)
+		resp, err := client.Do(context.Background())
+		if err != nil {
+			t.Fatal(err)
+		}
+		if resp.Code != test.want {
+			t.Errorf("index:%d, codes: %d msg: %s, err: %v", i, resp.Code, resp.Msg, resp.Err)
+		}
+	}
+}
+
+func TestUpdate(t *testing.T) {
+	token, err := GetToken(nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var tests = []struct {
+		v1.AdminUpdateRequest
+		want codes.Code
+	}{
+		// 测试用例
+		// 1.更新成功
+		// 2.邮箱号重复
+		// 3.邮箱号格式错误
+		{AdminUpdateRequest: v1.AdminUpdateRequest{ID: 5, Icon: lo.ToPtr("https://macro-oss.oss-cn-shenzhen.aliyuncs.com/mall/icon/github_icon_01.png"), Email: lo.ToPtr("123@qq.com"), Nickname: lo.ToPtr("更新测试"), Note: lo.ToPtr("更新测试")}, want: codes.OK},
+		{AdminUpdateRequest: v1.AdminUpdateRequest{ID: 5, Email: lo.ToPtr("admin1@163.com")}, want: errs.AdminEmailDuplicated.Code},
+		{AdminUpdateRequest: v1.AdminUpdateRequest{ID: 5, Email: lo.ToPtr("123")}, want: codes.BadRequest},
+	}
+	for i, test := range tests {
+		client := uhttp.NewHttpClient[r.Response[v1.AdminResponse]](AdminEndpoint+"/update/"+strconv.FormatInt(test.ID, 10), http.MethodPost)
+		client.Header.Set(middleware.AuthHeader, "Bearer "+token.Token)
+		client.Header.Add(uhttp.HeaderContentType, uhttp.MIMEJSON)
+		client.Header.Add(uhttp.HeaderContentType, uhttp.ContentEncoder)
+		client.Body, _ = json.Marshal(test.AdminUpdateRequest)
+		resp, err := client.Do(context.Background())
+		if err != nil {
+			t.Fatal(err)
+		}
+		if resp.Code != test.want {
+			t.Errorf("index:%d, codes: %d msg: %s, err: %v", i, resp.Code, resp.Msg, resp.Err)
+		}
+	}
+}
+
+func TestUpdatePasswd(t *testing.T) {
+	token, err := GetToken(&v1.AdminLoginRequest{
+		v1.UsernamePasswd{
+			Username: "uppasswd", Password: "admin123",
+		},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var tests = []struct {
+		v1.UpdatePasswordRequest
+		Relogin bool
+		want    codes.Code
+	}{
+		// 测试用例
+		// 1.更新成功
+		// 2.令牌失效
+		// 3.修改前密码登录
+		// 4.修改后密码登录并获取新的令牌
+		// 5.旧密码错误
+		// 6.旧密码为空
+		// 7.新密码为空
+		// 8.账户为空
+		// 9.修改为原来的密码(方便下次调试)
+		{UpdatePasswordRequest: v1.UpdatePasswordRequest{Username: "uppasswd", Password: "admin123", NewPassword: "admin1234"}, want: codes.OK},
+		{UpdatePasswordRequest: v1.UpdatePasswordRequest{Username: "uppasswd", Password: "admin123", NewPassword: "admin1234"}, want: errs.TokenOut.Code},
+		{UpdatePasswordRequest: v1.UpdatePasswordRequest{Username: "uppasswd", Password: "admin123"}, Relogin: true, want: errs.AdminLoginFail.Code},
+		{UpdatePasswordRequest: v1.UpdatePasswordRequest{Username: "uppasswd", Password: "admin1234"}, Relogin: true, want: codes.OK},
+		{UpdatePasswordRequest: v1.UpdatePasswordRequest{Username: "uppasswd", Password: "admin123", NewPassword: "admin1234"}, want: errs.AdminOldPwdErr.Code},
+		{UpdatePasswordRequest: v1.UpdatePasswordRequest{Username: "uppasswd", Password: "", NewPassword: "admin123434"}, want: codes.BadRequest},
+		{UpdatePasswordRequest: v1.UpdatePasswordRequest{Username: "uppasswd", Password: "admin123", NewPassword: ""}, want: codes.BadRequest},
+		{UpdatePasswordRequest: v1.UpdatePasswordRequest{Username: "", Password: "admin123", NewPassword: "admin123434"}, want: codes.BadRequest},
+		{UpdatePasswordRequest: v1.UpdatePasswordRequest{Username: "uppasswd", Password: "admin1234", NewPassword: "admin123"}, want: codes.OK},
+	}
+
+	for i, test := range tests {
+		// 更新密码后登录校验
+		if test.Relogin {
+			token, err = GetToken(&v1.AdminLoginRequest{
+				v1.UsernamePasswd{
+					Username: test.Username, Password: test.Password,
+				},
+			})
+
+			if err != nil {
+				var serr *status.Status
+				if !errors.As(err, &serr) || serr.Code != test.want {
+					t.Errorf("index:%d, err: %v", i, err)
+					return
+				}
+			}
+			return
+		}
+		// 更新密码相关校验
+		client := uhttp.NewHttpClient[r.Response[v1.AdminPwdErr]](AdminEndpoint+"/updatePassword", http.MethodPost)
+		client.Header.Set(middleware.AuthHeader, "Bearer "+token.Token)
+		client.Header.Add(uhttp.HeaderContentType, uhttp.MIMEJSON)
+		client.Header.Add(uhttp.HeaderContentType, uhttp.ContentEncoder)
+		client.Body, _ = json.Marshal(test.UpdatePasswordRequest)
+		resp, err := client.Do(context.Background())
+		if err != nil {
+			t.Fatal(err)
+		}
+		if resp.Code != test.want {
+			t.Errorf("index:%d, codes: %d msg: %s, err: %v", i, resp.Code, resp.Msg, resp.Err)
+		}
 	}
 }

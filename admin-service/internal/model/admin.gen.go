@@ -23,7 +23,7 @@ type Admin struct {
 	Note       *string               `gorm:"column:note;comment:备注信息" json:"note"`                                      // 备注信息
 	LoginTime  *time.Time            `gorm:"column:login_time;comment:最后登录时间" json:"loginTime"`                         // 最后登录时间
 	Status     bool                  `gorm:"column:status;not null;default:1;comment:帐号启用状态：0->禁用；1->启用" json:"status"` // 帐号启用状态：0->禁用；1->启用
-	IsDel      soft_delete.DeletedAt `gorm:"column:is_del;not null" json:"-"`
+	IsDel      soft_delete.DeletedAt `gorm:"column:is_del;not null;softDelete:flag" json:"-"`
 	CreateTime *time.Time            `gorm:"column:create_time;default:CURRENT_TIMESTAMP" json:"createTime"`
 	UpdateTime *time.Time            `gorm:"column:update_time;default:CURRENT_TIMESTAMP" json:"updateTime"`
 }

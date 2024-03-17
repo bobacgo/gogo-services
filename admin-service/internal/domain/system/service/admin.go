@@ -10,6 +10,7 @@ import (
 	"github.com/gogoclouds/gogo-services/admin-service/api/errs"
 	v1 "github.com/gogoclouds/gogo-services/admin-service/api/system/v1"
 	"github.com/gogoclouds/gogo-services/admin-service/internal/config"
+	"github.com/gogoclouds/gogo-services/admin-service/internal/domain/system/dto"
 	"github.com/gogoclouds/gogo-services/admin-service/internal/model"
 	"github.com/gogoclouds/gogo-services/common-lib/app/logger"
 	"github.com/gogoclouds/gogo-services/common-lib/app/security"
@@ -30,15 +31,19 @@ type IAdminRepo interface {
 	// HasUsername
 	// 1.查询字段少。
 	// 2.不能通过
-	HasUsername(ctx context.Context, username string) (exist bool, isDel uint8, err error)
-	HasEmail(ctx context.Context, email string) (exist bool, isDel uint8, err error)
+	HasUsername(ctx context.Context, req *dto.UniqueUsernameQuery) (*dto.UniqueResult, error)
+	HasEmail(ctx context.Context, req *dto.UniqueEmailQuery) (*dto.UniqueResult, error)
 	FindByUsername(ctx context.Context, username string) (*model.Admin, error)
 	FindByID(ctx context.Context, ID int64) (*model.Admin, error)
-	Find(ctx context.Context, req *v1.ListRequest) (*page.Data[*model.Admin], error)
+	Find(ctx context.Context, req *v1.AdminListRequest) (*page.Data[*model.Admin], error)
+	// 创建admin
 	Insert(ctx context.Context, record ...*model.Admin) error
-	Update(ctx context.Context, data *model.Admin) error
+	// 更新admin相关
+	Update(ctx context.Context, data *v1.AdminUpdateRequest) error
+	UpdateLoginTime(ctx context.Context, ID int64, loginTime time.Time) error
 	UpdatePwd(ctx context.Context, ID int64, pwd string) error
 	UpdateStatus(ctx context.Context, ID int64, status bool) error
+	// 删除admin
 	Delete(ctx context.Context, ID int64) error
 }
 
@@ -62,21 +67,25 @@ func NewAdminService(rdb redis.Cmdable, repo IAdminRepo, adminRoleRepo IAdminRol
 
 func (svc *AdminService) Register(ctx context.Context, data *v1.AdminRegisterRequest) error {
 	// 查询是否有相同的用户名
-	exist, isDel, err := svc.repo.HasUsername(ctx, data.Username)
-	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) { // 其他错误(非用户未找到)
+	hasRes, err := svc.repo.HasUsername(ctx, &dto.UniqueUsernameQuery{
+		Username: data.Username,
+	})
+	if err != nil { // 其他错误(非用户未找到)
 		return err
 	}
-	if isDel == 1 { // 已注销
+	if hasRes.IsDel == 1 { // 已注销
 		return errs.AdminUnUsernameDuplicated
 	}
-	if exist {
+	if hasRes.Exist {
 		return errs.AdminUsernameDuplicated
 	}
-	exist, isDel, err = svc.repo.HasEmail(ctx, data.Email)
-	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) { // 其他错误(非邮箱未找到)
+	hasRes, err = svc.repo.HasEmail(ctx, &dto.UniqueEmailQuery{
+		Email: data.Email,
+	})
+	if err != nil { // 其他错误(非邮箱未找到)
 		return err
 	}
-	if exist && isDel == 0 { // 邮箱已存在(不包括已注销的)
+	if hasRes.Exist && hasRes.IsDel == 0 { // 邮箱已存在(不包括已注销的)
 		// 重新启用已注销的账户, 需要校验邮箱是否重复,如果重复就清空该账户的邮箱号.
 		return errs.AdminEmailDuplicated
 	}
@@ -113,6 +122,9 @@ func (svc *AdminService) Login(ctx context.Context, data *v1.AdminLoginRequest) 
 	if err != nil {
 		return nil, errs.TokenGenerateErr
 	}
+
+	go svc.repo.UpdateLoginTime(ctx, admin.ID, time.Now())
+
 	return &v1.AdminLoginResponse{Token: atoken, RToken: rtoken}, nil
 }
 
@@ -163,19 +175,44 @@ func (svc *AdminService) GetAdminInfo(ctx context.Context, username string) (*v1
 	return userInfo, nil
 }
 
-func (svc *AdminService) List(ctx context.Context, req *v1.ListRequest) (*page.Data[*model.Admin], error) {
+func (svc *AdminService) List(ctx context.Context, req *v1.AdminListRequest) (*page.Data[*model.Admin], error) {
 	return svc.repo.Find(ctx, req)
 }
 
-func (svc *AdminService) GetItem(ctx context.Context, ID int64) (*model.Admin, error) {
+func (svc *AdminService) GetItem(ctx context.Context, ID int64) (*v1.AdminResponse, error) {
 	admin, err := svc.repo.FindByID(ctx, ID)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, errs.AdminNotFound
 	}
-	return admin, err
+
+	return &v1.AdminResponse{
+		ID:         admin.ID,
+		Username:   admin.Username,
+		Email:      admin.Email,
+		Icon:       admin.Icon,
+		Note:       admin.Note,
+		Status:     admin.Status,
+		LoginTime:  admin.LoginTime,
+		CreateTime: admin.CreateTime,
+		UpdateTime: admin.UpdateTime,
+	}, err
 }
 
-func (svc *AdminService) Update(ctx context.Context, data *model.Admin) error {
+// 更新admin信息
+// 不是很重要的信息不需要实时更新(没有移除token)
+func (svc *AdminService) Update(ctx context.Context, data *v1.AdminUpdateRequest) error {
+	if data.Email != nil {
+		hesRes, err := svc.repo.HasEmail(ctx, &dto.UniqueEmailQuery{
+			ExcludeID: data.ID,
+			Email:     *data.Email,
+		})
+		if err != nil {
+			return err
+		}
+		if hesRes.Exist && hesRes.IsDel == 0 { // 邮箱已存在(不包括已注销的)
+			return errs.AdminEmailDuplicated
+		}
+	}
 	return svc.repo.Update(ctx, data)
 }
 
@@ -187,10 +224,10 @@ func (svc *AdminService) UpdatePassword(ctx context.Context, req *v1.UpdatePassw
 		}
 		return err
 	}
-	if admin.Password != string(req.Password) { // TODO
+	if !req.Password.BcryptVerify(admin.Password) {
 		return errs.AdminOldPwdErr
 	}
-	if err = svc.repo.UpdatePwd(ctx, admin.ID, string(req.NewPassword)); err != nil {
+	if err = svc.repo.UpdatePwd(ctx, admin.ID, req.NewPassword.BcryptHash()); err != nil {
 		return err
 	}
 	return security.JwtHelper.RemoveToken(ctx, admin.Username)
@@ -201,7 +238,7 @@ func (svc *AdminService) Delete(ctx context.Context, ID int64) error {
 	if err != nil {
 		return errs.AdminNotFound
 	}
-	if err = svc.repo.Delete(ctx, ID); err != nil {
+	if err := svc.repo.Delete(ctx, ID); err != nil {
 		return err
 	}
 	return security.JwtHelper.RemoveToken(ctx, admin.Username)
@@ -218,12 +255,12 @@ func (svc *AdminService) UpdateStatus(ctx context.Context, ID int64, status bool
 	return security.JwtHelper.RemoveToken(ctx, admin.Username)
 }
 
-func (svc *AdminService) UpdateRole(ctx context.Context, ID int64, role []int64) error {
+func (svc *AdminService) UpdateRole(ctx context.Context, ID int64, roles []int64) error {
 	admin, err := svc.repo.FindByID(ctx, ID)
 	if err != nil {
 		return errs.AdminNotFound
 	}
-	if err = svc.adminRoleRepo.UpdateRole(ctx, ID, role); err != nil {
+	if err = svc.adminRoleRepo.UpdateRole(ctx, ID, roles); err != nil {
 		return err
 	}
 	return security.JwtHelper.RemoveToken(ctx, admin.Username)

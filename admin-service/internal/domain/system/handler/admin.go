@@ -4,7 +4,6 @@ import (
 	"github.com/gin-gonic/gin"
 	v1 "github.com/gogoclouds/gogo-services/admin-service/api/system/v1"
 	"github.com/gogoclouds/gogo-services/admin-service/internal/domain/system/service"
-	"github.com/gogoclouds/gogo-services/admin-service/internal/model"
 	"github.com/gogoclouds/gogo-services/admin-service/internal/router/middleware"
 	"github.com/gogoclouds/gogo-services/common-lib/app/security"
 	"github.com/gogoclouds/gogo-services/common-lib/web/r"
@@ -90,7 +89,7 @@ func (h *adminServer) GetSelfInfo(ctx *gin.Context) {
 }
 
 func (h *adminServer) List(ctx *gin.Context) {
-	req := new(v1.ListRequest)
+	req := new(v1.AdminListRequest)
 	if err := ctx.ShouldBind(req); err != nil {
 		r.Reply(ctx, errs.BadRequest.WithDetails(err))
 		return
@@ -104,8 +103,12 @@ func (h *adminServer) List(ctx *gin.Context) {
 }
 
 func (h *adminServer) GetItem(ctx *gin.Context) {
-	userID := security.GetUserIntID(ctx)
-	data, err := h.svc.GetItem(ctx, userID)
+	req := new(v1.AdminRequest)
+	if err := ctx.ShouldBindUri(req); err != nil {
+		r.Reply(ctx, errs.BadRequest.WithDetails(err))
+		return
+	}
+	data, err := h.svc.GetItem(ctx, req.ID)
 	if err != nil {
 		r.Reply(ctx, err)
 		return
@@ -114,7 +117,11 @@ func (h *adminServer) GetItem(ctx *gin.Context) {
 }
 
 func (h *adminServer) Update(ctx *gin.Context) {
-	req := new(model.Admin)
+	req := new(v1.AdminUpdateRequest)
+	if err := ctx.ShouldBindUri(req); err != nil {
+		r.Reply(ctx, errs.BadRequest.WithDetails(err))
+		return
+	}
 	if err := ctx.ShouldBind(req); err != nil {
 		r.Reply(ctx, errs.BadRequest.WithDetails(err))
 		return
@@ -139,8 +146,12 @@ func (h *adminServer) UpdatePassword(ctx *gin.Context) {
 }
 
 func (h *adminServer) Delete(ctx *gin.Context) {
-	userID := security.GetUserIntID(ctx)
-	err := h.svc.Delete(ctx, userID)
+	req := new(v1.AdminRequest)
+	if err := ctx.ShouldBindUri(req); err != nil {
+		r.Reply(ctx, errs.BadRequest.WithDetails(err))
+		return
+	}
+	err := h.svc.Delete(ctx, req.ID)
 	r.Reply(ctx, err)
 }
 

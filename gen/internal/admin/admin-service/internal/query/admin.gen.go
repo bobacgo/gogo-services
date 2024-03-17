@@ -32,7 +32,7 @@ func newAdmin(db *gorm.DB, opts ...gen.DOOption) admin {
 	_admin.Password = field.NewString(tableName, "password")
 	_admin.Icon = field.NewString(tableName, "icon")
 	_admin.Email = field.NewString(tableName, "email")
-	_admin.NickName = field.NewString(tableName, "nick_name")
+	_admin.Nickname = field.NewString(tableName, "nickname")
 	_admin.Note = field.NewString(tableName, "note")
 	_admin.LoginTime = field.NewTime(tableName, "login_time")
 	_admin.Status = field.NewBool(tableName, "status")
@@ -55,7 +55,7 @@ type admin struct {
 	Password   field.String
 	Icon       field.String // 头像
 	Email      field.String // 邮箱
-	NickName   field.String // 昵称
+	Nickname   field.String // 昵称
 	Note       field.String // 备注信息
 	LoginTime  field.Time   // 最后登录时间
 	Status     field.Bool   // 帐号启用状态：0->禁用；1->启用
@@ -83,7 +83,7 @@ func (a *admin) updateTableName(table string) *admin {
 	a.Password = field.NewString(table, "password")
 	a.Icon = field.NewString(table, "icon")
 	a.Email = field.NewString(table, "email")
-	a.NickName = field.NewString(table, "nick_name")
+	a.Nickname = field.NewString(table, "nickname")
 	a.Note = field.NewString(table, "note")
 	a.LoginTime = field.NewTime(table, "login_time")
 	a.Status = field.NewBool(table, "status")
@@ -120,7 +120,7 @@ func (a *admin) fillFieldMap() {
 	a.fieldMap["password"] = a.Password
 	a.fieldMap["icon"] = a.Icon
 	a.fieldMap["email"] = a.Email
-	a.fieldMap["nick_name"] = a.NickName
+	a.fieldMap["nickname"] = a.Nickname
 	a.fieldMap["note"] = a.Note
 	a.fieldMap["login_time"] = a.LoginTime
 	a.fieldMap["status"] = a.Status

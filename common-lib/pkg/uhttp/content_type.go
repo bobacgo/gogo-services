@@ -2,6 +2,8 @@ package uhttp
 
 const HeaderContentType = "Content-Type"
 
+const ContentEncoder = "utf-8"
+
 // Content-Type MIME of the most common data formats.
 // github.com/gin-gonic/gin/binding
 const (

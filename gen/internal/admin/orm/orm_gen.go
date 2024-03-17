@@ -2,13 +2,15 @@ package main
 
 import (
 	"context"
-	"github.com/gogoclouds/gogo-services/common-lib/pkg/word"
 	"log"
 	"os"
 	"time"
 
+	"github.com/gogoclouds/gogo-services/common-lib/pkg/word"
+
 	"gorm.io/driver/mysql"
 	"gorm.io/gen"
+	"gorm.io/gen/field"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 	"gorm.io/gorm/schema"
@@ -66,7 +68,11 @@ func main() {
 	g.UseDB(db)
 	g.ApplyBasic(
 		g.GenerateModel("menu"),
-		g.GenerateModel("admin", gen.FieldJSONTag("password", "-"), gen.FieldType("is_del", "soft_delete.DeletedAt"), gen.FieldJSONTag("is_del", "-")),
+		g.GenerateModel("admin", gen.FieldJSONTag("password", "-"), gen.FieldType("is_del", "soft_delete.DeletedAt"), gen.FieldJSONTag("is_del", "-"),
+			gen.FieldGORMTag("is_del", func(tag field.GormTag) field.GormTag {
+				tag.Set("softDelete", "flag")
+				return tag
+			})),
 		g.GenerateModel("role"),
 		g.GenerateModel("admin_role_relation"),
 	)

@@ -1,6 +1,8 @@
 package v1
 
 import (
+	"time"
+
 	"github.com/gin-gonic/gin"
 	"github.com/gogoclouds/gogo-services/admin-service/internal/model"
 	"github.com/gogoclouds/gogo-services/common-lib/app/security"
@@ -70,19 +72,44 @@ type UserInfo struct {
 	Roles    []string `json:"roles"`
 }
 
-type ListRequest struct {
+type AdminListRequest struct {
 	Keyword string `json:"keyword" form:"keyword"`
 	page.Query
 }
 
-type ListResponse struct {
+type AdminListResponse struct {
 	page.Data[*model.Admin]
 }
 
+type AdminRequest struct {
+	ID int64 `json:"id" uri:"id"`
+}
+
+type AdminResponse struct {
+	ID         int64      `json:"id"`
+	Username   string     `json:"username"`
+	Icon       *string    `json:"icon"`      // 头像
+	Email      *string    `json:"email"`     // 邮箱
+	Nickname   *string    `json:"nickname"`  // 昵称
+	Note       *string    `json:"note"`      // 备注信息
+	Status     bool       `json:"status"`    // 帐号启用状态：0->禁用；1->启用
+	LoginTime  *time.Time `json:"loginTime"` // 最后登录时间
+	CreateTime *time.Time `son:"createTime"`
+	UpdateTime *time.Time `json:"updateTime"`
+}
+
+type AdminUpdateRequest struct {
+	ID       int64   `gorm:"-" json:"id"`
+	Icon     *string `json:"icon"`                             // 头像
+	Email    *string `json:"email" validate:"omitempty,email"` // 邮箱
+	Nickname *string `json:"nickname"`                         // 昵称
+	Note     *string `json:"note"`                             // 备注信息
+}
+
 type UpdatePasswordRequest struct {
-	UsernamePasswd
-	Password    security.Ciphertext `json:"oldPassword" validate:"required"` // 密码
-	NewPassword security.Ciphertext `json:"newPassword" validate:"required"` // 新密码
+	Username    string              `json:"username" validate:"required,lte=20"` // 用户名
+	Password    security.Ciphertext `json:"oldPassword" validate:"required"`     // 密码
+	NewPassword security.Ciphertext `json:"newPassword" validate:"required"`     // 新密码
 }
 
 type UpdateStatusRequest struct {
@@ -93,8 +120,4 @@ type UpdateStatusRequest struct {
 type UpdateRoleRequest struct {
 	ID    int64   `json:"id"`    // ID
 	Roles []int64 `json:"roles"` // 角色
-}
-
-type AdminResponse struct {
-	model.Admin
 }
