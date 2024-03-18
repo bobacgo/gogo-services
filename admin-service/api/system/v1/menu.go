@@ -18,6 +18,7 @@ type MenuServer interface {
 
 type MenuListRequest struct {
 	page.Query
+	ParentID int64 `json:"parentId" uri:"parentId"`
 }
 
 type MenuListResponse struct {

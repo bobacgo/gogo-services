@@ -112,12 +112,12 @@ type UpdatePasswordRequest struct {
 	NewPassword security.Ciphertext `json:"newPassword" validate:"required"`     // 新密码
 }
 
-type UpdateStatusRequest struct {
-	ID     int64 `json:"id"`     // ID
-	Status bool  `json:"status"` // 状态
+type AdminUpdateStatusRequest struct {
+	ID     int64 `json:"id" uri:"id"`                // ID
+	Status *bool `json:"status" validate:"required"` // 状态
 }
 
-type UpdateRoleRequest struct {
+type AdminUpdateRoleRequest struct {
 	ID    int64   `json:"id"`    // ID
 	Roles []int64 `json:"roles"` // 角色
 }

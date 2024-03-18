@@ -40,10 +40,14 @@ func GetToken(request *v1.AdminLoginRequest) (*v1.AdminLoginResponse, error) {
 		return nil, err
 	}
 	if resp.Code != codes.OK {
-		if resp.Code == errs.AdminLoginFail.Code {
+		switch resp.Code {
+		case errs.AdminLoginFail.Code:
 			return nil, errs.AdminLoginFail
+		case errs.AdminLoginForbidden.Code:
+			return nil, errs.AdminLoginForbidden
+		default:
+			return nil, fmt.Errorf("msg: %s, err: %v", resp.Msg, resp.Err)
 		}
-		return nil, fmt.Errorf("msg: %s, err: %v", resp.Msg, resp.Err)
 	}
 	return &resp.Data, nil
 }
@@ -183,7 +187,7 @@ func TestGetSelfInfo(t *testing.T) {
 	}
 }
 
-func TestList(t *testing.T) {
+func TestAdminList(t *testing.T) {
 	token, err := GetToken(nil)
 	if err != nil {
 		t.Fatal(err)
@@ -200,7 +204,7 @@ func TestList(t *testing.T) {
 	}
 }
 
-func TestGetItem(t *testing.T) {
+func TestAdminGetItem(t *testing.T) {
 	token, err := GetToken(nil)
 	if err != nil {
 		t.Fatal(err)
@@ -228,7 +232,7 @@ func TestGetItem(t *testing.T) {
 	}
 }
 
-func TestDelete(t *testing.T) {
+func TestAdminDelete(t *testing.T) {
 	token, err := GetToken(nil)
 	if err != nil {
 		t.Fatal(err)
@@ -256,7 +260,7 @@ func TestDelete(t *testing.T) {
 	}
 }
 
-func TestUpdate(t *testing.T) {
+func TestAdminUpdate(t *testing.T) {
 	token, err := GetToken(nil)
 	if err != nil {
 		t.Fatal(err)
@@ -357,4 +361,64 @@ func TestUpdatePasswd(t *testing.T) {
 			t.Errorf("index:%d, codes: %d msg: %s, err: %v", i, resp.Code, resp.Msg, resp.Err)
 		}
 	}
+}
+
+func TestAdminStatus(t *testing.T) {
+	token, err := GetToken(nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var tests = []struct {
+		v1.AdminUpdateStatusRequest
+		relogin bool
+		want    codes.Code
+	}{
+		// 测试用例
+		// 1.修改状态成功
+		// 2.登录禁止
+		// 3.状态改回来
+		// 4.状态不传
+		{AdminUpdateStatusRequest: v1.AdminUpdateStatusRequest{ID: 7, Status: lo.ToPtr(false)}, want: codes.OK},
+		{relogin: true, want: errs.AdminLoginForbidden.Code},
+		{AdminUpdateStatusRequest: v1.AdminUpdateStatusRequest{ID: 7, Status: lo.ToPtr(true)}, want: codes.OK},
+		{AdminUpdateStatusRequest: v1.AdminUpdateStatusRequest{ID: 7}, want: codes.BadRequest},
+	}
+	for i, test := range tests {
+		if test.relogin {
+			token, err = GetToken(&v1.AdminLoginRequest{
+				v1.UsernamePasswd{
+					Username: "status0", Password: "admin123",
+				},
+			})
+
+			if err != nil {
+				var serr *status.Status
+				if !errors.As(err, &serr) || serr.Code != test.want {
+					t.Errorf("index:%d, err: %v", i, err)
+					return
+				}
+			}
+			return
+		}
+		client := uhttp.NewHttpClient[r.Response[any]](AdminEndpoint+"/updateStatus/"+strconv.FormatInt(test.ID, 10), http.MethodPost)
+		client.Header.Set(middleware.AuthHeader, "Bearer "+token.Token)
+		client.Header.Add(uhttp.HeaderContentType, uhttp.MIMEJSON)
+		client.Header.Add(uhttp.HeaderContentType, uhttp.ContentEncoder)
+		client.Body, _ = json.Marshal(test.AdminUpdateStatusRequest)
+		resp, err := client.Do(context.Background())
+		if err != nil {
+			t.Fatal(err)
+		}
+		if resp.Code != test.want {
+			t.Errorf("index:%d, codes: %d msg: %s, err: %v", i, resp.Code, resp.Msg, resp.Err)
+		}
+	}
+}
+
+func TestAdminUpdateRole(t *testing.T) {
+	// TODO
+}
+
+func TestAdminRoleList(t *testing.T) {
+	// TODO
 }

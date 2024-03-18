@@ -156,17 +156,21 @@ func (h *adminServer) Delete(ctx *gin.Context) {
 }
 
 func (h *adminServer) UpdateStatus(ctx *gin.Context) {
-	req := new(v1.UpdateStatusRequest)
+	req := new(v1.AdminUpdateStatusRequest)
+	if err := ctx.ShouldBindUri(req); err != nil {
+		r.Reply(ctx, errs.BadRequest.WithDetails(err))
+		return
+	}
 	if err := ctx.ShouldBind(req); err != nil {
 		r.Reply(ctx, errs.BadRequest.WithDetails(err))
 		return
 	}
-	err := h.svc.UpdateStatus(ctx, req.ID, req.Status)
+	err := h.svc.UpdateStatus(ctx, req.ID, *req.Status)
 	r.Reply(ctx, err)
 }
 
 func (h *adminServer) UpdateRole(ctx *gin.Context) {
-	req := new(v1.UpdateRoleRequest)
+	req := new(v1.AdminUpdateRoleRequest)
 	if err := ctx.ShouldBind(req); err != nil {
 		r.Reply(ctx, errs.BadRequest.WithDetails(err))
 		return
