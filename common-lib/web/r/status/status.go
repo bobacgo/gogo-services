@@ -2,6 +2,7 @@ package status
 
 import (
 	"fmt"
+
 	"github.com/gogoclouds/gogo-services/common-lib/web/r/codes"
 )
 
@@ -74,7 +75,7 @@ func (s *Status) WithDetails(details ...any) *Status {
 }
 
 func (s *Status) String() string {
-	return fmt.Sprintf("rpc error: code = %d desc = %s", s.GetCode(), s.GetMessage())
+	return fmt.Sprintf("code = %d desc = %s", s.GetCode(), s.GetMessage())
 }
 
 func (s *Status) Error() string {

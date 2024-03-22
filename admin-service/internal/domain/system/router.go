@@ -17,11 +17,13 @@ func Register(app *app.App, r gin.IRouter) {
 	authRouter.Use(middleware.Auth())
 	{
 		adminRepo := repo.NewAdminRepo(db)
-		adminServer := handler.NewAdminServer(service.NewAdminService(rdb, adminRepo, adminRepo))
+		menuRepo := repo.NewMenuRepo(db)
+		adminServer := handler.NewAdminServer(service.NewAdminService(rdb, adminRepo, adminRepo, menuRepo))
 		r.POST("/admin/register", adminServer.Register)                      // 用户注册
 		r.POST("/admin/login", adminServer.Login)                            // 登录以后返回token
 		r.GET("/admin/refreshToken", adminServer.RefreshToken)               // 刷新token
 		authRouter.GET("/admin/logout", adminServer.Logout)                  // 登出功能
+		authRouter.POST("/admin/logout", adminServer.Logout)                 // 登出功能 (不推荐)
 		authRouter.GET("/admin/info", adminServer.GetSelfInfo)               // 获取当前登录用户信息
 		authRouter.GET("/admin/list", adminServer.List)                      // 根据用户名或姓名分页获取用户列表
 		authRouter.GET("/admin/:id", adminServer.GetItem)                    // 获取指定用户信息

@@ -4,7 +4,7 @@ package codes
 type Code = uint32
 
 const (
-	OK                  Code = 0
+	OK                  Code = 200
 	BadRequest          Code = 400
 	InternalServerError Code = 500
 	TokenInvalid        Code = 4010

@@ -29,4 +29,8 @@ var (
 
 // menu
 
+var (
+	MenuNotFound = status.New(400100, "找不到该菜单")
+)
+
 // role

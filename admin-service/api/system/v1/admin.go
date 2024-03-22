@@ -51,8 +51,9 @@ type AdminLoginRequest struct {
 }
 
 type AdminLoginResponse struct {
-	Token  string `json:"token"`
-	RToken string `json:"rToken"`
+	TokenHead string `json:"tokenHead"`
+	Token     string `json:"token"`
+	RToken    string `json:"rToken"`
 }
 
 type AdminPwdErr struct {
@@ -65,11 +66,23 @@ type AdminRefreshTokenRequest struct {
 }
 
 type UserInfo struct {
-	Username string   `json:"username"`
-	NickName string   `json:"nickName"`
-	Menus    []any    `json:"menus"`
-	Icon     string   `json:"icon"`
-	Roles    []string `json:"roles"`
+	Username string `json:"username"`
+	NickName string `json:"nickname"`
+	// Menus    []*dto.MenuNode `json:"menus"`
+	Menus []*AdminMenu `json:"menus"`
+	Icon  string       `json:"icon"`
+	Roles []string     `json:"roles"`
+}
+
+type AdminMenu struct {
+	ID       int64   `gorm:"column:id;primaryKey;autoIncrement:true" json:"id"`
+	ParentID int64   `gorm:"column:parent_id;not null;comment:父级ID" json:"parentId"` // 父级ID
+	Title    *string `gorm:"column:title;comment:菜单名称" json:"title"`                 // 菜单名称
+	Level    *int32  `gorm:"column:level;comment:菜单级数" json:"level"`                 // 菜单级数
+	Sort     *int32  `gorm:"column:sort;comment:菜单排序" json:"sort"`                   // 菜单排序
+	Name     string  `gorm:"column:name;not null;comment:前端名称" json:"name"`          // 前端名称
+	Icon     *string `gorm:"column:icon;comment:前端图标" json:"icon"`                   // 前端图标
+	Hidden   int8    `gorm:"column:hidden;not null;comment:前端隐藏" json:"hidden"`      // 前端隐藏
 }
 
 type AdminListRequest struct {

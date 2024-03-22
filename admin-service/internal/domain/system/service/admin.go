@@ -18,6 +18,7 @@ import (
 	"github.com/gogoclouds/gogo-services/common-lib/pkg/utime"
 	"github.com/gogoclouds/gogo-services/common-lib/web/r/page"
 	"github.com/golang-jwt/jwt"
+	"github.com/jinzhu/copier"
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 )
@@ -55,13 +56,15 @@ type AdminService struct {
 	cache         redis.Cmdable
 	repo          IAdminRepo
 	adminRoleRepo IAdminRoleRepo
+	menuRepo      IMenuRepo
 }
 
-func NewAdminService(rdb redis.Cmdable, repo IAdminRepo, adminRoleRepo IAdminRoleRepo) *AdminService {
+func NewAdminService(rdb redis.Cmdable, repo IAdminRepo, adminRoleRepo IAdminRoleRepo, menuRepo IMenuRepo) *AdminService {
 	return &AdminService{
 		cache:         rdb,
 		repo:          repo,
 		adminRoleRepo: adminRoleRepo,
+		menuRepo:      menuRepo,
 	}
 }
 
@@ -125,7 +128,7 @@ func (svc *AdminService) Login(ctx context.Context, data *v1.AdminLoginRequest) 
 
 	go svc.repo.UpdateLoginTime(ctx, admin.ID, time.Now())
 
-	return &v1.AdminLoginResponse{Token: atoken, RToken: rtoken}, nil
+	return &v1.AdminLoginResponse{TokenHead: "Bearer ", Token: atoken, RToken: rtoken}, nil
 }
 
 func (svc *AdminService) Logout(ctx context.Context, username string) error {
@@ -157,16 +160,28 @@ func (svc *AdminService) RefreshToken(ctx context.Context, req *v1.AdminRefreshT
 func (svc *AdminService) GetAdminInfo(ctx context.Context, username string) (*v1.UserInfo, error) {
 	admin, err := svc.repo.FindByUsername(ctx, username)
 	if err != nil {
+		logger.Error("get admin info error", "username", username, "err", err)
 		return nil, errs.AdminNotFound
 	}
+
+	menusList, _, err := svc.menuRepo.Find(ctx, &v1.MenuListRequest{Query: page.NewQuery(-1, -1)})
+	if err != nil {
+		logger.Error("get menu list error", "err", err)
+		return nil, errs.AdminNotFound
+	}
+
+	// menus := new(MenuService).listToTree(menusList)
+
 	if admin.Nickname == nil {
 		admin.Nickname = &admin.Username
 	}
+	var menus []*v1.AdminMenu
+	copier.Copy(&menus, menusList)
 	userInfo := &v1.UserInfo{
 		Username: admin.Username,
 		NickName: *admin.Nickname,
-		Roles:    []string{"admin"}, // TODO 获取用户角色
-		Menus:    []any{},           // TODO 获取角色菜单
+		Roles:    []string{"超级管理员"}, // TODO 获取用户角色
+		Menus:    menus,             // TODO 获取角色菜单
 	}
 
 	if admin.Icon != nil {

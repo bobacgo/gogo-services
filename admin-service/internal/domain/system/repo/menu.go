@@ -2,7 +2,10 @@ package repo
 
 import (
 	"context"
-	"github.com/gogoclouds/gogo-services/admin-service/api/system/v1"
+	"errors"
+
+	"github.com/gogoclouds/gogo-services/admin-service/api/errs"
+	v1 "github.com/gogoclouds/gogo-services/admin-service/api/system/v1"
 	"github.com/gogoclouds/gogo-services/admin-service/internal/model"
 	"github.com/gogoclouds/gogo-services/admin-service/internal/query"
 	"gorm.io/gorm"
@@ -19,12 +22,21 @@ func NewMenuRepo(db *gorm.DB) *MenuRepo {
 
 func (repo *MenuRepo) Find(ctx context.Context, req *v1.MenuListRequest) (result []*model.Menu, count int64, err error) {
 	q := repo.q.Menu
-	return q.WithContext(ctx).FindByPage(req.Offset(), req.Limit())
+	db := q.WithContext(ctx)
+	if req.ParentID != nil {
+		db = db.Where(q.ParentID.Eq(*req.ParentID))
+	}
+	// return q.WithContext(ctx).Where(q.ParentID.Eq(req.ParentID)).FindByPage(req.Offset(), req.Limit())
+	return db.FindByPage(req.Offset(), req.Limit())
 }
 
 func (repo *MenuRepo) FindOne(ctx context.Context, req *v1.MenuRequest) (*model.Menu, error) {
 	q := repo.q.Menu
-	return q.WithContext(ctx).Where(q.ID.Eq(req.ID)).First()
+	res, err := q.WithContext(ctx).Where(q.ID.Eq(req.ID)).First()
+	if errors.Is(err, gorm.ErrRecordNotFound) { // 错误应该不能依赖于底层错误
+		return nil, errs.MenuNotFound
+	}
+	return res, err
 }
 
 func (repo *MenuRepo) Create(ctx context.Context, data *model.Menu) error {

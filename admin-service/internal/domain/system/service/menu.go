@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"log/slog"
 
 	v1 "github.com/gogoclouds/gogo-services/admin-service/api/system/v1"
 	"github.com/gogoclouds/gogo-services/admin-service/internal/domain/system/dto"
@@ -56,6 +57,7 @@ func (svc *MenuService) TreeList(ctx context.Context) ([]*dto.MenuNode, error) {
 func (svc *MenuService) GetDetails(ctx context.Context, req *v1.MenuRequest) (*v1.MenuResponse, error) {
 	one, err := svc.repo.FindOne(ctx, req)
 	if err != nil {
+		slog.ErrorContext(ctx, "find menu details failed", slog.Int64("id", req.ID), slog.Any("err", err))
 		return nil, err
 	}
 	return &v1.MenuResponse{

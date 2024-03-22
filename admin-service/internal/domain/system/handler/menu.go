@@ -45,7 +45,7 @@ func (h *MenuServer) TreeList(ctx *gin.Context) {
 
 func (h *MenuServer) Details(ctx *gin.Context) {
 	req := new(v1.MenuRequest)
-	if err := ctx.ShouldBind(req); err != nil {
+	if err := ctx.ShouldBindUri(req); err != nil {
 		r.Reply(ctx, errs.BadRequest.WithDetails(err))
 		return
 	}
