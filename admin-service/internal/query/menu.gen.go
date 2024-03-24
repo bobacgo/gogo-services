@@ -36,6 +36,7 @@ func newMenu(db *gorm.DB, opts ...gen.DOOption) menu {
 	_menu.Icon = field.NewString(tableName, "icon")
 	_menu.Hidden = field.NewBool(tableName, "hidden")
 	_menu.CreateTime = field.NewTime(tableName, "create_time")
+	_menu.UpdateTime = field.NewTime(tableName, "update_time")
 
 	_menu.fillFieldMap()
 
@@ -55,7 +56,8 @@ type menu struct {
 	Name       field.String // 前端名称
 	Icon       field.String // 前端图标
 	Hidden     field.Bool   // 前端隐藏
-	CreateTime field.Time   // 创建时间
+	CreateTime field.Time
+	UpdateTime field.Time
 
 	fieldMap map[string]field.Expr
 }
@@ -81,6 +83,7 @@ func (m *menu) updateTableName(table string) *menu {
 	m.Icon = field.NewString(table, "icon")
 	m.Hidden = field.NewBool(table, "hidden")
 	m.CreateTime = field.NewTime(table, "create_time")
+	m.UpdateTime = field.NewTime(table, "update_time")
 
 	m.fillFieldMap()
 
@@ -105,7 +108,7 @@ func (m *menu) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (m *menu) fillFieldMap() {
-	m.fieldMap = make(map[string]field.Expr, 9)
+	m.fieldMap = make(map[string]field.Expr, 10)
 	m.fieldMap["id"] = m.ID
 	m.fieldMap["parent_id"] = m.ParentID
 	m.fieldMap["title"] = m.Title
@@ -115,6 +118,7 @@ func (m *menu) fillFieldMap() {
 	m.fieldMap["icon"] = m.Icon
 	m.fieldMap["hidden"] = m.Hidden
 	m.fieldMap["create_time"] = m.CreateTime
+	m.fieldMap["update_time"] = m.UpdateTime
 }
 
 func (m menu) clone(db *gorm.DB) menu {

@@ -164,7 +164,7 @@ func (svc *AdminService) GetAdminInfo(ctx context.Context, username string) (*v1
 		return nil, errs.AdminNotFound
 	}
 
-	menusList, _, err := svc.menuRepo.Find(ctx, &v1.MenuListRequest{Query: page.NewQuery(-1, -1)})
+	menusList, _, err := svc.menuRepo.Find(ctx, &v1.MenuListRequest{Query: page.NewNot()})
 	if err != nil {
 		logger.Error("get menu list error", "err", err)
 		return nil, errs.AdminNotFound

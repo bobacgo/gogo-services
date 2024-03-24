@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"log/slog"
 
 	v1 "github.com/gogoclouds/gogo-services/admin-service/api/system/v1"
 	"github.com/gogoclouds/gogo-services/admin-service/internal/domain/system/dto"
@@ -17,7 +16,7 @@ type IMenuRepo interface {
 	FindOne(ctx context.Context, req *v1.MenuRequest) (*model.Menu, error)
 	Create(ctx context.Context, data *model.Menu) error
 	Update(ctx context.Context, req *v1.MenuUpdateRequest) error
-	UpdateHidden(ctx context.Context, ID int64, hidden bool) error
+	UpdateHidden(ctx context.Context, ID int64, hidden *bool) error
 	Delete(ctx context.Context, req *v1.MenuDeleteRequest) error
 }
 
@@ -41,12 +40,7 @@ func (svc *MenuService) List(ctx context.Context, req *v1.MenuListRequest) (*pag
 }
 
 func (svc *MenuService) TreeList(ctx context.Context) ([]*dto.MenuNode, error) {
-	req := v1.MenuListRequest{
-		Query: page.Query{
-			PageNum:  -1,
-			PageSize: -1,
-		},
-	}
+	req := v1.MenuListRequest{Query: page.NewNot()}
 	list, _, err := svc.repo.Find(ctx, &req)
 	if err != nil {
 		return nil, err
@@ -54,15 +48,8 @@ func (svc *MenuService) TreeList(ctx context.Context) ([]*dto.MenuNode, error) {
 	return svc.listToTree(list), nil
 }
 
-func (svc *MenuService) GetDetails(ctx context.Context, req *v1.MenuRequest) (*v1.MenuResponse, error) {
-	one, err := svc.repo.FindOne(ctx, req)
-	if err != nil {
-		slog.ErrorContext(ctx, "find menu details failed", slog.Int64("id", req.ID), slog.Any("err", err))
-		return nil, err
-	}
-	return &v1.MenuResponse{
-		Menu: one,
-	}, nil
+func (svc *MenuService) GetDetails(ctx context.Context, req *v1.MenuRequest) (*model.Menu, error) {
+	return svc.repo.FindOne(ctx, req)
 }
 
 func (svc *MenuService) Add(ctx context.Context, req *v1.MenuCreateRequest) error {
@@ -75,7 +62,7 @@ func (svc *MenuService) Update(ctx context.Context, req *v1.MenuUpdateRequest) e
 	return svc.repo.Update(ctx, req)
 }
 
-func (svc *MenuService) UpdateHidden(ctx context.Context, ID int64, hidden bool) error {
+func (svc *MenuService) UpdateHidden(ctx context.Context, ID int64, hidden *bool) error {
 	return svc.repo.UpdateHidden(ctx, ID, hidden)
 }
 

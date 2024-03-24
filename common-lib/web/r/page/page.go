@@ -14,6 +14,11 @@ func NewQuery(pageNum, pageSize int) Query {
 	return Query{PageNum: pageNum, PageSize: pageSize}
 }
 
+// NewNot 分页接口查询所有(不分页)
+func NewNot() Query {
+	return NewQuery(-1, -1)
+}
+
 func (r Query) Offset() int {
 	pNum := r.PageNum
 	if r.PageNum < 0 {

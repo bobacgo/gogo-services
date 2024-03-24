@@ -1,6 +1,8 @@
 package r
 
 import (
+	"log/slog"
+
 	"github.com/gin-gonic/gin"
 	"github.com/gogoclouds/gogo-services/common-lib/web/r/errs"
 
@@ -10,7 +12,6 @@ import (
 	"strconv"
 
 	"github.com/go-playground/validator/v10"
-	"github.com/gogoclouds/gogo-services/common-lib/app/logger"
 	"github.com/gogoclouds/gogo-services/common-lib/web/r/codes"
 	"github.com/gogoclouds/gogo-services/common-lib/web/r/status"
 )
@@ -38,7 +39,7 @@ func Reply(c *gin.Context, data any) {
 		//httpCode = http.StatusInternalServerError
 		resp.Code = errs.InternalError.Code
 		resp.Msg = errs.InternalError.Message
-		logger.Error(v.Error())
+		slog.ErrorContext(c, v.Error())
 	default:
 		resp.Data = data
 	}

@@ -26,7 +26,6 @@ func (repo *MenuRepo) Find(ctx context.Context, req *v1.MenuListRequest) (result
 	if req.ParentID != nil {
 		db = db.Where(q.ParentID.Eq(*req.ParentID))
 	}
-	// return q.WithContext(ctx).Where(q.ParentID.Eq(req.ParentID)).FindByPage(req.Offset(), req.Limit())
 	return db.FindByPage(req.Offset(), req.Limit())
 }
 
@@ -49,7 +48,7 @@ func (repo *MenuRepo) Update(ctx context.Context, req *v1.MenuUpdateRequest) err
 	return err
 }
 
-func (repo *MenuRepo) UpdateHidden(ctx context.Context, ID int64, hidden bool) error {
+func (repo *MenuRepo) UpdateHidden(ctx context.Context, ID int64, hidden *bool) error {
 	q := repo.q.Menu
 	_, err := q.WithContext(ctx).Where(q.ID.Eq(ID)).Update(q.Hidden, hidden)
 	return err

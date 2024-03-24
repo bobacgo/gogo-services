@@ -2,6 +2,7 @@ package v1_test
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"strconv"
 	"testing"
@@ -14,6 +15,7 @@ import (
 	"github.com/gogoclouds/gogo-services/common-lib/web/r"
 	"github.com/gogoclouds/gogo-services/common-lib/web/r/codes"
 	"github.com/gogoclouds/gogo-services/common-lib/web/r/page"
+	"github.com/samber/lo"
 )
 
 var MenuEndpoint = "http://localhost:8080/menu"
@@ -66,6 +68,8 @@ func TestMenuDetails(t *testing.T) {
 		v1.MenuRequest
 		want codes.Code
 	}{
+		// 1. 获取存在的数据
+		// 2. 获取不存在的数据
 		{v1.MenuRequest{ID: 1}, codes.OK},
 		{v1.MenuRequest{ID: 10000}, errs.MenuNotFound.Code},
 	}
@@ -85,7 +89,34 @@ func TestMenuDetails(t *testing.T) {
 }
 
 func TestMenuAdd(t *testing.T) {
+	token, err := GetToken(nil)
+	if err != nil {
+		t.Fatal(err)
+	}
 
+	var tests = []struct {
+		v1.MenuCreateRequest
+		want codes.Code
+	}{
+		// 1. 创建成功
+		// 2. 参数校验 Title、Name、Icon 不能为空
+		{v1.MenuCreateRequest{ParentID: 0, Title: lo.ToPtr("test"), Name: "test", Icon: lo.ToPtr("test"), Level: lo.ToPtr[int32](0), Sort: lo.ToPtr[int32](0), Hidden: false}, codes.OK},
+		{v1.MenuCreateRequest{ParentID: 0, Level: lo.ToPtr[int32](0), Sort: lo.ToPtr[int32](0), Hidden: false}, codes.BadRequest},
+	}
+	for i, test := range tests {
+		client := uhttp.NewHttpClient[r.Response[any]](MenuEndpoint+"/create", http.MethodPost)
+		client.Header.Set(middleware.AuthHeader, "Bearer "+token.Token)
+		client.Header.Add(uhttp.HeaderContentType, uhttp.MIMEJSON)
+		client.Header.Add(uhttp.HeaderContentType, uhttp.ContentEncoder)
+		client.Body, _ = json.Marshal(test.MenuCreateRequest)
+		resp, err := client.Do(context.Background())
+		if err != nil {
+			t.Fatal(err)
+		}
+		if resp.Code != test.want {
+			t.Errorf("index: %d codes: %d msg: %s, err: %v", i, resp.Code, resp.Msg, resp.Err)
+		}
+	}
 }
 
 func TestMenuUpdate(t *testing.T) {
