@@ -1,24 +1,27 @@
 package handler
 
 import (
+	"log/slog"
+
 	"github.com/gin-gonic/gin"
-	"github.com/gogoclouds/gogo-services/admin-service/api/system/v1"
+	v1 "github.com/gogoclouds/gogo-services/admin-service/api/system/v1"
 	"github.com/gogoclouds/gogo-services/admin-service/internal/domain/system/service"
 	"github.com/gogoclouds/gogo-services/common-lib/web/r"
 	"github.com/gogoclouds/gogo-services/common-lib/web/r/errs"
 	"github.com/gogoclouds/gogo-services/common-lib/web/r/page"
-	"log/slog"
 )
 
-type RoleServer struct {
+type roleServer struct {
 	svc *service.RoleService
 }
 
+var _ v1.RoleServer = (*roleServer)(nil)
+
 func NewRoleServer(svc *service.RoleService) v1.RoleServer {
-	return &RoleServer{svc: svc}
+	return &roleServer{svc: svc}
 }
 
-func (h *RoleServer) List(ctx *gin.Context) {
+func (h *roleServer) List(ctx *gin.Context) {
 	req := new(v1.RoleListRequest)
 	if err := ctx.ShouldBind(req); err != nil {
 		r.Reply(ctx, errs.BadRequest.WithDetails(err))
@@ -33,7 +36,7 @@ func (h *RoleServer) List(ctx *gin.Context) {
 	r.Reply(ctx, list)
 }
 
-func (h *RoleServer) Details(ctx *gin.Context) {
+func (h *roleServer) Details(ctx *gin.Context) {
 	req := new(v1.RoleRequest)
 	if err := ctx.ShouldBind(req); err != nil {
 		r.Reply(ctx, errs.BadRequest.WithDetails(err))
@@ -48,7 +51,7 @@ func (h *RoleServer) Details(ctx *gin.Context) {
 	r.Reply(ctx, data)
 }
 
-func (h *RoleServer) Add(ctx *gin.Context) {
+func (h *roleServer) Add(ctx *gin.Context) {
 	req := new(v1.RoleCreateRequest)
 	if err := ctx.ShouldBind(req); err != nil {
 		r.Reply(ctx, errs.BadRequest.WithDetails(err))
@@ -62,7 +65,7 @@ func (h *RoleServer) Add(ctx *gin.Context) {
 	r.Reply(ctx, nil)
 }
 
-func (h *RoleServer) Update(ctx *gin.Context) {
+func (h *roleServer) Update(ctx *gin.Context) {
 	req := new(v1.RoleUpdateRequest)
 	if err := ctx.ShouldBind(req); err != nil {
 		r.Reply(ctx, errs.BadRequest.WithDetails(err))
@@ -76,7 +79,7 @@ func (h *RoleServer) Update(ctx *gin.Context) {
 	r.Reply(ctx, nil)
 }
 
-func (h *RoleServer) Delete(ctx *gin.Context) {
+func (h *roleServer) Delete(ctx *gin.Context) {
 	req := new(v1.RoleDeleteRequest)
 	if err := ctx.ShouldBind(req); err != nil {
 		r.Reply(ctx, errs.BadRequest.WithDetails(err))
@@ -90,7 +93,7 @@ func (h *RoleServer) Delete(ctx *gin.Context) {
 	r.Reply(ctx, nil)
 }
 
-func (h *RoleServer) ListAll(ctx *gin.Context) {
+func (h *roleServer) ListAll(ctx *gin.Context) {
 	req := v1.RoleListRequest{
 		Query: page.Query{
 			PageNum:  -1,
@@ -106,7 +109,7 @@ func (h *RoleServer) ListAll(ctx *gin.Context) {
 	r.Reply(ctx, list)
 }
 
-func (h *RoleServer) UpdateStatus(ctx *gin.Context) {
+func (h *roleServer) UpdateStatus(ctx *gin.Context) {
 	req := new(v1.RoleUpdateStatusRequest)
 	if err := ctx.ShouldBind(req); err != nil {
 		r.Reply(ctx, errs.BadRequest.WithDetails(err))

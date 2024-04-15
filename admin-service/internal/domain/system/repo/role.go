@@ -2,7 +2,9 @@ package repo
 
 import (
 	"context"
-	"github.com/gogoclouds/gogo-services/admin-service/api/system/v1"
+
+	v1 "github.com/gogoclouds/gogo-services/admin-service/api/system/v1"
+	"github.com/gogoclouds/gogo-services/admin-service/internal/domain/system/service"
 	"github.com/gogoclouds/gogo-services/admin-service/internal/model"
 	"github.com/gogoclouds/gogo-services/admin-service/internal/query"
 	"gorm.io/gorm"
@@ -12,6 +14,8 @@ type RoleRepo struct {
 	db *gorm.DB
 	q  *query.Query
 }
+
+var _ service.IRoleRepo = (*RoleRepo)(nil)
 
 func NewRoleRepo(db *gorm.DB) *RoleRepo {
 	return &RoleRepo{db: db, q: query.Use(db)}

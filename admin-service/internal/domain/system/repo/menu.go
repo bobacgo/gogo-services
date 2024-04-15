@@ -6,6 +6,7 @@ import (
 
 	"github.com/gogoclouds/gogo-services/admin-service/api/errs"
 	v1 "github.com/gogoclouds/gogo-services/admin-service/api/system/v1"
+	"github.com/gogoclouds/gogo-services/admin-service/internal/domain/system/service"
 	"github.com/gogoclouds/gogo-services/admin-service/internal/model"
 	"github.com/gogoclouds/gogo-services/admin-service/internal/query"
 	"gorm.io/gorm"
@@ -15,6 +16,8 @@ type MenuRepo struct {
 	db *gorm.DB
 	q  *query.Query
 }
+
+var _ service.IMenuRepo = (*MenuRepo)(nil)
 
 func NewMenuRepo(db *gorm.DB) *MenuRepo {
 	return &MenuRepo{db: db, q: query.Use(db)}

@@ -4,33 +4,47 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
+	"time"
+
 	"github.com/gin-gonic/gin/binding"
 	"github.com/gogoclouds/gogo-services/common-lib/app/conf"
 	"github.com/gogoclouds/gogo-services/common-lib/app/server/http/middleware"
 	"github.com/gogoclouds/gogo-services/common-lib/web/gin/validator"
 	"github.com/gogoclouds/gogo-services/common-lib/web/r"
-	"net/http"
-	"time"
 
 	"github.com/gogoclouds/gogo-services/common-lib/app/logger"
 
 	"github.com/gin-gonic/gin"
 )
 
-func RunHttpServer(app *App, register func(a *App, e *gin.Engine)) {
-	app.Wg.Add(1)
-	defer app.Wg.Done()
+func RunHttpServer(app *App, register func(e *gin.Engine, a *Options)) {
+	app.wg.Add(1)
+	defer app.wg.Done()
 
 	e := gin.New()
+
+	switch app.opts.conf.Env {
+	case conf.EnvProd:
+		gin.SetMode(gin.ReleaseMode)
+	case conf.EnvDev:
+		gin.SetMode(gin.DebugMode)
+	case conf.EnvTest:
+		gin.SetMode(gin.TestMode)
+	}
+
 	e.Use(gin.Logger()) // TODO -> zap.Logger
 	e.Use(middleware.Recovery())
 	e.Use(middleware.LoggerResponseFail())
 
 	binding.Validator = new(validator.DefaultValidator)
-	healthApi(e)     // provide health API
-	register(app, e) // register router
+	healthApi(e) // provide health API
 
-	srv := &http.Server{Addr: app.Opts.Conf.Server.Http.Addr, Handler: e}
+	if register != nil {
+		register(e, &app.opts) // register router
+	}
+
+	srv := &http.Server{Addr: app.opts.conf.Server.Http.Addr, Handler: e}
 
 	// Initializing the server in a goroutine so that
 	// it won't block the graceful shutdown handling below
@@ -39,8 +53,8 @@ func RunHttpServer(app *App, register func(a *App, e *gin.Engine)) {
 			logger.Panicf("listen: %s\n", err)
 		}
 	}()
-	logger.Infof("http server running %s", app.Opts.Conf.Server.Http.Addr)
-	<-app.Exit
+	logger.Infof("http server running %s", app.opts.conf.Server.Http.Addr)
+	<-app.exit
 	logger.Info("Shutting down http server...")
 	// The context is used to inform the server it has 5 seconds to finish
 	// the request it is currently handling

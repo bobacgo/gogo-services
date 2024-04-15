@@ -8,15 +8,17 @@ import (
 	"github.com/gogoclouds/gogo-services/common-lib/web/r/errs"
 )
 
-type MenuServer struct {
+type menuServer struct {
 	svc *service.MenuService
 }
 
+var _ v1.MenuServer = (*menuServer)(nil)
+
 func NewMenuServer(svc *service.MenuService) v1.MenuServer {
-	return &MenuServer{svc: svc}
+	return &menuServer{svc: svc}
 }
 
-func (h *MenuServer) List(ctx *gin.Context) {
+func (h *menuServer) List(ctx *gin.Context) {
 	req := new(v1.MenuListRequest)
 	if err := ctx.ShouldBindUri(req); err != nil {
 		r.Reply(ctx, errs.BadRequest.WithDetails(err))
@@ -34,7 +36,7 @@ func (h *MenuServer) List(ctx *gin.Context) {
 	r.Reply(ctx, list)
 }
 
-func (h *MenuServer) TreeList(ctx *gin.Context) {
+func (h *menuServer) TreeList(ctx *gin.Context) {
 	list, err := h.svc.TreeList(ctx)
 	if err != nil {
 		r.Reply(ctx, err)
@@ -43,7 +45,7 @@ func (h *MenuServer) TreeList(ctx *gin.Context) {
 	r.Reply(ctx, list)
 }
 
-func (h *MenuServer) Details(ctx *gin.Context) {
+func (h *menuServer) Details(ctx *gin.Context) {
 	req := new(v1.MenuRequest)
 	if err := ctx.ShouldBindUri(req); err != nil {
 		r.Reply(ctx, errs.BadRequest.WithDetails(err))
@@ -57,7 +59,7 @@ func (h *MenuServer) Details(ctx *gin.Context) {
 	r.Reply(ctx, data)
 }
 
-func (h *MenuServer) Add(ctx *gin.Context) {
+func (h *menuServer) Add(ctx *gin.Context) {
 	req := new(v1.MenuCreateRequest)
 	if err := ctx.ShouldBind(req); err != nil {
 		r.Reply(ctx, errs.BadRequest.WithDetails(err))
@@ -70,7 +72,7 @@ func (h *MenuServer) Add(ctx *gin.Context) {
 	r.Reply(ctx, nil)
 }
 
-func (h *MenuServer) Update(ctx *gin.Context) {
+func (h *menuServer) Update(ctx *gin.Context) {
 	req := new(v1.MenuUpdateRequest)
 	if err := ctx.ShouldBind(req); err != nil {
 		r.Reply(ctx, errs.BadRequest.WithDetails(err))
@@ -83,7 +85,7 @@ func (h *MenuServer) Update(ctx *gin.Context) {
 	r.Reply(ctx, nil)
 }
 
-func (h *MenuServer) UpdateHidden(ctx *gin.Context) {
+func (h *menuServer) UpdateHidden(ctx *gin.Context) {
 	req := new(v1.MenuUpdateHiddenRequest)
 	if err := ctx.ShouldBind(req); err != nil {
 		r.Reply(ctx, errs.BadRequest.WithDetails(err))
@@ -96,7 +98,7 @@ func (h *MenuServer) UpdateHidden(ctx *gin.Context) {
 	r.Reply(ctx, nil)
 }
 
-func (h *MenuServer) Delete(ctx *gin.Context) {
+func (h *menuServer) Delete(ctx *gin.Context) {
 	req := new(v1.MenuDeleteRequest)
 	if err := ctx.ShouldBind(req); err != nil {
 		r.Reply(ctx, errs.BadRequest.WithDetails(err))

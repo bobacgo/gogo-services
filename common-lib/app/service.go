@@ -2,7 +2,6 @@ package app
 
 import (
 	"context"
-	"github.com/gogoclouds/gogo-services/common-lib/pkg/uid"
 	"net"
 	"os"
 	"os/signal"
@@ -11,23 +10,26 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/gogoclouds/gogo-services/common-lib/pkg/uid"
+
 	"github.com/gogoclouds/gogo-services/common-lib/app/logger"
 	"github.com/gogoclouds/gogo-services/common-lib/app/registry"
 	"github.com/gogoclouds/gogo-services/common-lib/pkg/network"
 )
 
 type App struct {
-	Opts options
+	opts Options
 
-	Wg   sync.WaitGroup
-	Exit chan struct{}
+	wg     sync.WaitGroup
+	exit   chan struct{}
+	signal chan os.Signal
 
 	mu       sync.Mutex
 	instance *registry.ServiceInstance
 }
 
 func New(opts ...Option) *App {
-	o := options{
+	o := Options{
 		appid:           uid.UUID(),
 		sigs:            []os.Signal{syscall.SIGTERM, syscall.SIGQUIT, syscall.SIGINT},
 		registryTimeout: 10 * time.Second,
@@ -37,8 +39,9 @@ func New(opts ...Option) *App {
 		opt(&o)
 	}
 	return &App{
-		Opts: o,
-		Exit: make(chan struct{}),
+		opts:   o,
+		exit:   make(chan struct{}),
+		signal: make(chan os.Signal, 1),
 	}
 }
 
@@ -54,7 +57,7 @@ func (a *App) Run() error {
 	a.instance = instance
 	a.mu.Unlock()
 
-	opts := a.Opts
+	opts := a.opts
 
 	if opts.httpServer != nil {
 		go RunHttpServer(a, opts.httpServer)
@@ -89,21 +92,26 @@ func (a *App) Run() error {
 	}
 
 	// 阻塞,监听退出信号
-	c := make(chan os.Signal, 1)
-	signal.Notify(c, opts.sigs...)
-	<-c
+	signal.Notify(a.signal, opts.sigs...)
+	<-a.signal
 
-	err = a.Stop(ctx)
+	err = a.shutdown(ctx)
 
 	logger.Info("service has exited")
 	return err
 }
 
-// Stop stop server
+// Stop 手动停止服务
+func (a *App) Stop() error {
+	a.signal <- syscall.SIGTERM
+	return nil
+}
+
+// shutdown server
 // 1.注销服务
 // 2.退出 http、grpc服务
-func (a *App) Stop(ctx context.Context) (err error) {
-	opts := a.Opts
+func (a *App) shutdown(ctx context.Context) (err error) {
+	opts := a.opts
 
 	for _, fn := range opts.beforeStop {
 		err = fn(ctx)
@@ -121,11 +129,11 @@ func (a *App) Stop(ctx context.Context) (err error) {
 		}
 	}
 
-	close(a.Exit) // 通知http、rpc服务退出信号
+	close(a.exit) // 通知http、rpc服务退出信号
 
 	// 1.等待 Http 服务结束退出
 	// 2.等待 RPC 服务结束退出
-	a.Wg.Wait()
+	a.wg.Wait()
 
 	for _, fn := range opts.afterStop {
 		err = fn(ctx)
@@ -135,7 +143,7 @@ func (a *App) Stop(ctx context.Context) (err error) {
 }
 
 func (a *App) buildInstance() (*registry.ServiceInstance, error) {
-	opts := a.Opts
+	opts := a.opts
 
 	endpoints := make([]string, 0)
 	httpScheme, grpcScheme := false, false
@@ -149,14 +157,14 @@ func (a *App) buildInstance() (*registry.ServiceInstance, error) {
 		endpoints = append(endpoints, e.String())
 	}
 	if !httpScheme {
-		if rUrl, err := getRegistryUrl("http", opts.Conf.Server.Http.Addr); err == nil {
+		if rUrl, err := getRegistryUrl("http", opts.conf.Server.Http.Addr); err == nil {
 			endpoints = append(endpoints, rUrl)
 		} else {
 			logger.Errorf("get http registry err:%v", err)
 		}
 	}
 	if !grpcScheme {
-		if rUrl, err := getRegistryUrl("grpc", opts.Conf.Server.Rpc.Addr); err == nil {
+		if rUrl, err := getRegistryUrl("grpc", opts.conf.Server.Rpc.Addr); err == nil {
 			endpoints = append(endpoints, rUrl)
 		} else {
 			logger.Errorf("get grpc registry err:%v", err)
@@ -164,8 +172,8 @@ func (a *App) buildInstance() (*registry.ServiceInstance, error) {
 	}
 	return &registry.ServiceInstance{
 		ID:        opts.appid,
-		Name:      opts.Conf.Name,
-		Version:   opts.Conf.Version,
+		Name:      opts.conf.Name,
+		Version:   opts.conf.Version,
 		Metadata:  nil,
 		Endpoints: endpoints,
 	}, nil

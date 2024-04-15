@@ -7,6 +7,7 @@ import (
 
 	v1 "github.com/gogoclouds/gogo-services/admin-service/api/system/v1"
 	"github.com/gogoclouds/gogo-services/admin-service/internal/domain/system/dto"
+	"github.com/gogoclouds/gogo-services/admin-service/internal/domain/system/service"
 	"github.com/gogoclouds/gogo-services/admin-service/internal/model"
 	"github.com/gogoclouds/gogo-services/admin-service/internal/query"
 	"github.com/gogoclouds/gogo-services/common-lib/web/r/page"
@@ -17,6 +18,8 @@ import (
 type AdminRepo struct {
 	q *query.Query
 }
+
+var _ service.IAdminRepo = (*AdminRepo)(nil)
 
 func NewAdminRepo(db *gorm.DB) *AdminRepo {
 	return &AdminRepo{

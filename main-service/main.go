@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+
 	"github.com/gogoclouds/gogo-services/main-service/internal/config"
 
 	"github.com/gogoclouds/gogo-services/common-lib/app"
@@ -25,6 +26,7 @@ func main() {
 			config.Conf = cfg
 		}),
 		app.WithLogger(),
+		app.WithLocalCache(),
 		app.WithDB(),
 		app.WithRedis(),
 		//app.WithGinServer(nil),

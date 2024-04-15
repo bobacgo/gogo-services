@@ -2,10 +2,13 @@ package app
 
 import (
 	"context"
-	"github.com/gogoclouds/gogo-services/common-lib/app/conf"
+	"log"
+	"log/slog"
 	"net/url"
 	"os"
 	"time"
+
+	"github.com/gogoclouds/gogo-services/common-lib/app/conf"
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/gin-gonic/gin"
@@ -19,12 +22,14 @@ import (
 	"gorm.io/gorm"
 )
 
-type Option func(o *options)
+type Option func(o *Options)
 
-type options struct {
-	Conf  *conf.BasicConfig
-	DB    *gorm.DB
-	Redis redis.UniversalClient
+type Options struct {
+	// 内部属性不能直接开放,需要通过 GetXxx 获取
+	conf       *conf.BasicConfig
+	localCache cache.Cache
+	db         *gorm.DB
+	redis      redis.UniversalClient
 
 	appid           string
 	endpoints       []*url.URL
@@ -32,45 +37,71 @@ type options struct {
 	registrar       registry.ServiceRegistrar
 	registryTimeout time.Duration
 
-	httpServer func(a *App, e *gin.Engine)
+	httpServer func(e *gin.Engine, a *Options)
 
-	rpcServer func(a *App, s *grpc.Server)
+	rpcServer func(s *grpc.Server, a *Options)
 	// Before and After hook
 	beforeStart, beforeStop, afterStart, afterStop []func(context.Context) error
 }
 
+// GetConf 获取公共配置(eg app info、logger config、db config 、redis config)
+func (o Options) GetConf() *conf.BasicConfig {
+	return o.conf
+}
+
+// GetLocalCache 获取本地缓存 Interface
+func (o Options) GetLocalCache() cache.Cache {
+	return o.localCache
+}
+
+// GetDB 获取数据库默认client
+func (o Options) GetDB() *gorm.DB {
+	return o.db
+}
+
+// GetDBByKey 获取数据库client
+func (o Options) GetDBByKey(key string) *gorm.DB {
+	// TODO 多个数据源时
+	return o.db
+}
+
+// GetRedis 获取redis client
+func (o Options) GetRedis() redis.UniversalClient {
+	return o.redis
+}
+
 func WithAppId(id string) Option {
-	return func(o *options) {
+	return func(o *Options) {
 		o.appid = id
 	}
 }
 
 func WithEndpoints(endpoints []*url.URL) Option {
-	return func(o *options) {
+	return func(o *Options) {
 		o.endpoints = endpoints
 	}
 }
 
 func WithSignal(sigs []os.Signal) Option {
-	return func(o *options) {
+	return func(o *Options) {
 		o.sigs = sigs
 	}
 }
 
 func WithRegistrar(registrar registry.ServiceRegistrar) Option {
-	return func(o *options) {
+	return func(o *Options) {
 		o.registrar = registrar
 	}
 }
 
 func WithRegistrarTimeout(rt time.Duration) Option {
-	return func(o *options) {
+	return func(o *Options) {
 		o.registryTimeout = rt
 	}
 }
 
 func WithConfig[T any](filename string, fn func(cfg *conf.ServiceConfig[T])) Option {
-	return func(o *options) {
+	return func(o *Options) {
 		cfg, err := conf.Load[conf.ServiceConfig[T]](filename, func(e fsnotify.Event) {
 			//logger.S(config.Conf.Logger.Level)
 		})
@@ -78,52 +109,63 @@ func WithConfig[T any](filename string, fn func(cfg *conf.ServiceConfig[T])) Opt
 			panic(err)
 		}
 		fn(cfg)
-		o.Conf = &cfg.BasicConfig
+		o.conf = &cfg.BasicConfig
 		conf.Conf = &cfg.BasicConfig
 	}
 }
 
 func WithLogger() Option {
-	return func(o *options) {
-		o.Conf.Logger = logger.NewConfig()
-		o.Conf.Logger.Filename = o.Conf.Name
+	return func(o *Options) {
+		o.conf.Logger = logger.NewConfig()
+		o.conf.Logger.Filename = o.conf.Name
 		//o.Conf.Logger.TimeFormat = o.Conf.TimeFormat
-		logger.InitZapLogger(o.Conf.Logger)
-		logger.Info("logger init done...")
+		logger.InitZapLogger(o.conf.Logger)
+		slog.Info("[logger] init done.")
+	}
+}
+
+func WithLocalCache() Option {
+	return func(o *Options) {
+		var err error
+		o.localCache, err = cache.DefaultCache()
+		if err != nil {
+			log.Panicln(err)
+		}
+		slog.Info("[local_cache] init done.")
 	}
 }
 
 func WithDB(tables ...[]string) Option {
 	// TODO gorm.AutoMerge
-	return func(o *options) {
-		newDB, err := db.NewDB(mysql.Open(o.Conf.DB.Source), o.Conf.DB)
+	return func(o *Options) {
+		var err error
+		o.db, err = db.NewDB(mysql.Open(o.conf.DB.Source), o.conf.DB)
 		if err != nil {
-			logger.Panic(err.Error())
+			log.Panicln(err.Error())
 		}
-		logger.Info("mysql init done...")
-		o.DB = newDB
+		slog.Info("[mysql] init done.")
 	}
 }
 
 func WithRedis() Option {
-	return func(o *options) {
-		newRedis, err := cache.NewRedis(o.Conf.Redis)
+	return func(o *Options) {
+		var err error
+		o.redis, err = cache.NewRedis(o.conf.Redis)
 		if err != nil {
-			logger.Panic(err.Error())
+			log.Panicln(err.Error())
 		}
-		logger.Info("redis init done...")
-		o.Redis = newRedis
+		slog.Info("[redis] init done.")
 	}
 }
 
-func WithGinServer(router func(a *App, e *gin.Engine)) Option {
-	return func(o *options) {
+func WithGinServer(router func(e *gin.Engine, a *Options)) Option {
+	return func(o *Options) {
 		o.httpServer = router
 	}
 }
 
-func WithGrpcServer(svr func(a *App, rpcServer *grpc.Server)) Option {
-	return func(o *options) {
+func WithGrpcServer(svr func(rpcServer *grpc.Server, a *Options)) Option {
+	return func(o *Options) {
 		o.rpcServer = svr
 	}
 }
@@ -132,28 +174,28 @@ func WithGrpcServer(svr func(a *App, rpcServer *grpc.Server)) Option {
 
 // WithBeforeStart run funcs before app starts
 func WithBeforeStart(fn func(context.Context) error) Option {
-	return func(o *options) {
+	return func(o *Options) {
 		o.beforeStart = append(o.beforeStart, fn)
 	}
 }
 
 // WithBeforeStop run funcs before app stops
 func WithBeforeStop(fn func(context.Context) error) Option {
-	return func(o *options) {
+	return func(o *Options) {
 		o.beforeStop = append(o.beforeStop, fn)
 	}
 }
 
 // WithAfterStart run funcs after app starts
 func WithAfterStart(fn func(context.Context) error) Option {
-	return func(o *options) {
+	return func(o *Options) {
 		o.afterStart = append(o.afterStart, fn)
 	}
 }
 
 // WithAfterStop run funcs after app stops
 func WithAfterStop(fn func(context.Context) error) Option {
-	return func(o *options) {
+	return func(o *Options) {
 		o.afterStop = append(o.afterStop, fn)
 	}
 }

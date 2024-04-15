@@ -1,6 +1,7 @@
 package app
 
 import (
+	"log"
 	"net"
 
 	"google.golang.org/grpc"
@@ -10,26 +11,29 @@ import (
 	healthgrpc "google.golang.org/grpc/health/grpc_health_v1"
 )
 
-func RunRpcServer(app *App, register func(app *App, server *grpc.Server)) {
-	app.Wg.Add(1)
-	defer app.Wg.Done()
-	lis, err := net.Listen("tcp", app.Opts.Conf.Server.Rpc.Addr)
+func RunRpcServer(app *App, register func(server *grpc.Server, app *Options)) {
+	app.wg.Add(1)
+	defer app.wg.Done()
+	lis, err := net.Listen("tcp", app.opts.conf.Server.Rpc.Addr)
 	if err != nil {
-		panic(err)
+		log.Panicln(err)
 	}
 	s := grpc.NewServer()
 
 	// 注册健康检查服务
 	healthgrpc.RegisterHealthServer(s, health.NewServer())
-	register(app, s)
+
+	if register != nil {
+		register(s, &app.opts)
+	}
 
 	go func() {
 		if err = s.Serve(lis); err != nil {
-			panic(err)
+			log.Panicln(err)
 		}
 	}()
 
-	<-app.Exit       // 阻塞,等待被关闭
+	<-app.exit       // 阻塞,等待被关闭
 	s.GracefulStop() // 优雅停止
 }
 

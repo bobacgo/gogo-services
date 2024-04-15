@@ -1,10 +1,11 @@
 package app_test
 
 import (
-	"github.com/gogoclouds/gogo-services/common-lib/app"
 	"io"
 	"net/http"
 	"testing"
+
+	"github.com/gogoclouds/gogo-services/common-lib/app"
 
 	"github.com/gin-gonic/gin"
 )
@@ -29,7 +30,7 @@ func Test_HttpApi(t *testing.T) {
 	t.Logf("%s", b)
 }
 
-func router(app *app.App, e *gin.Engine) {
+func router(e *gin.Engine, app *app.Options) {
 	e.GET("/ping", func(c *gin.Context) {
 		c.JSON(200, map[string]interface{}{
 			"code": 0,

@@ -14,6 +14,8 @@ type adminServer struct {
 	svc *service.AdminService
 }
 
+var _ v1.AdminServer = (*adminServer)(nil)
+
 func NewAdminServer(svc *service.AdminService) v1.AdminServer {
 	return &adminServer{svc: svc}
 }

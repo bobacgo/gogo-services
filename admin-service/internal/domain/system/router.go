@@ -9,9 +9,8 @@ import (
 	"github.com/gogoclouds/gogo-services/common-lib/app"
 )
 
-func Register(app *app.App, r gin.IRouter) {
-	db := app.Opts.DB
-	rdb := app.Opts.Redis
+func Register(app *app.Options, r gin.IRouter) {
+	db, rdb := app.GetDB(), app.GetRedis()
 
 	authRouter := r.Group("")
 	authRouter.Use(middleware.Auth())
