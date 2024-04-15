@@ -10,7 +10,7 @@ import (
 	"github.com/gogoclouds/gogo-services/common-lib/app/logger"
 )
 
-var filepath = flag.String("config", "config/config.yaml", "config file path")
+var filepath = flag.String("config", "./config.yaml", "config file path")
 
 func init() {
 	flag.String("name", "main-service", "service name")

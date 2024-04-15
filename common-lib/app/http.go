@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"time"
 
@@ -22,8 +23,6 @@ func RunHttpServer(app *App, register func(e *gin.Engine, a *Options)) {
 	app.wg.Add(1)
 	defer app.wg.Done()
 
-	e := gin.New()
-
 	switch app.opts.conf.Env {
 	case conf.EnvProd:
 		gin.SetMode(gin.ReleaseMode)
@@ -33,9 +32,13 @@ func RunHttpServer(app *App, register func(e *gin.Engine, a *Options)) {
 		gin.SetMode(gin.TestMode)
 	}
 
+	e := gin.New()
+
 	e.Use(gin.Logger()) // TODO -> zap.Logger
 	e.Use(middleware.Recovery())
 	e.Use(middleware.LoggerResponseFail())
+
+	slog.Warn(fmt.Sprintf(`[gin] Running in "%s" mode`, gin.Mode()))
 
 	binding.Validator = new(validator.DefaultValidator)
 	healthApi(e) // provide health API
