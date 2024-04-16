@@ -16,8 +16,9 @@ func Register(app *app.Options, r gin.IRouter) {
 	authRouter.Use(middleware.Auth())
 	{
 		adminRepo := repo.NewAdminRepo(db)
+		adminRoleRepo := repo.NewAdminRoleRepo(db)
 		menuRepo := repo.NewMenuRepo(db)
-		adminServer := handler.NewAdminServer(service.NewAdminService(rdb, adminRepo, adminRepo, menuRepo))
+		adminServer := handler.NewAdminServer(service.NewAdminService(rdb, adminRepo, adminRoleRepo, menuRepo))
 		r.POST("/admin/register", adminServer.Register)                      // 用户注册
 		r.POST("/admin/login", adminServer.Login)                            // 登录以后返回token
 		r.GET("/admin/refreshToken", adminServer.RefreshToken)               // 刷新token

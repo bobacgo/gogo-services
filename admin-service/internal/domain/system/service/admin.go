@@ -52,15 +52,17 @@ const (
 	LoginLimitKeyPrefix = "admin:login_limit"
 )
 
-type AdminService struct {
+type adminService struct {
 	cache         redis.Cmdable
 	repo          IAdminRepo
 	adminRoleRepo IAdminRoleRepo
 	menuRepo      IMenuRepo
 }
 
-func NewAdminService(rdb redis.Cmdable, repo IAdminRepo, adminRoleRepo IAdminRoleRepo, menuRepo IMenuRepo) *AdminService {
-	return &AdminService{
+var _ v1.IAdminServer = (*adminService)(nil)
+
+func NewAdminService(rdb redis.Cmdable, repo IAdminRepo, adminRoleRepo IAdminRoleRepo, menuRepo IMenuRepo) v1.IAdminServer {
+	return &adminService{
 		cache:         rdb,
 		repo:          repo,
 		adminRoleRepo: adminRoleRepo,
@@ -68,7 +70,7 @@ func NewAdminService(rdb redis.Cmdable, repo IAdminRepo, adminRoleRepo IAdminRol
 	}
 }
 
-func (svc *AdminService) Register(ctx context.Context, data *v1.AdminRegisterRequest) error {
+func (svc *adminService) Register(ctx context.Context, data *v1.AdminRegisterRequest) error {
 	// 查询是否有相同的用户名
 	hasRes, err := svc.repo.HasUsername(ctx, &dto.UniqueUsernameQuery{
 		Username: data.Username,
@@ -101,7 +103,7 @@ func (svc *AdminService) Register(ctx context.Context, data *v1.AdminRegisterReq
 	})
 }
 
-func (svc *AdminService) Login(ctx context.Context, data *v1.AdminLoginRequest) (*v1.AdminLoginResponse, error) {
+func (svc *adminService) Login(ctx context.Context, data *v1.AdminLoginRequest) (*v1.AdminLoginResponse, error) {
 	// 1.支持多平台， 不同平台有不同的 token
 	// 2.每一个平台只能登录同时在线一个
 	admin, err := svc.repo.FindByUsername(ctx, data.Username)
@@ -131,11 +133,11 @@ func (svc *AdminService) Login(ctx context.Context, data *v1.AdminLoginRequest) 
 	return &v1.AdminLoginResponse{TokenHead: "Bearer ", Token: atoken, RToken: rtoken}, nil
 }
 
-func (svc *AdminService) Logout(ctx context.Context, username string) error {
+func (svc *adminService) Logout(ctx context.Context, username string) error {
 	return security.JwtHelper.RemoveToken(ctx, username)
 }
 
-func (svc *AdminService) RefreshToken(ctx context.Context, req *v1.AdminRefreshTokenRequest) (*v1.AdminLoginResponse, error) {
+func (svc *adminService) RefreshToken(ctx context.Context, req *v1.AdminRefreshTokenRequest) (*v1.AdminLoginResponse, error) {
 	claims, err := security.JwtHelper.Parse(req.AToken)
 	if err != nil && !security.JwtHelper.ValidationErrorExpired(err) {
 		return nil, err
@@ -157,7 +159,7 @@ func (svc *AdminService) RefreshToken(ctx context.Context, req *v1.AdminRefreshT
 	return &v1.AdminLoginResponse{Token: aToken, RToken: rToken}, nil
 }
 
-func (svc *AdminService) GetAdminInfo(ctx context.Context, username string) (*v1.UserInfo, error) {
+func (svc *adminService) GetAdminInfo(ctx context.Context, username string) (*v1.UserInfo, error) {
 	admin, err := svc.repo.FindByUsername(ctx, username)
 	if err != nil {
 		logger.Error("get admin info error", "username", username, "err", err)
@@ -190,11 +192,11 @@ func (svc *AdminService) GetAdminInfo(ctx context.Context, username string) (*v1
 	return userInfo, nil
 }
 
-func (svc *AdminService) List(ctx context.Context, req *v1.AdminListRequest) (*page.Data[*model.Admin], error) {
+func (svc *adminService) List(ctx context.Context, req *v1.AdminListRequest) (*page.Data[*model.Admin], error) {
 	return svc.repo.Find(ctx, req)
 }
 
-func (svc *AdminService) GetItem(ctx context.Context, ID int64) (*v1.AdminResponse, error) {
+func (svc *adminService) GetItem(ctx context.Context, ID int64) (*v1.AdminResponse, error) {
 	admin, err := svc.repo.FindByID(ctx, ID)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, errs.AdminNotFound
@@ -215,7 +217,7 @@ func (svc *AdminService) GetItem(ctx context.Context, ID int64) (*v1.AdminRespon
 
 // 更新admin信息
 // 不是很重要的信息不需要实时更新(没有移除token)
-func (svc *AdminService) Update(ctx context.Context, data *v1.AdminUpdateRequest) error {
+func (svc *adminService) Update(ctx context.Context, data *v1.AdminUpdateRequest) error {
 	if data.Email != nil {
 		hesRes, err := svc.repo.HasEmail(ctx, &dto.UniqueEmailQuery{
 			ExcludeID: data.ID,
@@ -231,7 +233,7 @@ func (svc *AdminService) Update(ctx context.Context, data *v1.AdminUpdateRequest
 	return svc.repo.Update(ctx, data)
 }
 
-func (svc *AdminService) UpdatePassword(ctx context.Context, req *v1.UpdatePasswordRequest) error {
+func (svc *adminService) UpdatePassword(ctx context.Context, req *v1.UpdatePasswordRequest) error {
 	admin, err := svc.repo.FindByUsername(ctx, req.Username)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -248,7 +250,7 @@ func (svc *AdminService) UpdatePassword(ctx context.Context, req *v1.UpdatePassw
 	return security.JwtHelper.RemoveToken(ctx, admin.Username)
 }
 
-func (svc *AdminService) Delete(ctx context.Context, ID int64) error {
+func (svc *adminService) Delete(ctx context.Context, ID int64) error {
 	admin, err := svc.repo.FindByID(ctx, ID)
 	if err != nil {
 		return errs.AdminNotFound
@@ -259,7 +261,7 @@ func (svc *AdminService) Delete(ctx context.Context, ID int64) error {
 	return security.JwtHelper.RemoveToken(ctx, admin.Username)
 }
 
-func (svc *AdminService) UpdateStatus(ctx context.Context, ID int64, status bool) error {
+func (svc *adminService) UpdateStatus(ctx context.Context, ID int64, status bool) error {
 	admin, err := svc.repo.FindByID(ctx, ID)
 	if err != nil {
 		return errs.AdminNotFound
@@ -270,7 +272,7 @@ func (svc *AdminService) UpdateStatus(ctx context.Context, ID int64, status bool
 	return security.JwtHelper.RemoveToken(ctx, admin.Username)
 }
 
-func (svc *AdminService) UpdateRole(ctx context.Context, ID int64, roles []int64) error {
+func (svc *adminService) UpdateRole(ctx context.Context, ID int64, roles []int64) error {
 	admin, err := svc.repo.FindByID(ctx, ID)
 	if err != nil {
 		return errs.AdminNotFound
@@ -281,11 +283,11 @@ func (svc *AdminService) UpdateRole(ctx context.Context, ID int64, roles []int64
 	return security.JwtHelper.RemoveToken(ctx, admin.Username)
 }
 
-func (svc *AdminService) GetRoleList(ctx context.Context, ID int64) ([]*model.Role, error) {
+func (svc *adminService) GetRoleList(ctx context.Context, ID int64) ([]*model.Role, error) {
 	return svc.adminRoleRepo.FindAdminRole(ctx, ID)
 }
 
-func (svc *AdminService) newPasswdVerifier(ctx context.Context, admin *model.Admin) *security.PasswdVerifier {
+func (svc *adminService) newPasswdVerifier(ctx context.Context, admin *model.Admin) *security.PasswdVerifier {
 	pwdHelper := security.NewPasswdVerifier(svc.cache, config.Conf.Service.ErrAttemptLimit)
 	// 第二天0点清零
 	remain := utime.ZeroHour(1).Unix() - time.Now().Unix()
@@ -302,7 +304,7 @@ func (svc *AdminService) newPasswdVerifier(ctx context.Context, admin *model.Adm
 	return pwdHelper
 }
 
-func (svc *AdminService) newClaims(admin *model.Admin) *security.Claims {
+func (svc *adminService) newClaims(admin *model.Admin) *security.Claims {
 	claims := security.Claims{
 		StandardClaims: jwt.StandardClaims{Id: uid.UUID()},
 		UserID:         strconv.FormatInt(admin.ID, 10),

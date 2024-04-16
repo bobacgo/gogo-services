@@ -1,19 +1,21 @@
 package v1
 
 import (
-	"github.com/gin-gonic/gin"
+	"context"
+
+	"github.com/gogoclouds/gogo-services/admin-service/internal/domain/system/dto"
 	"github.com/gogoclouds/gogo-services/admin-service/internal/model"
 	"github.com/gogoclouds/gogo-services/common-lib/web/r/page"
 )
 
-type MenuServer interface {
-	List(ctx *gin.Context)
-	TreeList(ctx *gin.Context)
-	Details(ctx *gin.Context)
-	Add(ctx *gin.Context)
-	Update(ctx *gin.Context)
-	UpdateHidden(ctx *gin.Context)
-	Delete(ctx *gin.Context)
+type IMenuServer interface {
+	List(ctx context.Context, req *MenuListRequest) (*page.Data[*model.Menu], error)
+	TreeList(ctx context.Context) ([]*dto.MenuNode, error)
+	GetDetails(ctx context.Context, req *MenuRequest) (*model.Menu, error)
+	Add(ctx context.Context, req *MenuCreateRequest) error
+	Update(ctx context.Context, req *MenuUpdateRequest) error
+	UpdateHidden(ctx context.Context, ID int64, hidden *bool) error
+	Delete(ctx context.Context, req *MenuDeleteRequest) error
 }
 
 type MenuListRequest struct {

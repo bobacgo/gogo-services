@@ -1,19 +1,19 @@
 package v1
 
 import (
-	"github.com/gin-gonic/gin"
+	"context"
+
 	"github.com/gogoclouds/gogo-services/admin-service/internal/model"
 	"github.com/gogoclouds/gogo-services/common-lib/web/r/page"
 )
 
-type RoleServer interface {
-	List(ctx *gin.Context)
-	Details(ctx *gin.Context)
-	Add(ctx *gin.Context)
-	Update(ctx *gin.Context)
-	Delete(ctx *gin.Context)
-	ListAll(ctx *gin.Context)
-	UpdateStatus(ctx *gin.Context)
+type IRoleServer interface {
+	List(ctx context.Context, req *RoleListRequest) (*page.Data[*model.Role], error)
+	GetDetails(ctx context.Context, req *RoleRequest) (*RoleResponse, error)
+	Add(ctx context.Context, req *RoleCreateRequest) error
+	Update(ctx context.Context, req *RoleUpdateRequest) error
+	Delete(ctx context.Context, req *RoleDeleteRequest) error
+	UpdateStatus(ctx context.Context, id int64, status bool) error
 }
 
 type RoleListRequest struct {

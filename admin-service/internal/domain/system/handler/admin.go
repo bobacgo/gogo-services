@@ -3,24 +3,21 @@ package handler
 import (
 	"github.com/gin-gonic/gin"
 	v1 "github.com/gogoclouds/gogo-services/admin-service/api/system/v1"
-	"github.com/gogoclouds/gogo-services/admin-service/internal/domain/system/service"
 	"github.com/gogoclouds/gogo-services/admin-service/internal/router/middleware"
 	"github.com/gogoclouds/gogo-services/common-lib/app/security"
 	"github.com/gogoclouds/gogo-services/common-lib/web/r"
 	"github.com/gogoclouds/gogo-services/common-lib/web/r/errs"
 )
 
-type adminServer struct {
-	svc *service.AdminService
+type AdminApi struct {
+	svc v1.IAdminServer
 }
 
-var _ v1.AdminServer = (*adminServer)(nil)
-
-func NewAdminServer(svc *service.AdminService) v1.AdminServer {
-	return &adminServer{svc: svc}
+func NewAdminServer(svc v1.IAdminServer) *AdminApi {
+	return &AdminApi{svc: svc}
 }
 
-func (h *adminServer) Register(ctx *gin.Context) {
+func (h *AdminApi) Register(ctx *gin.Context) {
 	req := new(v1.AdminRegisterRequest)
 	if err := ctx.ShouldBind(req); err != nil {
 		r.Reply(ctx, errs.BadRequest.WithDetails(err))
@@ -34,7 +31,7 @@ func (h *adminServer) Register(ctx *gin.Context) {
 	r.Reply(ctx, err)
 }
 
-func (h *adminServer) Login(ctx *gin.Context) {
+func (h *AdminApi) Login(ctx *gin.Context) {
 	req := new(v1.AdminLoginRequest)
 	if err := ctx.ShouldBind(req); err != nil {
 		r.Reply(ctx, errs.BadRequest.WithDetails(err))
@@ -53,14 +50,14 @@ func (h *adminServer) Login(ctx *gin.Context) {
 	r.Reply(ctx, data)
 }
 
-func (h *adminServer) Logout(ctx *gin.Context) {
+func (h *AdminApi) Logout(ctx *gin.Context) {
 	username := security.GetUsername(ctx)
 	err := h.svc.Logout(ctx, username)
 	r.Reply(ctx, err)
 }
 
 // RefreshToken 请求头携带rToken
-func (h *adminServer) RefreshToken(ctx *gin.Context) {
+func (h *AdminApi) RefreshToken(ctx *gin.Context) {
 	req := new(v1.AdminRefreshTokenRequest)
 	if err := ctx.ShouldBind(req); err != nil {
 		r.Reply(ctx, errs.BadRequest.WithDetails(err))
@@ -80,7 +77,7 @@ func (h *adminServer) RefreshToken(ctx *gin.Context) {
 	r.Reply(ctx, data)
 }
 
-func (h *adminServer) GetSelfInfo(ctx *gin.Context) {
+func (h *AdminApi) GetSelfInfo(ctx *gin.Context) {
 	username := security.GetUsername(ctx)
 	data, err := h.svc.GetAdminInfo(ctx, username)
 	if err != nil {
@@ -90,7 +87,7 @@ func (h *adminServer) GetSelfInfo(ctx *gin.Context) {
 	r.Reply(ctx, data)
 }
 
-func (h *adminServer) List(ctx *gin.Context) {
+func (h *AdminApi) List(ctx *gin.Context) {
 	req := new(v1.AdminListRequest)
 	if err := ctx.ShouldBind(req); err != nil {
 		r.Reply(ctx, errs.BadRequest.WithDetails(err))
@@ -104,7 +101,7 @@ func (h *adminServer) List(ctx *gin.Context) {
 	r.Reply(ctx, data)
 }
 
-func (h *adminServer) GetItem(ctx *gin.Context) {
+func (h *AdminApi) GetItem(ctx *gin.Context) {
 	req := new(v1.AdminRequest)
 	if err := ctx.ShouldBindUri(req); err != nil {
 		r.Reply(ctx, errs.BadRequest.WithDetails(err))
@@ -118,7 +115,7 @@ func (h *adminServer) GetItem(ctx *gin.Context) {
 	r.Reply(ctx, data)
 }
 
-func (h *adminServer) Update(ctx *gin.Context) {
+func (h *AdminApi) Update(ctx *gin.Context) {
 	req := new(v1.AdminUpdateRequest)
 	if err := ctx.ShouldBindUri(req); err != nil {
 		r.Reply(ctx, errs.BadRequest.WithDetails(err))
@@ -132,7 +129,7 @@ func (h *adminServer) Update(ctx *gin.Context) {
 	r.Reply(ctx, err)
 }
 
-func (h *adminServer) UpdatePassword(ctx *gin.Context) {
+func (h *AdminApi) UpdatePassword(ctx *gin.Context) {
 	req := new(v1.UpdatePasswordRequest)
 	if err := ctx.ShouldBind(req); err != nil {
 		r.Reply(ctx, errs.BadRequest.WithDetails(err))
@@ -147,7 +144,7 @@ func (h *adminServer) UpdatePassword(ctx *gin.Context) {
 	r.Reply(ctx, err)
 }
 
-func (h *adminServer) Delete(ctx *gin.Context) {
+func (h *AdminApi) Delete(ctx *gin.Context) {
 	req := new(v1.AdminRequest)
 	if err := ctx.ShouldBindUri(req); err != nil {
 		r.Reply(ctx, errs.BadRequest.WithDetails(err))
@@ -157,7 +154,7 @@ func (h *adminServer) Delete(ctx *gin.Context) {
 	r.Reply(ctx, err)
 }
 
-func (h *adminServer) UpdateStatus(ctx *gin.Context) {
+func (h *AdminApi) UpdateStatus(ctx *gin.Context) {
 	req := new(v1.AdminUpdateStatusRequest)
 	if err := ctx.ShouldBindUri(req); err != nil {
 		r.Reply(ctx, errs.BadRequest.WithDetails(err))
@@ -171,7 +168,7 @@ func (h *adminServer) UpdateStatus(ctx *gin.Context) {
 	r.Reply(ctx, err)
 }
 
-func (h *adminServer) UpdateRole(ctx *gin.Context) {
+func (h *AdminApi) UpdateRole(ctx *gin.Context) {
 	req := new(v1.AdminUpdateRoleRequest)
 	if err := ctx.ShouldBind(req); err != nil {
 		r.Reply(ctx, errs.BadRequest.WithDetails(err))
@@ -181,7 +178,7 @@ func (h *adminServer) UpdateRole(ctx *gin.Context) {
 	r.Reply(ctx, err)
 }
 
-func (h *adminServer) GetRoleList(ctx *gin.Context) {
+func (h *AdminApi) GetRoleList(ctx *gin.Context) {
 	userID := security.GetUserIntID(ctx)
 	data, err := h.svc.GetRoleList(ctx, userID)
 	if err != nil {

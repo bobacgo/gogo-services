@@ -2,7 +2,8 @@ package service
 
 import (
 	"context"
-	"github.com/gogoclouds/gogo-services/admin-service/api/system/v1"
+
+	v1 "github.com/gogoclouds/gogo-services/admin-service/api/system/v1"
 	"github.com/gogoclouds/gogo-services/admin-service/internal/model"
 	"github.com/gogoclouds/gogo-services/common-lib/web/r/page"
 	"github.com/jinzhu/copier"
@@ -17,15 +18,17 @@ type IRoleRepo interface {
 	Delete(ctx context.Context, req *v1.RoleDeleteRequest) error
 }
 
-type RoleService struct {
+type roleService struct {
 	repo IRoleRepo
 }
 
-func NewRoleService(repo IRoleRepo) *RoleService {
-	return &RoleService{repo: repo}
+var _ v1.IRoleServer = (*roleService)(nil)
+
+func NewRoleService(repo IRoleRepo) v1.IRoleServer {
+	return &roleService{repo: repo}
 }
 
-func (svc *RoleService) List(ctx context.Context, req *v1.RoleListRequest) (*page.Data[*model.Role], error) {
+func (svc *roleService) List(ctx context.Context, req *v1.RoleListRequest) (*page.Data[*model.Role], error) {
 	list, total, err := svc.repo.Find(ctx, req)
 	if err != nil {
 		return nil, err
@@ -36,7 +39,7 @@ func (svc *RoleService) List(ctx context.Context, req *v1.RoleListRequest) (*pag
 	}, nil
 }
 
-func (svc *RoleService) GetDetails(ctx context.Context, req *v1.RoleRequest) (*v1.RoleResponse, error) {
+func (svc *roleService) GetDetails(ctx context.Context, req *v1.RoleRequest) (*v1.RoleResponse, error) {
 	one, err := svc.repo.FindOne(ctx, req)
 	if err != nil {
 		return nil, err
@@ -46,20 +49,20 @@ func (svc *RoleService) GetDetails(ctx context.Context, req *v1.RoleRequest) (*v
 	}, nil
 }
 
-func (svc *RoleService) Add(ctx context.Context, req *v1.RoleCreateRequest) error {
+func (svc *roleService) Add(ctx context.Context, req *v1.RoleCreateRequest) error {
 	var data model.Role
 	copier.Copy(&data, req)
 	return svc.repo.Create(ctx, &data)
 }
 
-func (svc *RoleService) Update(ctx context.Context, req *v1.RoleUpdateRequest) error {
+func (svc *roleService) Update(ctx context.Context, req *v1.RoleUpdateRequest) error {
 	return svc.repo.Update(ctx, req)
 }
 
-func (svc *RoleService) Delete(ctx context.Context, req *v1.RoleDeleteRequest) error {
+func (svc *roleService) Delete(ctx context.Context, req *v1.RoleDeleteRequest) error {
 	return svc.repo.Delete(ctx, req)
 }
 
-func (svc *RoleService) UpdateStatus(ctx context.Context, id int64, status bool) error {
+func (svc *roleService) UpdateStatus(ctx context.Context, id int64, status bool) error {
 	return svc.repo.UpdateStatus(ctx, id, status)
 }

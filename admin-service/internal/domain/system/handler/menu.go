@@ -3,22 +3,19 @@ package handler
 import (
 	"github.com/gin-gonic/gin"
 	v1 "github.com/gogoclouds/gogo-services/admin-service/api/system/v1"
-	"github.com/gogoclouds/gogo-services/admin-service/internal/domain/system/service"
 	"github.com/gogoclouds/gogo-services/common-lib/web/r"
 	"github.com/gogoclouds/gogo-services/common-lib/web/r/errs"
 )
 
-type menuServer struct {
-	svc *service.MenuService
+type MenuApi struct {
+	svc v1.IMenuServer
 }
 
-var _ v1.MenuServer = (*menuServer)(nil)
-
-func NewMenuServer(svc *service.MenuService) v1.MenuServer {
-	return &menuServer{svc: svc}
+func NewMenuServer(svc v1.IMenuServer) *MenuApi {
+	return &MenuApi{svc: svc}
 }
 
-func (h *menuServer) List(ctx *gin.Context) {
+func (h *MenuApi) List(ctx *gin.Context) {
 	req := new(v1.MenuListRequest)
 	if err := ctx.ShouldBindUri(req); err != nil {
 		r.Reply(ctx, errs.BadRequest.WithDetails(err))
@@ -36,7 +33,7 @@ func (h *menuServer) List(ctx *gin.Context) {
 	r.Reply(ctx, list)
 }
 
-func (h *menuServer) TreeList(ctx *gin.Context) {
+func (h *MenuApi) TreeList(ctx *gin.Context) {
 	list, err := h.svc.TreeList(ctx)
 	if err != nil {
 		r.Reply(ctx, err)
@@ -45,7 +42,7 @@ func (h *menuServer) TreeList(ctx *gin.Context) {
 	r.Reply(ctx, list)
 }
 
-func (h *menuServer) Details(ctx *gin.Context) {
+func (h *MenuApi) Details(ctx *gin.Context) {
 	req := new(v1.MenuRequest)
 	if err := ctx.ShouldBindUri(req); err != nil {
 		r.Reply(ctx, errs.BadRequest.WithDetails(err))
@@ -59,7 +56,7 @@ func (h *menuServer) Details(ctx *gin.Context) {
 	r.Reply(ctx, data)
 }
 
-func (h *menuServer) Add(ctx *gin.Context) {
+func (h *MenuApi) Add(ctx *gin.Context) {
 	req := new(v1.MenuCreateRequest)
 	if err := ctx.ShouldBind(req); err != nil {
 		r.Reply(ctx, errs.BadRequest.WithDetails(err))
@@ -72,7 +69,7 @@ func (h *menuServer) Add(ctx *gin.Context) {
 	r.Reply(ctx, nil)
 }
 
-func (h *menuServer) Update(ctx *gin.Context) {
+func (h *MenuApi) Update(ctx *gin.Context) {
 	req := new(v1.MenuUpdateRequest)
 	if err := ctx.ShouldBind(req); err != nil {
 		r.Reply(ctx, errs.BadRequest.WithDetails(err))
@@ -85,7 +82,7 @@ func (h *menuServer) Update(ctx *gin.Context) {
 	r.Reply(ctx, nil)
 }
 
-func (h *menuServer) UpdateHidden(ctx *gin.Context) {
+func (h *MenuApi) UpdateHidden(ctx *gin.Context) {
 	req := new(v1.MenuUpdateHiddenRequest)
 	if err := ctx.ShouldBind(req); err != nil {
 		r.Reply(ctx, errs.BadRequest.WithDetails(err))
@@ -98,7 +95,7 @@ func (h *menuServer) UpdateHidden(ctx *gin.Context) {
 	r.Reply(ctx, nil)
 }
 
-func (h *menuServer) Delete(ctx *gin.Context) {
+func (h *MenuApi) Delete(ctx *gin.Context) {
 	req := new(v1.MenuDeleteRequest)
 	if err := ctx.ShouldBind(req); err != nil {
 		r.Reply(ctx, errs.BadRequest.WithDetails(err))

@@ -1,37 +1,28 @@
 package v1
 
 import (
+	"context"
 	"time"
 
-	"github.com/gin-gonic/gin"
 	"github.com/gogoclouds/gogo-services/admin-service/internal/model"
 	"github.com/gogoclouds/gogo-services/common-lib/app/security"
 	"github.com/gogoclouds/gogo-services/common-lib/web/r/page"
 )
 
-type AdminServer interface {
-
-	// Register
-	// @Summary 注册
-	// @Description 注册
-	// @Tags 用户
-	// @Param {object} AdminRegisterRequest
-	// @Success 200 {object} AdminResponse
-	// @Router /api/v1/sys-user [get]
-	// @Security Bearer
-	Register(ctx *gin.Context)
-	Login(ctx *gin.Context)
-	Logout(ctx *gin.Context)
-	RefreshToken(ctx *gin.Context)
-	GetSelfInfo(ctx *gin.Context)
-	List(ctx *gin.Context)
-	GetItem(ctx *gin.Context)
-	Update(ctx *gin.Context)
-	UpdatePassword(ctx *gin.Context)
-	Delete(ctx *gin.Context)
-	UpdateStatus(ctx *gin.Context)
-	UpdateRole(ctx *gin.Context)
-	GetRoleList(ctx *gin.Context)
+type IAdminServer interface {
+	Register(ctx context.Context, data *AdminRegisterRequest) error
+	Login(ctx context.Context, data *AdminLoginRequest) (*AdminLoginResponse, error)
+	Logout(ctx context.Context, username string) error
+	RefreshToken(ctx context.Context, req *AdminRefreshTokenRequest) (*AdminLoginResponse, error)
+	GetAdminInfo(ctx context.Context, username string) (*UserInfo, error)
+	List(ctx context.Context, req *AdminListRequest) (*page.Data[*model.Admin], error)
+	GetItem(ctx context.Context, ID int64) (*AdminResponse, error)
+	Update(ctx context.Context, data *AdminUpdateRequest) error
+	UpdatePassword(ctx context.Context, req *UpdatePasswordRequest) error
+	Delete(ctx context.Context, ID int64) error
+	UpdateStatus(ctx context.Context, ID int64, status bool) error
+	UpdateRole(ctx context.Context, ID int64, roles []int64) error
+	GetRoleList(ctx context.Context, ID int64) ([]*model.Role, error)
 }
 
 type UsernamePasswd struct {

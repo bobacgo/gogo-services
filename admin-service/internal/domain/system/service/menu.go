@@ -20,15 +20,17 @@ type IMenuRepo interface {
 	Delete(ctx context.Context, req *v1.MenuDeleteRequest) error
 }
 
-type MenuService struct {
+type menuService struct {
 	repo IMenuRepo
 }
 
-func NewMenuService(repo IMenuRepo) *MenuService {
-	return &MenuService{repo: repo}
+var _ v1.IMenuServer = (*menuService)(nil)
+
+func NewMenuService(repo IMenuRepo) v1.IMenuServer {
+	return &menuService{repo: repo}
 }
 
-func (svc *MenuService) List(ctx context.Context, req *v1.MenuListRequest) (*page.Data[*model.Menu], error) {
+func (svc *menuService) List(ctx context.Context, req *v1.MenuListRequest) (*page.Data[*model.Menu], error) {
 	list, total, err := svc.repo.Find(ctx, req)
 	if err != nil {
 		return nil, err
@@ -39,7 +41,7 @@ func (svc *MenuService) List(ctx context.Context, req *v1.MenuListRequest) (*pag
 	}, nil
 }
 
-func (svc *MenuService) TreeList(ctx context.Context) ([]*dto.MenuNode, error) {
+func (svc *menuService) TreeList(ctx context.Context) ([]*dto.MenuNode, error) {
 	req := v1.MenuListRequest{Query: page.NewNot()}
 	list, _, err := svc.repo.Find(ctx, &req)
 	if err != nil {
@@ -48,29 +50,29 @@ func (svc *MenuService) TreeList(ctx context.Context) ([]*dto.MenuNode, error) {
 	return svc.listToTree(list), nil
 }
 
-func (svc *MenuService) GetDetails(ctx context.Context, req *v1.MenuRequest) (*model.Menu, error) {
+func (svc *menuService) GetDetails(ctx context.Context, req *v1.MenuRequest) (*model.Menu, error) {
 	return svc.repo.FindOne(ctx, req)
 }
 
-func (svc *MenuService) Add(ctx context.Context, req *v1.MenuCreateRequest) error {
+func (svc *menuService) Add(ctx context.Context, req *v1.MenuCreateRequest) error {
 	var data model.Menu
 	copier.Copy(&data, req)
 	return svc.repo.Create(ctx, &data)
 }
 
-func (svc *MenuService) Update(ctx context.Context, req *v1.MenuUpdateRequest) error {
+func (svc *menuService) Update(ctx context.Context, req *v1.MenuUpdateRequest) error {
 	return svc.repo.Update(ctx, req)
 }
 
-func (svc *MenuService) UpdateHidden(ctx context.Context, ID int64, hidden *bool) error {
+func (svc *menuService) UpdateHidden(ctx context.Context, ID int64, hidden *bool) error {
 	return svc.repo.UpdateHidden(ctx, ID, hidden)
 }
 
-func (svc *MenuService) Delete(ctx context.Context, req *v1.MenuDeleteRequest) error {
+func (svc *menuService) Delete(ctx context.Context, req *v1.MenuDeleteRequest) error {
 	return svc.repo.Delete(ctx, req)
 }
 
-func (svc *MenuService) listToTree(list []*model.Menu) []*dto.MenuNode {
+func (svc *menuService) listToTree(list []*model.Menu) []*dto.MenuNode {
 	tree := make([]*dto.MenuNode, 0, len(list))
 	pMap := lo.GroupBy(list, func(e *model.Menu) int64 {
 		return e.ParentID

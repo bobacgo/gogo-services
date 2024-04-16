@@ -15,49 +15,19 @@ import (
 	"gorm.io/gorm"
 )
 
-type AdminRepo struct {
+type adminRepo struct {
 	q *query.Query
 }
 
-var _ service.IAdminRepo = (*AdminRepo)(nil)
+var _ service.IAdminRepo = (*adminRepo)(nil)
 
-func NewAdminRepo(db *gorm.DB) *AdminRepo {
-	return &AdminRepo{
+func NewAdminRepo(db *gorm.DB) service.IAdminRepo {
+	return &adminRepo{
 		q: query.Use(db),
 	}
 }
 
-func (repo *AdminRepo) FindAdminRole(ctx context.Context, adminID int64) ([]*model.Role, error) {
-	qARR := repo.q.AdminRoleRelation
-	q := repo.q.Role
-
-	var roleIDs []int64
-	if err := qARR.WithContext(ctx).Where(qARR.AdminID.Eq(adminID)).Pluck(qARR.RoleID, &roleIDs); err != nil {
-		return nil, err
-	}
-	return q.WithContext(ctx).Where(q.ID.In(roleIDs...)).Find()
-}
-
-func (repo *AdminRepo) UpdateRole(ctx context.Context, adminID int64, role []int64) error {
-	q := repo.q.AdminRoleRelation
-	res, err := q.WithContext(ctx).Where(q.AdminID.Eq(adminID)).Delete()
-	if res.RowsAffected == 0 {
-		if err != nil {
-			return err
-		}
-		return gorm.ErrRecordNotFound
-	}
-	var data []*model.AdminRoleRelation
-	for _, v := range role {
-		data = append(data, &model.AdminRoleRelation{
-			AdminID: adminID,
-			RoleID:  v,
-		})
-	}
-	return q.WithContext(ctx).Create(data...)
-}
-
-func (repo *AdminRepo) HasUsername(ctx context.Context, req *dto.UniqueUsernameQuery) (*dto.UniqueResult, error) {
+func (repo *adminRepo) HasUsername(ctx context.Context, req *dto.UniqueUsernameQuery) (*dto.UniqueResult, error) {
 	q := repo.q.Admin
 
 	conds := []gen.Condition{
@@ -69,7 +39,7 @@ func (repo *AdminRepo) HasUsername(ctx context.Context, req *dto.UniqueUsernameQ
 	return repo.hasRecord(ctx, conds)
 }
 
-func (repo *AdminRepo) HasEmail(ctx context.Context, req *dto.UniqueEmailQuery) (*dto.UniqueResult, error) {
+func (repo *adminRepo) HasEmail(ctx context.Context, req *dto.UniqueEmailQuery) (*dto.UniqueResult, error) {
 	q := repo.q.Admin
 
 	conds := []gen.Condition{
@@ -81,17 +51,17 @@ func (repo *AdminRepo) HasEmail(ctx context.Context, req *dto.UniqueEmailQuery) 
 	return repo.hasRecord(ctx, conds)
 }
 
-func (repo *AdminRepo) FindByUsername(ctx context.Context, username string) (*model.Admin, error) {
+func (repo *adminRepo) FindByUsername(ctx context.Context, username string) (*model.Admin, error) {
 	q := repo.q.Admin
 	return q.WithContext(ctx).Where(q.Username.Eq(username)).First()
 }
 
-func (repo *AdminRepo) FindByID(ctx context.Context, ID int64) (*model.Admin, error) {
+func (repo *adminRepo) FindByID(ctx context.Context, ID int64) (*model.Admin, error) {
 	q := repo.q.Admin
 	return q.WithContext(ctx).Where(q.ID.Eq(ID)).First()
 }
 
-func (repo *AdminRepo) Find(ctx context.Context, req *v1.AdminListRequest) (*page.Data[*model.Admin], error) {
+func (repo *adminRepo) Find(ctx context.Context, req *v1.AdminListRequest) (*page.Data[*model.Admin], error) {
 	q := repo.q.Admin
 	do := q.WithContext(ctx)
 	if req.Keyword != "" {
@@ -105,41 +75,41 @@ func (repo *AdminRepo) Find(ctx context.Context, req *v1.AdminListRequest) (*pag
 	return page.New(count, list...), nil
 }
 
-func (repo *AdminRepo) Insert(ctx context.Context, records ...*model.Admin) error {
+func (repo *adminRepo) Insert(ctx context.Context, records ...*model.Admin) error {
 	return repo.q.Admin.WithContext(ctx).Create(records...)
 }
 
-func (repo *AdminRepo) Update(ctx context.Context, data *v1.AdminUpdateRequest) error {
+func (repo *adminRepo) Update(ctx context.Context, data *v1.AdminUpdateRequest) error {
 	q := repo.q.Admin
 	_, err := repo.q.Admin.WithContext(ctx).Where(q.ID.Eq(data.ID)).Updates(data)
 	return err
 }
 
-func (repo *AdminRepo) UpdateLoginTime(ctx context.Context, ID int64, loginTime time.Time) error {
+func (repo *adminRepo) UpdateLoginTime(ctx context.Context, ID int64, loginTime time.Time) error {
 	q := repo.q.Admin
 	_, err := q.WithContext(ctx).Where(q.ID.Eq(ID)).Update(q.LoginTime, loginTime)
 	return err
 }
 
-func (repo *AdminRepo) UpdatePwd(ctx context.Context, ID int64, pwd string) error {
+func (repo *adminRepo) UpdatePwd(ctx context.Context, ID int64, pwd string) error {
 	q := repo.q.Admin
 	_, err := q.WithContext(ctx).Where(q.ID.Eq(ID)).Update(q.Password, pwd)
 	return err
 }
 
-func (repo *AdminRepo) UpdateStatus(ctx context.Context, ID int64, status bool) error {
+func (repo *adminRepo) UpdateStatus(ctx context.Context, ID int64, status bool) error {
 	q := repo.q.Admin
 	_, err := q.WithContext(ctx).Where(q.ID.Eq(ID)).Update(q.Status, status)
 	return err
 }
 
-func (repo *AdminRepo) Delete(ctx context.Context, ID int64) error {
+func (repo *adminRepo) Delete(ctx context.Context, ID int64) error {
 	q := repo.q.Admin
 	_, err := q.WithContext(ctx).Where(q.ID.Eq(ID)).Delete()
 	return err
 }
 
-func (repo *AdminRepo) hasRecord(ctx context.Context, conds []gen.Condition) (*dto.UniqueResult, error) {
+func (repo *adminRepo) hasRecord(ctx context.Context, conds []gen.Condition) (*dto.UniqueResult, error) {
 	if len(conds) == 0 {
 		return nil, errors.New("conds is empty")
 	}
