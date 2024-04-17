@@ -3,9 +3,11 @@ package service
 import (
 	"context"
 
+	"github.com/gogoclouds/gogo-services/admin-service/api/errs"
 	v1 "github.com/gogoclouds/gogo-services/admin-service/api/system/v1"
 	"github.com/gogoclouds/gogo-services/admin-service/internal/domain/system/dto"
 	"github.com/gogoclouds/gogo-services/admin-service/internal/model"
+	"github.com/gogoclouds/gogo-services/common-lib/app/validator"
 	"github.com/gogoclouds/gogo-services/common-lib/web/r/page"
 	"github.com/jinzhu/copier"
 	"github.com/samber/lo"
@@ -51,24 +53,39 @@ func (svc *menuService) TreeList(ctx context.Context) ([]*dto.MenuNode, error) {
 }
 
 func (svc *menuService) GetDetails(ctx context.Context, req *v1.MenuRequest) (*model.Menu, error) {
+	if err := validator.StructCtx(ctx, req); err != nil {
+		return nil, errs.BadRequest.WithDetails(err)
+	}
 	return svc.repo.FindOne(ctx, req)
 }
 
 func (svc *menuService) Add(ctx context.Context, req *v1.MenuCreateRequest) error {
+	if err := validator.StructCtx(ctx, req); err != nil {
+		return errs.BadRequest.WithDetails(err)
+	}
 	var data model.Menu
 	copier.Copy(&data, req)
 	return svc.repo.Create(ctx, &data)
 }
 
 func (svc *menuService) Update(ctx context.Context, req *v1.MenuUpdateRequest) error {
+	if err := validator.StructCtx(ctx, req); err != nil {
+		return errs.BadRequest.WithDetails(err)
+	}
 	return svc.repo.Update(ctx, req)
 }
 
-func (svc *menuService) UpdateHidden(ctx context.Context, ID int64, hidden *bool) error {
-	return svc.repo.UpdateHidden(ctx, ID, hidden)
+func (svc *menuService) UpdateHidden(ctx context.Context, req *v1.MenuUpdateHiddenRequest) error {
+	if err := validator.StructCtx(ctx, req); err != nil {
+		return errs.BadRequest.WithDetails(err)
+	}
+	return svc.repo.UpdateHidden(ctx, req.ID, req.Hidden)
 }
 
 func (svc *menuService) Delete(ctx context.Context, req *v1.MenuDeleteRequest) error {
+	if err := validator.StructCtx(ctx, req); err != nil {
+		return errs.BadRequest.WithDetails(err)
+	}
 	return svc.repo.Delete(ctx, req)
 }
 

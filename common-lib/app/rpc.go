@@ -14,7 +14,10 @@ import (
 func RunRpcServer(app *App, register func(server *grpc.Server, app *Options)) {
 	app.wg.Add(1)
 	defer app.wg.Done()
-	lis, err := net.Listen("tcp", app.opts.conf.Server.Rpc.Addr)
+
+	cfg := app.opts.GetConf()
+
+	lis, err := net.Listen("tcp", cfg.Server.Rpc.Addr)
 	if err != nil {
 		log.Panicln(err)
 	}

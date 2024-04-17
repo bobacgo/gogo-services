@@ -13,7 +13,7 @@ type IRoleServer interface {
 	Add(ctx context.Context, req *RoleCreateRequest) error
 	Update(ctx context.Context, req *RoleUpdateRequest) error
 	Delete(ctx context.Context, req *RoleDeleteRequest) error
-	UpdateStatus(ctx context.Context, id int64, status bool) error
+	UpdateStatus(ctx context.Context, req *RoleUpdateStatusRequest) error
 }
 
 type RoleListRequest struct {
@@ -25,7 +25,7 @@ type RoleListResponse struct {
 }
 
 type RoleRequest struct {
-	ID int64 `json:"id"`
+	ID int64 `json:"id" validate:"required"`
 }
 
 type RoleResponse struct {
@@ -43,7 +43,7 @@ type RoleUpdateRequest struct {
 }
 
 type RoleUpdateStatusRequest struct {
-	ID     int64 `json:"id"`
+	ID     int64 `json:"id" validate:"required"`
 	Status bool  `json:"status"`
 }
 

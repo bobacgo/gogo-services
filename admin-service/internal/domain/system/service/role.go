@@ -3,8 +3,10 @@ package service
 import (
 	"context"
 
+	"github.com/gogoclouds/gogo-services/admin-service/api/errs"
 	v1 "github.com/gogoclouds/gogo-services/admin-service/api/system/v1"
 	"github.com/gogoclouds/gogo-services/admin-service/internal/model"
+	"github.com/gogoclouds/gogo-services/common-lib/app/validator"
 	"github.com/gogoclouds/gogo-services/common-lib/web/r/page"
 	"github.com/jinzhu/copier"
 )
@@ -40,6 +42,9 @@ func (svc *roleService) List(ctx context.Context, req *v1.RoleListRequest) (*pag
 }
 
 func (svc *roleService) GetDetails(ctx context.Context, req *v1.RoleRequest) (*v1.RoleResponse, error) {
+	if err := validator.StructCtx(ctx, req); err != nil {
+		return nil, errs.BadRequest.WithDetails(err)
+	}
 	one, err := svc.repo.FindOne(ctx, req)
 	if err != nil {
 		return nil, err
@@ -50,19 +55,31 @@ func (svc *roleService) GetDetails(ctx context.Context, req *v1.RoleRequest) (*v
 }
 
 func (svc *roleService) Add(ctx context.Context, req *v1.RoleCreateRequest) error {
+	if err := validator.StructCtx(ctx, req); err != nil {
+		return errs.BadRequest.WithDetails(err)
+	}
 	var data model.Role
 	copier.Copy(&data, req)
 	return svc.repo.Create(ctx, &data)
 }
 
 func (svc *roleService) Update(ctx context.Context, req *v1.RoleUpdateRequest) error {
+	if err := validator.StructCtx(ctx, req); err != nil {
+		return errs.BadRequest.WithDetails(err)
+	}
 	return svc.repo.Update(ctx, req)
 }
 
 func (svc *roleService) Delete(ctx context.Context, req *v1.RoleDeleteRequest) error {
+	if err := validator.StructCtx(ctx, req); err != nil {
+		return errs.BadRequest.WithDetails(err)
+	}
 	return svc.repo.Delete(ctx, req)
 }
 
-func (svc *roleService) UpdateStatus(ctx context.Context, id int64, status bool) error {
-	return svc.repo.UpdateStatus(ctx, id, status)
+func (svc *roleService) UpdateStatus(ctx context.Context, req *v1.RoleUpdateStatusRequest) error {
+	if err := validator.StructCtx(ctx, req); err != nil {
+		return errs.BadRequest.WithDetails(err)
+	}
+	return svc.repo.UpdateStatus(ctx, req.ID, req.Status)
 }

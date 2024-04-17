@@ -91,12 +91,7 @@ func (h *RoleApi) Delete(ctx *gin.Context) {
 }
 
 func (h *RoleApi) ListAll(ctx *gin.Context) {
-	req := v1.RoleListRequest{
-		Query: page.Query{
-			PageNum:  -1,
-			PageSize: -1,
-		},
-	}
+	req := v1.RoleListRequest{Query: page.NewNot()}
 	list, err := h.svc.List(ctx, &req)
 	if err != nil {
 		slog.ErrorContext(ctx, "List error", slog.String("err", err.Error()))
@@ -112,7 +107,7 @@ func (h *RoleApi) UpdateStatus(ctx *gin.Context) {
 		r.Reply(ctx, errs.BadRequest.WithDetails(err))
 		return
 	}
-	err := h.svc.UpdateStatus(ctx, req.ID, req.Status)
+	err := h.svc.UpdateStatus(ctx, req)
 	if err != nil {
 		slog.ErrorContext(ctx, "List error", slog.String("err", err.Error()))
 		r.Reply(ctx, err)

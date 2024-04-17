@@ -12,17 +12,18 @@ import (
 type IAdminServer interface {
 	Register(ctx context.Context, data *AdminRegisterRequest) error
 	Login(ctx context.Context, data *AdminLoginRequest) (*AdminLoginResponse, error)
-	Logout(ctx context.Context, username string) error
+	Logout(ctx context.Context, req *AdminLogoutRequest) error
 	RefreshToken(ctx context.Context, req *AdminRefreshTokenRequest) (*AdminLoginResponse, error)
-	GetAdminInfo(ctx context.Context, username string) (*UserInfo, error)
+	GetAdminInfo(ctx context.Context, req *AdminInfoRequest) (*UserInfo, error)
 	List(ctx context.Context, req *AdminListRequest) (*page.Data[*model.Admin], error)
-	GetItem(ctx context.Context, ID int64) (*AdminResponse, error)
+	GetItem(ctx context.Context, req *AdminRequest) (*AdminResponse, error)
 	Update(ctx context.Context, data *AdminUpdateRequest) error
 	UpdatePassword(ctx context.Context, req *UpdatePasswordRequest) error
-	Delete(ctx context.Context, ID int64) error
-	UpdateStatus(ctx context.Context, ID int64, status bool) error
-	UpdateRole(ctx context.Context, ID int64, roles []int64) error
-	GetRoleList(ctx context.Context, ID int64) ([]*model.Role, error)
+	Delete(ctx context.Context, req *AdminRequest) error
+	UpdateStatus(ctx context.Context, req *AdminUpdateStatusRequest) error
+	UpdateRole(ctx context.Context, req *AdminUpdateRoleRequest) error
+	// 通过AdminID获取角色列表
+	GetRoleList(ctx context.Context, req *AdminRequest) ([]*model.Role, error)
 }
 
 type UsernamePasswd struct {
@@ -47,6 +48,10 @@ type AdminLoginResponse struct {
 	RToken    string `json:"rToken"`
 }
 
+type AdminLogoutRequest struct {
+	Username string `json:"username" form:"username" validate:"required"`
+}
+
 type AdminPwdErr struct {
 	DecrCount int64 `json:"decrCount"` // 剩余次数
 }
@@ -54,6 +59,10 @@ type AdminPwdErr struct {
 type AdminRefreshTokenRequest struct {
 	AToken string `json:"aToken" form:"aToken" validate:"required"`
 	RToken string `json:"rToken" header:"authorization"`
+}
+
+type AdminInfoRequest struct {
+	Username string `json:"username" validate:"required"`
 }
 
 type UserInfo struct {
@@ -86,7 +95,7 @@ type AdminListResponse struct {
 }
 
 type AdminRequest struct {
-	ID int64 `json:"id" uri:"id"`
+	ID int64 `json:"id" uri:"id" validate:"required"`
 }
 
 type AdminResponse struct {
@@ -117,11 +126,11 @@ type UpdatePasswordRequest struct {
 }
 
 type AdminUpdateStatusRequest struct {
-	ID     int64 `json:"id" uri:"id"`                // ID
-	Status *bool `json:"status" validate:"required"` // 状态
+	ID     int64 `json:"id" uri:"id" validate:"required"` // ID
+	Status *bool `json:"status" validate:"required"`      // 状态
 }
 
 type AdminUpdateRoleRequest struct {
-	ID    int64   `json:"id"`    // ID
-	Roles []int64 `json:"roles"` // 角色
+	ID    int64   `json:"id" validate:"required"` // ID
+	Roles []int64 `json:"roles"`                  // 角色
 }

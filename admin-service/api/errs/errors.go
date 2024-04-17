@@ -1,10 +1,13 @@
 package errs
 
 import (
+	"github.com/gogoclouds/gogo-services/common-lib/web/r/errs"
 	"github.com/gogoclouds/gogo-services/common-lib/web/r/status"
 )
 
 // Token
+
+var BadRequest = errs.BadRequest
 
 var (
 	TokenGenerateErr = status.New(401001, "令牌生成出错")

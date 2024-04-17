@@ -8,10 +8,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/gin-gonic/gin/binding"
 	"github.com/gogoclouds/gogo-services/common-lib/app/conf"
 	"github.com/gogoclouds/gogo-services/common-lib/app/server/http/middleware"
-	"github.com/gogoclouds/gogo-services/common-lib/web/gin/validator"
 	"github.com/gogoclouds/gogo-services/common-lib/web/r"
 
 	"github.com/gogoclouds/gogo-services/common-lib/app/logger"
@@ -23,7 +21,9 @@ func RunHttpServer(app *App, register func(e *gin.Engine, a *Options)) {
 	app.wg.Add(1)
 	defer app.wg.Done()
 
-	switch app.opts.conf.Env {
+	cfg := app.opts.GetConf()
+
+	switch cfg.Env {
 	case conf.EnvProd:
 		gin.SetMode(gin.ReleaseMode)
 	case conf.EnvDev:
@@ -38,16 +38,17 @@ func RunHttpServer(app *App, register func(e *gin.Engine, a *Options)) {
 	e.Use(middleware.Recovery())
 	e.Use(middleware.LoggerResponseFail())
 
-	slog.Warn(fmt.Sprintf(`[gin] Running in "%s" mode`, gin.Mode()))
+	if cfg.Env != conf.EnvDev {
+		slog.Warn(fmt.Sprintf(`[gin] Running in "%s" mode`, gin.Mode()))
+	}
 
-	binding.Validator = new(validator.DefaultValidator)
-	healthApi(e) // provide health API
+	healthApi(e, cfg) // provide health API
 
 	if register != nil {
 		register(e, &app.opts) // register router
 	}
 
-	srv := &http.Server{Addr: app.opts.conf.Server.Http.Addr, Handler: e}
+	srv := &http.Server{Addr: cfg.Server.Http.Addr, Handler: e}
 
 	// Initializing the server in a goroutine so that
 	// it won't block the graceful shutdown handling below
@@ -56,7 +57,7 @@ func RunHttpServer(app *App, register func(e *gin.Engine, a *Options)) {
 			logger.Panicf("listen: %s\n", err)
 		}
 	}()
-	logger.Infof("http server running %s", app.opts.conf.Server.Http.Addr)
+	logger.Infof("http server running %s", cfg.Server.Http.Addr)
 	<-app.exit
 	logger.Info("Shutting down http server...")
 	// The context is used to inform the server it has 5 seconds to finish
@@ -70,9 +71,9 @@ func RunHttpServer(app *App, register func(e *gin.Engine, a *Options)) {
 }
 
 // healthApi http check-up API
-func healthApi(e *gin.Engine) {
+func healthApi(e *gin.Engine, cfg *conf.BasicConfig) {
 	e.GET("/health", func(c *gin.Context) {
-		msg := fmt.Sprintf("%s [env=%s] %s, is active", conf.Conf.Name, conf.Conf.Env, conf.Conf.Version)
+		msg := fmt.Sprintf("%s [env=%s] %s, is active", cfg.Name, cfg.Env, cfg.Version)
 		r.Reply(c, msg)
 	})
 }

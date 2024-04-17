@@ -52,7 +52,7 @@ func (h *AdminApi) Login(ctx *gin.Context) {
 
 func (h *AdminApi) Logout(ctx *gin.Context) {
 	username := security.GetUsername(ctx)
-	err := h.svc.Logout(ctx, username)
+	err := h.svc.Logout(ctx, &v1.AdminLogoutRequest{Username: username})
 	r.Reply(ctx, err)
 }
 
@@ -79,7 +79,7 @@ func (h *AdminApi) RefreshToken(ctx *gin.Context) {
 
 func (h *AdminApi) GetSelfInfo(ctx *gin.Context) {
 	username := security.GetUsername(ctx)
-	data, err := h.svc.GetAdminInfo(ctx, username)
+	data, err := h.svc.GetAdminInfo(ctx, &v1.AdminInfoRequest{Username: username})
 	if err != nil {
 		r.Reply(ctx, err)
 		return
@@ -107,7 +107,7 @@ func (h *AdminApi) GetItem(ctx *gin.Context) {
 		r.Reply(ctx, errs.BadRequest.WithDetails(err))
 		return
 	}
-	data, err := h.svc.GetItem(ctx, req.ID)
+	data, err := h.svc.GetItem(ctx, req)
 	if err != nil {
 		r.Reply(ctx, err)
 		return
@@ -150,7 +150,7 @@ func (h *AdminApi) Delete(ctx *gin.Context) {
 		r.Reply(ctx, errs.BadRequest.WithDetails(err))
 		return
 	}
-	err := h.svc.Delete(ctx, req.ID)
+	err := h.svc.Delete(ctx, req)
 	r.Reply(ctx, err)
 }
 
@@ -164,7 +164,7 @@ func (h *AdminApi) UpdateStatus(ctx *gin.Context) {
 		r.Reply(ctx, errs.BadRequest.WithDetails(err))
 		return
 	}
-	err := h.svc.UpdateStatus(ctx, req.ID, *req.Status)
+	err := h.svc.UpdateStatus(ctx, req)
 	r.Reply(ctx, err)
 }
 
@@ -174,13 +174,13 @@ func (h *AdminApi) UpdateRole(ctx *gin.Context) {
 		r.Reply(ctx, errs.BadRequest.WithDetails(err))
 		return
 	}
-	err := h.svc.UpdateRole(ctx, req.ID, req.Roles)
+	err := h.svc.UpdateRole(ctx, req)
 	r.Reply(ctx, err)
 }
 
 func (h *AdminApi) GetRoleList(ctx *gin.Context) {
 	userID := security.GetUserIntID(ctx)
-	data, err := h.svc.GetRoleList(ctx, userID)
+	data, err := h.svc.GetRoleList(ctx, &v1.AdminRequest{ID: userID})
 	if err != nil {
 		r.Reply(ctx, err)
 		return

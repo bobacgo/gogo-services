@@ -88,7 +88,7 @@ func (h *MenuApi) UpdateHidden(ctx *gin.Context) {
 		r.Reply(ctx, errs.BadRequest.WithDetails(err))
 		return
 	}
-	if err := h.svc.UpdateHidden(ctx, req.ID, req.Hidden); err != nil {
+	if err := h.svc.UpdateHidden(ctx, req); err != nil {
 		r.Reply(ctx, err)
 		return
 	}

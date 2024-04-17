@@ -14,7 +14,7 @@ type IMenuServer interface {
 	GetDetails(ctx context.Context, req *MenuRequest) (*model.Menu, error)
 	Add(ctx context.Context, req *MenuCreateRequest) error
 	Update(ctx context.Context, req *MenuUpdateRequest) error
-	UpdateHidden(ctx context.Context, ID int64, hidden *bool) error
+	UpdateHidden(ctx context.Context, req *MenuUpdateHiddenRequest) error
 	Delete(ctx context.Context, req *MenuDeleteRequest) error
 }
 
@@ -28,7 +28,7 @@ type MenuListResponse struct {
 }
 
 type MenuRequest struct {
-	ID int64 `json:"id" uri:"id"`
+	ID int64 `json:"id" uri:"id" validate:"required"`
 }
 
 type MenuCreateRequest struct {
@@ -45,7 +45,7 @@ type MenuCreateResponse struct {
 }
 
 type MenuUpdateRequest struct {
-	ID       int64   `json:"id"`
+	ID       int64   `json:"id" validate:"required"`
 	ParentID *int64  `json:"parentId"` // 父级ID
 	Title    *string `json:"title"`    // 菜单名称
 	Level    *int32  `json:"level"`    // 菜单级数
@@ -59,12 +59,12 @@ type MenuUpdateResponse struct {
 }
 
 type MenuUpdateHiddenRequest struct {
-	ID     int64 `json:"id"`
+	ID     int64 `json:"id" validate:"required"`
 	Hidden *bool `json:"hidden" form:"hidden" validate:"required"`
 }
 
 type MenuDeleteRequest struct {
-	ID int64 `json:"id" uri:"id"`
+	ID int64 `json:"id" uri:"id" validate:"required"`
 }
 
 type MenuDeleteResponse struct {

@@ -14,12 +14,14 @@ import (
 	"github.com/gogoclouds/gogo-services/admin-service/internal/model"
 	"github.com/gogoclouds/gogo-services/common-lib/app/logger"
 	"github.com/gogoclouds/gogo-services/common-lib/app/security"
+	"github.com/gogoclouds/gogo-services/common-lib/app/validator"
 	"github.com/gogoclouds/gogo-services/common-lib/pkg/uid"
 	"github.com/gogoclouds/gogo-services/common-lib/pkg/utime"
 	"github.com/gogoclouds/gogo-services/common-lib/web/r/page"
 	"github.com/golang-jwt/jwt"
 	"github.com/jinzhu/copier"
 	"github.com/redis/go-redis/v9"
+	"github.com/samber/lo"
 	"gorm.io/gorm"
 )
 
@@ -70,10 +72,14 @@ func NewAdminService(rdb redis.Cmdable, repo IAdminRepo, adminRoleRepo IAdminRol
 	}
 }
 
-func (svc *adminService) Register(ctx context.Context, data *v1.AdminRegisterRequest) error {
+func (svc *adminService) Register(ctx context.Context, req *v1.AdminRegisterRequest) error {
+	if err := validator.StructCtx(ctx, req); err != nil {
+		return errs.BadRequest.WithDetails(err)
+	}
+
 	// 查询是否有相同的用户名
 	hasRes, err := svc.repo.HasUsername(ctx, &dto.UniqueUsernameQuery{
-		Username: data.Username,
+		Username: req.Username,
 	})
 	if err != nil { // 其他错误(非用户未找到)
 		return err
@@ -85,7 +91,7 @@ func (svc *adminService) Register(ctx context.Context, data *v1.AdminRegisterReq
 		return errs.AdminUsernameDuplicated
 	}
 	hasRes, err = svc.repo.HasEmail(ctx, &dto.UniqueEmailQuery{
-		Email: data.Email,
+		Email: req.Email,
 	})
 	if err != nil { // 其他错误(非邮箱未找到)
 		return err
@@ -95,18 +101,21 @@ func (svc *adminService) Register(ctx context.Context, data *v1.AdminRegisterReq
 		return errs.AdminEmailDuplicated
 	}
 	return svc.repo.Insert(ctx, &model.Admin{
-		Username: data.Username,
-		Password: data.Password.BcryptHash(),
-		Icon:     &data.Icon,
-		Email:    &data.Email,
-		Note:     &data.Note,
+		Username: req.Username,
+		Password: req.Password.BcryptHash(),
+		Icon:     &req.Icon,
+		Email:    &req.Email,
+		Note:     &req.Note,
 	})
 }
 
-func (svc *adminService) Login(ctx context.Context, data *v1.AdminLoginRequest) (*v1.AdminLoginResponse, error) {
+func (svc *adminService) Login(ctx context.Context, req *v1.AdminLoginRequest) (*v1.AdminLoginResponse, error) {
+	if err := validator.StructCtx(ctx, req); err != nil {
+		return nil, errs.BadRequest.WithDetails(err)
+	}
 	// 1.支持多平台， 不同平台有不同的 token
 	// 2.每一个平台只能登录同时在线一个
-	admin, err := svc.repo.FindByUsername(ctx, data.Username)
+	admin, err := svc.repo.FindByUsername(ctx, req.Username)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errs.AdminLoginFail
@@ -119,7 +128,7 @@ func (svc *adminService) Login(ctx context.Context, data *v1.AdminLoginRequest) 
 	}
 
 	pwdHelper := svc.newPasswdVerifier(ctx, admin)
-	if !pwdHelper.BcryptVerifyWithCount(ctx, admin.Password, string(data.Password)) {
+	if !pwdHelper.BcryptVerifyWithCount(ctx, admin.Password, string(req.Password)) {
 		return nil, errs.AdminLoginFail.WithDetails(v1.AdminPwdErr{DecrCount: pwdHelper.GetRemainCount()})
 	}
 	claims := svc.newClaims(admin)
@@ -133,11 +142,17 @@ func (svc *adminService) Login(ctx context.Context, data *v1.AdminLoginRequest) 
 	return &v1.AdminLoginResponse{TokenHead: "Bearer ", Token: atoken, RToken: rtoken}, nil
 }
 
-func (svc *adminService) Logout(ctx context.Context, username string) error {
-	return security.JwtHelper.RemoveToken(ctx, username)
+func (svc *adminService) Logout(ctx context.Context, req *v1.AdminLogoutRequest) error {
+	if err := validator.StructCtx(ctx, req); err != nil {
+		return errs.BadRequest.WithDetails(err)
+	}
+	return security.JwtHelper.RemoveToken(ctx, req.Username)
 }
 
 func (svc *adminService) RefreshToken(ctx context.Context, req *v1.AdminRefreshTokenRequest) (*v1.AdminLoginResponse, error) {
+	if err := validator.StructCtx(ctx, req); err != nil {
+		return nil, errs.BadRequest.WithDetails(err)
+	}
 	claims, err := security.JwtHelper.Parse(req.AToken)
 	if err != nil && !security.JwtHelper.ValidationErrorExpired(err) {
 		return nil, err
@@ -159,10 +174,13 @@ func (svc *adminService) RefreshToken(ctx context.Context, req *v1.AdminRefreshT
 	return &v1.AdminLoginResponse{Token: aToken, RToken: rToken}, nil
 }
 
-func (svc *adminService) GetAdminInfo(ctx context.Context, username string) (*v1.UserInfo, error) {
-	admin, err := svc.repo.FindByUsername(ctx, username)
+func (svc *adminService) GetAdminInfo(ctx context.Context, req *v1.AdminInfoRequest) (*v1.UserInfo, error) {
+	if err := validator.StructCtx(ctx, req); err != nil {
+		return nil, errs.BadRequest.WithDetails(err)
+	}
+	admin, err := svc.repo.FindByUsername(ctx, req.Username)
 	if err != nil {
-		logger.Error("get admin info error", "username", username, "err", err)
+		logger.Error("get admin info error", "username", req.Username, "err", err)
 		return nil, errs.AdminNotFound
 	}
 
@@ -193,11 +211,17 @@ func (svc *adminService) GetAdminInfo(ctx context.Context, username string) (*v1
 }
 
 func (svc *adminService) List(ctx context.Context, req *v1.AdminListRequest) (*page.Data[*model.Admin], error) {
+	if err := validator.StructCtx(ctx, req); err != nil {
+		return nil, errs.BadRequest.WithDetails(err)
+	}
 	return svc.repo.Find(ctx, req)
 }
 
-func (svc *adminService) GetItem(ctx context.Context, ID int64) (*v1.AdminResponse, error) {
-	admin, err := svc.repo.FindByID(ctx, ID)
+func (svc *adminService) GetItem(ctx context.Context, req *v1.AdminRequest) (*v1.AdminResponse, error) {
+	if err := validator.StructCtx(ctx, req); err != nil {
+		return nil, errs.BadRequest.WithDetails(err)
+	}
+	admin, err := svc.repo.FindByID(ctx, req.ID)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, errs.AdminNotFound
 	}
@@ -217,11 +241,14 @@ func (svc *adminService) GetItem(ctx context.Context, ID int64) (*v1.AdminRespon
 
 // 更新admin信息
 // 不是很重要的信息不需要实时更新(没有移除token)
-func (svc *adminService) Update(ctx context.Context, data *v1.AdminUpdateRequest) error {
-	if data.Email != nil {
+func (svc *adminService) Update(ctx context.Context, req *v1.AdminUpdateRequest) error {
+	if err := validator.StructCtx(ctx, req); err != nil {
+		return errs.BadRequest.WithDetails(err)
+	}
+	if req.Email != nil {
 		hesRes, err := svc.repo.HasEmail(ctx, &dto.UniqueEmailQuery{
-			ExcludeID: data.ID,
-			Email:     *data.Email,
+			ExcludeID: req.ID,
+			Email:     *req.Email,
 		})
 		if err != nil {
 			return err
@@ -230,10 +257,13 @@ func (svc *adminService) Update(ctx context.Context, data *v1.AdminUpdateRequest
 			return errs.AdminEmailDuplicated
 		}
 	}
-	return svc.repo.Update(ctx, data)
+	return svc.repo.Update(ctx, req)
 }
 
 func (svc *adminService) UpdatePassword(ctx context.Context, req *v1.UpdatePasswordRequest) error {
+	if err := validator.StructCtx(ctx, req); err != nil {
+		return errs.BadRequest.WithDetails(err)
+	}
 	admin, err := svc.repo.FindByUsername(ctx, req.Username)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -250,41 +280,53 @@ func (svc *adminService) UpdatePassword(ctx context.Context, req *v1.UpdatePassw
 	return security.JwtHelper.RemoveToken(ctx, admin.Username)
 }
 
-func (svc *adminService) Delete(ctx context.Context, ID int64) error {
-	admin, err := svc.repo.FindByID(ctx, ID)
+func (svc *adminService) Delete(ctx context.Context, req *v1.AdminRequest) error {
+	if err := validator.StructCtx(ctx, req); err != nil {
+		return errs.BadRequest.WithDetails(err)
+	}
+	admin, err := svc.repo.FindByID(ctx, req.ID)
 	if err != nil {
 		return errs.AdminNotFound
 	}
-	if err := svc.repo.Delete(ctx, ID); err != nil {
+	if err := svc.repo.Delete(ctx, req.ID); err != nil {
 		return err
 	}
 	return security.JwtHelper.RemoveToken(ctx, admin.Username)
 }
 
-func (svc *adminService) UpdateStatus(ctx context.Context, ID int64, status bool) error {
-	admin, err := svc.repo.FindByID(ctx, ID)
+func (svc *adminService) UpdateStatus(ctx context.Context, req *v1.AdminUpdateStatusRequest) error {
+	if err := validator.StructCtx(ctx, req); err != nil {
+		return errs.BadRequest.WithDetails(err)
+	}
+	admin, err := svc.repo.FindByID(ctx, req.ID)
 	if err != nil {
 		return errs.AdminNotFound
 	}
-	if err = svc.repo.UpdateStatus(ctx, ID, status); err != nil {
+	if err = svc.repo.UpdateStatus(ctx, req.ID, *req.Status); err != nil {
 		return err
 	}
 	return security.JwtHelper.RemoveToken(ctx, admin.Username)
 }
 
-func (svc *adminService) UpdateRole(ctx context.Context, ID int64, roles []int64) error {
-	admin, err := svc.repo.FindByID(ctx, ID)
+func (svc *adminService) UpdateRole(ctx context.Context, req *v1.AdminUpdateRoleRequest) error {
+	if err := validator.StructCtx(ctx, req); err != nil {
+		return errs.BadRequest.WithDetails(err)
+	}
+	admin, err := svc.repo.FindByID(ctx, req.ID)
 	if err != nil {
 		return errs.AdminNotFound
 	}
-	if err = svc.adminRoleRepo.UpdateRole(ctx, ID, roles); err != nil {
+	if err = svc.adminRoleRepo.UpdateRole(ctx, req.ID, req.Roles); err != nil {
 		return err
 	}
 	return security.JwtHelper.RemoveToken(ctx, admin.Username)
 }
 
-func (svc *adminService) GetRoleList(ctx context.Context, ID int64) ([]*model.Role, error) {
-	return svc.adminRoleRepo.FindAdminRole(ctx, ID)
+func (svc *adminService) GetRoleList(ctx context.Context, req *v1.AdminRequest) ([]*model.Role, error) {
+	if err := validator.StructCtx(ctx, req); err != nil {
+		return nil, errs.BadRequest.WithDetails(err)
+	}
+	return svc.adminRoleRepo.FindAdminRole(ctx, req.ID)
 }
 
 func (svc *adminService) newPasswdVerifier(ctx context.Context, admin *model.Admin) *security.PasswdVerifier {
@@ -294,7 +336,7 @@ func (svc *adminService) newPasswdVerifier(ctx context.Context, admin *model.Adm
 	pwdHelper.SetKey(fmt.Sprintf("%s:%s", LoginLimitKeyPrefix, admin.Username), time.Duration(remain)*time.Second)
 	pwdHelper.OnErr = func(err error) {
 		if errors.Is(err, security.ErrPasswdLimit) && admin.Status {
-			if err = svc.UpdateStatus(ctx, admin.ID, false); err != nil {
+			if err = svc.UpdateStatus(ctx, &v1.AdminUpdateStatusRequest{ID: admin.ID, Status: lo.ToPtr(false)}); err != nil {
 				logger.Error("update status:", "id", admin.ID, "err", err)
 			}
 			return
