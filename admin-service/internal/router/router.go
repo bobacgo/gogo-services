@@ -4,8 +4,8 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/gogoclouds/gogo-services/admin-service/internal/config"
 	"github.com/gogoclouds/gogo-services/admin-service/internal/domain/system"
+	"github.com/gogoclouds/gogo-services/admin-service/internal/router/middleware"
 	"github.com/gogoclouds/gogo-services/common-lib/app"
 	"github.com/gogoclouds/gogo-services/common-lib/app/security"
 )
@@ -14,8 +14,9 @@ func Init(e *gin.Engine, app *app.Options) {
 	e.StaticFS("./web", http.Dir("./web"))
 	//authRouter := e.Use(middleware.Auth())
 	//_ = authRouter
+	cfg := app.GetConf()
 
-	security.JwtHelper = security.NewJWT(&config.Conf.Security.Jwt, app.GetRedis())
-
+	security.JwtHelper = security.NewJWT(&cfg.Security.Jwt, app.GetRedis())
+	e.Use(middleware.HeaderToContext(), middleware.Trace(cfg.Name))
 	system.Register(app, e)
 }

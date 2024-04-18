@@ -64,7 +64,7 @@ func (h *AdminApi) RefreshToken(ctx *gin.Context) {
 		return
 	}
 
-	req.RToken = middleware.GetAuthHeader(ctx)
+	req.RToken = middleware.TrimToken(ctx.GetString(middleware.AuthHeader))
 	if req.RToken == "" {
 		r.Reply(ctx, errs.BadRequest.WithDetails("Authorization header is empty"))
 		return

@@ -19,7 +19,7 @@ func RunRpcServer(app *App, register func(server *grpc.Server, app *Options)) {
 
 	lis, err := net.Listen("tcp", cfg.Server.Rpc.Addr)
 	if err != nil {
-		log.Panicln(err)
+		log.Panic(err)
 	}
 	s := grpc.NewServer()
 
@@ -32,7 +32,7 @@ func RunRpcServer(app *App, register func(server *grpc.Server, app *Options)) {
 
 	go func() {
 		if err = s.Serve(lis); err != nil {
-			log.Panicln(err)
+			log.Panic(err)
 		}
 	}()
 

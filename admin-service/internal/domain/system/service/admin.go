@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"strconv"
 	"time"
 
@@ -12,7 +13,6 @@ import (
 	"github.com/gogoclouds/gogo-services/admin-service/internal/config"
 	"github.com/gogoclouds/gogo-services/admin-service/internal/domain/system/dto"
 	"github.com/gogoclouds/gogo-services/admin-service/internal/model"
-	"github.com/gogoclouds/gogo-services/common-lib/app/logger"
 	"github.com/gogoclouds/gogo-services/common-lib/app/security"
 	"github.com/gogoclouds/gogo-services/common-lib/app/validator"
 	"github.com/gogoclouds/gogo-services/common-lib/pkg/uid"
@@ -180,13 +180,13 @@ func (svc *adminService) GetAdminInfo(ctx context.Context, req *v1.AdminInfoRequ
 	}
 	admin, err := svc.repo.FindByUsername(ctx, req.Username)
 	if err != nil {
-		logger.Error("get admin info error", "username", req.Username, "err", err)
+		slog.ErrorContext(ctx, "get admin info error", "username", req.Username, "err", err)
 		return nil, errs.AdminNotFound
 	}
 
 	menusList, _, err := svc.menuRepo.Find(ctx, &v1.MenuListRequest{Query: page.NewNot()})
 	if err != nil {
-		logger.Error("get menu list error", "err", err)
+		slog.ErrorContext(ctx, "get menu list error", "err", err)
 		return nil, errs.AdminNotFound
 	}
 
@@ -337,11 +337,11 @@ func (svc *adminService) newPasswdVerifier(ctx context.Context, admin *model.Adm
 	pwdHelper.OnErr = func(err error) {
 		if errors.Is(err, security.ErrPasswdLimit) && admin.Status {
 			if err = svc.UpdateStatus(ctx, &v1.AdminUpdateStatusRequest{ID: admin.ID, Status: lo.ToPtr(false)}); err != nil {
-				logger.Error("update status:", "id", admin.ID, "err", err)
+				slog.ErrorContext(ctx, "update status:", "id", admin.ID, "err", err)
 			}
 			return
 		}
-		logger.Error("verify password err:", "username", admin.Username, "err", err)
+		slog.ErrorContext(ctx, "verify password err:", "username", admin.Username, "err", err)
 	}
 	return pwdHelper
 }

@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"log/slog"
 	"net"
 	"os"
 	"os/signal"
@@ -12,7 +13,6 @@ import (
 
 	"github.com/gogoclouds/gogo-services/common-lib/pkg/uid"
 
-	"github.com/gogoclouds/gogo-services/common-lib/app/logger"
 	"github.com/gogoclouds/gogo-services/common-lib/app/registry"
 	"github.com/gogoclouds/gogo-services/common-lib/pkg/network"
 )
@@ -80,7 +80,7 @@ func (a *App) Run() error {
 		ctx, cancel := context.WithTimeout(context.Background(), opts.registryTimeout)
 		defer cancel()
 		if err := opts.registrar.Registry(ctx, instance); err != nil {
-			logger.Errorf("register service error: %v", err)
+			slog.Error("register service error", "err", err)
 			return err
 		}
 	}
@@ -97,7 +97,7 @@ func (a *App) Run() error {
 
 	err = a.shutdown(ctx)
 
-	logger.Info("service has exited")
+	slog.Info("service has exited")
 	return err
 }
 
@@ -124,7 +124,7 @@ func (a *App) shutdown(ctx context.Context) (err error) {
 		ctx, cancel := context.WithTimeout(context.Background(), opts.registryTimeout)
 		defer cancel()
 		if err := opts.registrar.Deregister(ctx, instance); err != nil {
-			logger.Errorf("deregister service error: %w", err)
+			slog.Error("deregister service error", "err", err)
 			return err
 		}
 	}
@@ -160,14 +160,14 @@ func (a *App) buildInstance() (*registry.ServiceInstance, error) {
 		if rUrl, err := getRegistryUrl("http", opts.conf.Server.Http.Addr); err == nil {
 			endpoints = append(endpoints, rUrl)
 		} else {
-			logger.Errorf("get http registry err:%v", err)
+			slog.Error("get http registry err", "err", err)
 		}
 	}
 	if !grpcScheme {
 		if rUrl, err := getRegistryUrl("grpc", opts.conf.Server.Rpc.Addr); err == nil {
 			endpoints = append(endpoints, rUrl)
 		} else {
-			logger.Errorf("get grpc registry err:%v", err)
+			slog.Error("get grpc registry err", "err", err)
 		}
 	}
 	return &registry.ServiceInstance{

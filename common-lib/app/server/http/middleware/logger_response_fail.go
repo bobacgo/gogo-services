@@ -3,12 +3,14 @@ package middleware
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
+	"io"
+	"log/slog"
+
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
-	"github.com/gogoclouds/gogo-services/common-lib/app/logger"
 	"github.com/gogoclouds/gogo-services/common-lib/web/r"
 	"github.com/gogoclouds/gogo-services/common-lib/web/r/codes"
-	"io"
 )
 
 // LoggerResponseFail 日志记录中间件
@@ -33,7 +35,7 @@ func LoggerResponseFail() gin.HandlerFunc {
 			return
 		}
 		if rsp.Code != codes.OK {
-			logger.Errorf("\nrequest: %s\nresponse: %s", reqBody, rspBody)
+			slog.ErrorContext(c, fmt.Sprintf("\nrequest: %s\nresponse: %s", reqBody, rspBody))
 		}
 	}
 }

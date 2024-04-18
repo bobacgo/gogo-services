@@ -2,12 +2,12 @@ package main
 
 import (
 	"flag"
+	"log"
 
 	"github.com/gogoclouds/gogo-services/admin-service/internal/config"
 	"github.com/gogoclouds/gogo-services/admin-service/internal/router"
 	"github.com/gogoclouds/gogo-services/common-lib/app"
 	"github.com/gogoclouds/gogo-services/common-lib/app/conf"
-	"github.com/gogoclouds/gogo-services/common-lib/app/logger"
 )
 
 var filepath = flag.String("config", "./config.yaml", "config file path")
@@ -35,6 +35,6 @@ func main() {
 		//app.WithAfterStart()
 	)
 	if err := newApp.Run(); err != nil {
-		logger.Panic(err.Error())
+		log.Panic(err.Error())
 	}
 }

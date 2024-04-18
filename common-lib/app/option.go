@@ -8,11 +8,10 @@ import (
 	"os"
 	"time"
 
-	"github.com/gogoclouds/gogo-services/common-lib/app/conf"
-
 	"github.com/fsnotify/fsnotify"
 	"github.com/gin-gonic/gin"
 	"github.com/gogoclouds/gogo-services/common-lib/app/cache"
+	"github.com/gogoclouds/gogo-services/common-lib/app/conf"
 	"github.com/gogoclouds/gogo-services/common-lib/app/db"
 	"github.com/gogoclouds/gogo-services/common-lib/app/logger"
 	"github.com/gogoclouds/gogo-services/common-lib/app/registry"
@@ -129,7 +128,7 @@ func WithLocalCache() Option {
 		var err error
 		o.localCache, err = cache.DefaultCache()
 		if err != nil {
-			log.Panicln(err)
+			log.Panic(err)
 		}
 		slog.Info("[local_cache] init done.")
 	}
@@ -141,7 +140,7 @@ func WithDB(tables ...[]string) Option {
 		var err error
 		o.db, err = db.NewDB(mysql.Open(o.conf.DB.Source), o.conf.DB)
 		if err != nil {
-			log.Panicln(err.Error())
+			log.Panic(err.Error())
 		}
 		slog.Info("[mysql] init done.")
 	}
@@ -152,7 +151,7 @@ func WithRedis() Option {
 		var err error
 		o.redis, err = cache.NewRedis(o.conf.Redis)
 		if err != nil {
-			log.Panicln(err.Error())
+			log.Panic(err.Error())
 		}
 		slog.Info("[redis] init done.")
 	}

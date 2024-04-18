@@ -2,8 +2,9 @@ package conf
 
 import (
 	"flag"
+	"log/slog"
+
 	"github.com/fsnotify/fsnotify"
-	"github.com/gogoclouds/gogo-services/common-lib/app/logger"
 	"github.com/gogoclouds/gogo-services/common-lib/app/validator"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
@@ -35,11 +36,11 @@ func Load[T any](filepath string, onChange func(e fsnotify.Event)) (*T, error) {
 	vpr.OnConfigChange(func(e fsnotify.Event) {
 		newCfg := new(T)
 		if err := vpr.Unmarshal(newCfg); err != nil {
-			logger.Error(err.Error())
+			slog.Error(err.Error())
 			return
 		}
 		if err := validator.Struct(newCfg); err != nil {
-			logger.Error(err.Error())
+			slog.Error(err.Error())
 			return
 		}
 		cf = newCfg

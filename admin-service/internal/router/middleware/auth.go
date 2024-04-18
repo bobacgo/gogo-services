@@ -2,11 +2,12 @@ package middleware
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/gin-gonic/gin"
 	"github.com/gogoclouds/gogo-services/admin-service/api/errs"
 	"github.com/gogoclouds/gogo-services/common-lib/app/security"
 	"github.com/gogoclouds/gogo-services/common-lib/web/r"
-	"strings"
 )
 
 const (
@@ -16,7 +17,7 @@ const (
 
 func Auth() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		bearerToken := c.GetHeader(AuthHeader)
+		bearerToken := c.GetString(AuthHeader)
 		if bearerToken == "" {
 			c.Abort()
 			r.Reply(c, errs.TokenMiss)

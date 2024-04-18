@@ -57,17 +57,17 @@ func RunHttpServer(app *App, register func(e *gin.Engine, a *Options)) {
 			logger.Panicf("listen: %s\n", err)
 		}
 	}()
-	logger.Infof("http server running %s", cfg.Server.Http.Addr)
+	slog.Info("http server running", "addr", cfg.Server.Http.Addr)
 	<-app.exit
-	logger.Info("Shutting down http server...")
+	slog.Info("Shutting down http server...")
 	// The context is used to inform the server it has 5 seconds to finish
 	// the request it is currently handling
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	if err := srv.Shutdown(ctx); err != nil {
-		logger.Errorf("Http server forced to shutdown: %w", err)
+		slog.Error("Http server forced to shutdown", "err", err)
 	}
-	logger.Info("http server exiting")
+	slog.Info("http server exiting")
 }
 
 // healthApi http check-up API

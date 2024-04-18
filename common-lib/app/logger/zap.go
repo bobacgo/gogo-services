@@ -2,10 +2,12 @@ package logger
 
 import (
 	"context"
+	"os"
+
 	"github.com/natefinch/lumberjack"
 	"go.uber.org/zap"
+	"go.uber.org/zap/exp/zapslog"
 	"go.uber.org/zap/zapcore"
-	"os"
 )
 
 type ZapLogger struct {
@@ -97,8 +99,13 @@ func InitZapLogger(conf Config) {
 		zapcore.Lock(os.Stdout),
 		atomicLevel,
 	)
-	l := zap.New(zapcore.NewTee(fileCore, consoleCore), zap.AddCaller(), zap.AddCallerSkip(2))
-	SetLogger(&ZapLogger{logger: l})
+
+	core := zapcore.NewTee(fileCore, consoleCore)
+
+	slogHandler := zapslog.NewHandler(core, &zapslog.HandlerOptions{AddSource: true})
+	InitSlog(slogHandler)
+
+	SetLogger(&ZapLogger{logger: zap.New(core, zap.AddCaller(), zap.AddCallerSkip(2))})
 }
 
 func setConsoleEncoder(timeFormat string) zapcore.Encoder {
