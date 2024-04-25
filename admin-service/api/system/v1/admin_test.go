@@ -55,31 +55,25 @@ func GetToken(request *v1.AdminLoginRequest) (*v1.AdminLoginResponse, error) {
 func TestRegister(t *testing.T) {
 	now := strconv.FormatInt(time.Now().Unix(), 10)
 	var tests = []struct {
+		name string
 		v1.AdminRegisterRequest
 		want codes.Code
 	}{
-		// 测试用例
-		// 1.注册新账户并登录成功
-		// 2.用户名不能重复
-		// 3.已删除用户名不能重复
-		// 4.邮箱号不能重复
-		// 5.邮箱格式
-
-		{v1.AdminRegisterRequest{UsernamePasswd: v1.UsernamePasswd{Username: "new" + now, Password: "admin123"}, Email: now + "@qq.com"}, codes.OK},
-		{v1.AdminRegisterRequest{UsernamePasswd: v1.UsernamePasswd{Username: "admin", Password: "admin123"}}, errs.AdminUsernameDuplicated.Code},
-		{v1.AdminRegisterRequest{UsernamePasswd: v1.UsernamePasswd{Username: "unusername", Password: "admin123"}}, errs.AdminUnUsernameDuplicated.Code},
-		{v1.AdminRegisterRequest{UsernamePasswd: v1.UsernamePasswd{Username: "new1" + now, Password: "admin123"}, Email: now + "@qq.com"}, errs.AdminEmailDuplicated.Code},
-		{v1.AdminRegisterRequest{UsernamePasswd: v1.UsernamePasswd{Username: "admin", Password: "admin123"}, Email: "qq.com"}, codes.BadRequest},
+		{"1.注册新账户并登录成功", v1.AdminRegisterRequest{UsernamePasswd: v1.UsernamePasswd{Username: "new" + now, Password: "admin123"}, Email: now + "@qq.com"}, codes.OK},
+		{"2.用户名不能重复", v1.AdminRegisterRequest{UsernamePasswd: v1.UsernamePasswd{Username: "admin", Password: "admin123"}}, errs.AdminUsernameDuplicated.Code},
+		{"3.已删除用户名不能重复", v1.AdminRegisterRequest{UsernamePasswd: v1.UsernamePasswd{Username: "unusername", Password: "admin123"}}, errs.AdminUnUsernameDuplicated.Code},
+		{"4.邮箱号不能重复", v1.AdminRegisterRequest{UsernamePasswd: v1.UsernamePasswd{Username: "new1" + now, Password: "admin123"}, Email: now + "@qq.com"}, errs.AdminEmailDuplicated.Code},
+		{"5.邮箱格式", v1.AdminRegisterRequest{UsernamePasswd: v1.UsernamePasswd{Username: "admin", Password: "admin123"}, Email: "qq.com"}, codes.BadRequest},
 	}
-	for i, test := range tests {
+	for _, test := range tests {
 		resp, err := uhttp.Post[r.Response[v1.AdminLoginResponse]](AdminEndpoint+"/register", test.AdminRegisterRequest)
 		if err != nil {
 			t.Fatal(err)
 		}
 		if resp.Code != test.want {
-			t.Errorf("index:%d, codes: %d msg: %s, err: %v", i, resp.Code, resp.Msg, resp.Err)
+			t.Errorf("name: %s, codes: %d msg: %s, err: %v", test.name, resp.Code, resp.Msg, resp.Err)
 		}
-		if test.want == codes.OK {
+		if test.want == codes.OK { // 注册成功后登录校验
 			loginReq := v1.AdminLoginRequest{UsernamePasswd: test.UsernamePasswd}
 			_, err = GetToken(&loginReq)
 			if err != nil {
@@ -91,33 +85,30 @@ func TestRegister(t *testing.T) {
 
 func TestLogin(t *testing.T) {
 	var tests = []struct {
+		name string
 		v1.AdminLoginRequest
 		want codes.Code
 	}{
 		// 测试用例
-		// 1.登录成功
-		// 1.1 用户名为空,密码为空
-		// 2.用户名长的过长
-		// 3.用户名不存在
 		// 4.单一登录
 		// 5.用户登录失败次数
 		// 6.用户被禁用
 		// 7.用户已注销
-		{AdminLoginRequest: v1.AdminLoginRequest{UsernamePasswd: v1.UsernamePasswd{Username: "admin", Password: "admin123"}}, want: codes.OK},
-		{AdminLoginRequest: v1.AdminLoginRequest{UsernamePasswd: v1.UsernamePasswd{Username: "admin", Password: "admin1231"}}, want: errs.AdminLoginFail.Code},
-		{AdminLoginRequest: v1.AdminLoginRequest{UsernamePasswd: v1.UsernamePasswd{Username: "", Password: ""}}, want: codes.BadRequest},
-		{AdminLoginRequest: v1.AdminLoginRequest{UsernamePasswd: v1.UsernamePasswd{Username: strings.Repeat("a", 21), Password: "admin123"}}, want: codes.BadRequest},
-		{AdminLoginRequest: v1.AdminLoginRequest{UsernamePasswd: v1.UsernamePasswd{Username: "用户名不存在", Password: "admin123"}}, want: errs.AdminLoginFail.Code},
-		{AdminLoginRequest: v1.AdminLoginRequest{UsernamePasswd: v1.UsernamePasswd{Username: "admin1", Password: "admin123"}}, want: errs.AdminLoginForbidden.Code},
+		{"1.登录成功", v1.AdminLoginRequest{UsernamePasswd: v1.UsernamePasswd{Username: "admin", Password: "admin123"}}, codes.OK},
+		{"2.密码错误", v1.AdminLoginRequest{UsernamePasswd: v1.UsernamePasswd{Username: "admin", Password: "admin1231"}}, errs.AdminLoginFail.Code},
+		{"3.用户名为空,密码为空", v1.AdminLoginRequest{UsernamePasswd: v1.UsernamePasswd{Username: "", Password: ""}}, codes.BadRequest},
+		{"4.用户名长的过长", v1.AdminLoginRequest{UsernamePasswd: v1.UsernamePasswd{Username: strings.Repeat("a", 21), Password: "admin123"}}, codes.BadRequest},
+		{"5.用户名不存在", v1.AdminLoginRequest{UsernamePasswd: v1.UsernamePasswd{Username: "用户名不存在", Password: "admin123"}}, errs.AdminLoginFail.Code},
+		{"6.用户被禁用", v1.AdminLoginRequest{UsernamePasswd: v1.UsernamePasswd{Username: "admin1", Password: "admin123"}}, errs.AdminLoginForbidden.Code},
 	}
 
-	for i, test := range tests {
+	for _, test := range tests {
 		resp, err := uhttp.Post[r.Response[v1.AdminLoginResponse]](AdminEndpoint+"/login", test.AdminLoginRequest)
 		if err != nil {
 			t.Fatal(err)
 		}
 		if resp.Code != test.want {
-			t.Errorf("index:%d, codes: %d msg: %s, err: %v", i, resp.Code, resp.Msg, resp.Err)
+			t.Errorf("name: %s, codes: %d msg: %s, err: %v", test.name, resp.Code, resp.Msg, resp.Err)
 		}
 	}
 }
@@ -145,19 +136,16 @@ func TestRefreshToken(t *testing.T) {
 	}
 
 	var tests = []struct {
+		name string
 		v1.AdminRefreshTokenRequest
 		want codes.Code
 	}{
-		// 测试用例
-		// 1. 有 aToken 和 rToken
-		// 2. 没有 rToken
-		// 3. 没有 aToken
-		{AdminRefreshTokenRequest: v1.AdminRefreshTokenRequest{AToken: token.Token, RToken: token.RToken}, want: codes.OK},
-		{AdminRefreshTokenRequest: v1.AdminRefreshTokenRequest{AToken: token.Token, RToken: ""}, want: codes.BadRequest},
-		{AdminRefreshTokenRequest: v1.AdminRefreshTokenRequest{AToken: "", RToken: token.RToken}, want: codes.BadRequest},
+		{"1.有 aToken 和 rToken", v1.AdminRefreshTokenRequest{AToken: token.Token, RToken: token.RToken}, codes.OK},
+		{"2. 没有 rToken", v1.AdminRefreshTokenRequest{AToken: token.Token, RToken: ""}, codes.BadRequest},
+		{"3. 没有 aToken", v1.AdminRefreshTokenRequest{AToken: "", RToken: token.RToken}, codes.BadRequest},
 	}
 
-	for i, test := range tests {
+	for _, test := range tests {
 		client := uhttp.NewHttpClient[r.Response[v1.AdminLoginResponse]](AdminEndpoint+"/refreshToken", http.MethodGet)
 		client.Header.Add(middleware.AuthHeader, "Bearer "+test.RToken)
 		client.Query.Set("aToken", test.AToken)
@@ -166,7 +154,7 @@ func TestRefreshToken(t *testing.T) {
 			t.Fatal(err)
 		}
 		if resp.Code != test.want {
-			t.Errorf("index:%d, codes: %d msg: %s, err: %v", i, resp.Code, resp.Msg, resp.Err)
+			t.Errorf("name: %s, codes: %d msg: %s, err: %v", test.name, resp.Code, resp.Msg, resp.Err)
 		}
 	}
 }
@@ -210,16 +198,14 @@ func TestAdminGetItem(t *testing.T) {
 		t.Fatal(err)
 	}
 	var tests = []struct {
+		name string
 		v1.AdminRequest
 		want codes.Code
 	}{
-		// 测试用例
-		// 1.获取成功
-		// 2.获取失败(ID不存在)
-		{AdminRequest: v1.AdminRequest{ID: 1}, want: codes.OK},
-		{AdminRequest: v1.AdminRequest{ID: 0}, want: errs.AdminNotFound.Code},
+		{"1.获取成功", v1.AdminRequest{ID: 1}, codes.OK},
+		{"2.获取失败(ID不存在)", v1.AdminRequest{ID: 0}, errs.AdminNotFound.Code},
 	}
-	for i, test := range tests {
+	for _, test := range tests {
 		client := uhttp.NewHttpClient[r.Response[v1.AdminResponse]](AdminEndpoint+"/"+strconv.FormatInt(test.ID, 10), http.MethodGet)
 		client.Header.Add(middleware.AuthHeader, "Bearer "+token.Token)
 		resp, err := client.Do(context.Background())
@@ -227,7 +213,7 @@ func TestAdminGetItem(t *testing.T) {
 			t.Fatal(err)
 		}
 		if resp.Code != test.want {
-			t.Errorf("index:%d, codes: %d msg: %s, err: %v", i, resp.Code, resp.Msg, resp.Err)
+			t.Errorf("name: %s, codes: %d msg: %s, err: %v", test.name, resp.Code, resp.Msg, resp.Err)
 		}
 	}
 }
@@ -238,16 +224,14 @@ func TestAdminDelete(t *testing.T) {
 		t.Fatal(err)
 	}
 	var tests = []struct {
+		name string
 		v1.AdminRequest
 		want codes.Code
 	}{
-		// 测试用例
-		// 1.删除成功
-		// 2.删除失败(ID不存在)
-		{AdminRequest: v1.AdminRequest{ID: 4}, want: codes.OK},
-		{AdminRequest: v1.AdminRequest{ID: 0}, want: errs.AdminNotFound.Code},
+		{"1.删除成功", v1.AdminRequest{ID: 4}, codes.OK},
+		{"2.删除失败(ID不存在)", v1.AdminRequest{ID: 0}, errs.AdminNotFound.Code},
 	}
-	for i, test := range tests {
+	for _, test := range tests {
 		client := uhttp.NewHttpClient[r.Response[v1.AdminResponse]](AdminEndpoint+"/delete/"+strconv.FormatInt(test.ID, 10), http.MethodPost)
 		client.Header.Set(middleware.AuthHeader, "Bearer "+token.Token)
 		resp, err := client.Do(context.Background())
@@ -255,7 +239,7 @@ func TestAdminDelete(t *testing.T) {
 			t.Fatal(err)
 		}
 		if resp.Code != test.want {
-			t.Errorf("index:%d, codes: %d msg: %s, err: %v", i, resp.Code, resp.Msg, resp.Err)
+			t.Errorf("name: %s, codes: %d msg: %s, err: %v", test.name, resp.Code, resp.Msg, resp.Err)
 		}
 	}
 }
@@ -266,18 +250,15 @@ func TestAdminUpdate(t *testing.T) {
 		t.Fatal(err)
 	}
 	var tests = []struct {
+		name string
 		v1.AdminUpdateRequest
 		want codes.Code
 	}{
-		// 测试用例
-		// 1.更新成功
-		// 2.邮箱号重复
-		// 3.邮箱号格式错误
-		{AdminUpdateRequest: v1.AdminUpdateRequest{ID: 5, Icon: lo.ToPtr("https://macro-oss.oss-cn-shenzhen.aliyuncs.com/mall/icon/github_icon_01.png"), Email: lo.ToPtr("123@qq.com"), Nickname: lo.ToPtr("更新测试"), Note: lo.ToPtr("更新测试")}, want: codes.OK},
-		{AdminUpdateRequest: v1.AdminUpdateRequest{ID: 5, Email: lo.ToPtr("admin1@163.com")}, want: errs.AdminEmailDuplicated.Code},
-		{AdminUpdateRequest: v1.AdminUpdateRequest{ID: 5, Email: lo.ToPtr("123")}, want: codes.BadRequest},
+		{"1.更新成功", v1.AdminUpdateRequest{ID: 5, Icon: lo.ToPtr("https://macro-oss.oss-cn-shenzhen.aliyuncs.com/mall/icon/github_icon_01.png"), Email: lo.ToPtr("123@qq.com"), Nickname: lo.ToPtr("更新测试"), Note: lo.ToPtr("更新测试")}, codes.OK},
+		{"2.邮箱号重复", v1.AdminUpdateRequest{ID: 5, Email: lo.ToPtr("admin1@163.com")}, errs.AdminEmailDuplicated.Code},
+		{"3.邮箱号格式错误", v1.AdminUpdateRequest{ID: 5, Email: lo.ToPtr("123")}, codes.BadRequest},
 	}
-	for i, test := range tests {
+	for _, test := range tests {
 		client := uhttp.NewHttpClient[r.Response[v1.AdminResponse]](AdminEndpoint+"/update/"+strconv.FormatInt(test.ID, 10), http.MethodPost)
 		client.Header.Set(middleware.AuthHeader, "Bearer "+token.Token)
 		client.Header.Add(uhttp.HeaderContentType, uhttp.MIMEJSON)
@@ -288,7 +269,7 @@ func TestAdminUpdate(t *testing.T) {
 			t.Fatal(err)
 		}
 		if resp.Code != test.want {
-			t.Errorf("index:%d, codes: %d msg: %s, err: %v", i, resp.Code, resp.Msg, resp.Err)
+			t.Errorf("index:%d, codes: %d msg: %s, err: %v", test.want, resp.Code, resp.Msg, resp.Err)
 		}
 	}
 }
@@ -304,32 +285,23 @@ func TestUpdatePasswd(t *testing.T) {
 	}
 
 	var tests = []struct {
+		name string
 		v1.UpdatePasswordRequest
 		Relogin bool
 		want    codes.Code
 	}{
-		// 测试用例
-		// 1.更新成功
-		// 2.令牌失效
-		// 3.修改前密码登录
-		// 4.修改后密码登录并获取新的令牌
-		// 5.旧密码错误
-		// 6.旧密码为空
-		// 7.新密码为空
-		// 8.账户为空
-		// 9.修改为原来的密码(方便下次调试)
-		{UpdatePasswordRequest: v1.UpdatePasswordRequest{Username: "uppasswd", Password: "admin123", NewPassword: "admin1234"}, want: codes.OK},
-		{UpdatePasswordRequest: v1.UpdatePasswordRequest{Username: "uppasswd", Password: "admin123", NewPassword: "admin1234"}, want: errs.TokenOut.Code},
-		{UpdatePasswordRequest: v1.UpdatePasswordRequest{Username: "uppasswd", Password: "admin123"}, Relogin: true, want: errs.AdminLoginFail.Code},
-		{UpdatePasswordRequest: v1.UpdatePasswordRequest{Username: "uppasswd", Password: "admin1234"}, Relogin: true, want: codes.OK},
-		{UpdatePasswordRequest: v1.UpdatePasswordRequest{Username: "uppasswd", Password: "admin123", NewPassword: "admin1234"}, want: errs.AdminOldPwdErr.Code},
-		{UpdatePasswordRequest: v1.UpdatePasswordRequest{Username: "uppasswd", Password: "", NewPassword: "admin123434"}, want: codes.BadRequest},
-		{UpdatePasswordRequest: v1.UpdatePasswordRequest{Username: "uppasswd", Password: "admin123", NewPassword: ""}, want: codes.BadRequest},
-		{UpdatePasswordRequest: v1.UpdatePasswordRequest{Username: "", Password: "admin123", NewPassword: "admin123434"}, want: codes.BadRequest},
-		{UpdatePasswordRequest: v1.UpdatePasswordRequest{Username: "uppasswd", Password: "admin1234", NewPassword: "admin123"}, want: codes.OK},
+		{"1.更新成功", v1.UpdatePasswordRequest{Username: "uppasswd", Password: "admin123", NewPassword: "admin1234"}, false, codes.OK},
+		{"2.令牌失效", v1.UpdatePasswordRequest{Username: "uppasswd", Password: "admin123", NewPassword: "admin1234"}, false, errs.TokenOut.Code},
+		{"3.修改前密码登录", v1.UpdatePasswordRequest{Username: "uppasswd", Password: "admin123"}, true, errs.AdminLoginFail.Code},
+		{"4.修改后密码登录并获取新的令牌", v1.UpdatePasswordRequest{Username: "uppasswd", Password: "admin1234"}, true, codes.OK},
+		{"5.旧密码错误", v1.UpdatePasswordRequest{Username: "uppasswd", Password: "admin123", NewPassword: "admin1234"}, false, errs.AdminOldPwdErr.Code},
+		{"6.旧密码为空", v1.UpdatePasswordRequest{Username: "uppasswd", Password: "", NewPassword: "admin123434"}, false, codes.BadRequest},
+		{"7.新密码为空", v1.UpdatePasswordRequest{Username: "uppasswd", Password: "admin123", NewPassword: ""}, false, codes.BadRequest},
+		{"8.账户为空", v1.UpdatePasswordRequest{Username: "", Password: "admin123", NewPassword: "admin123434"}, false, codes.BadRequest},
+		{"9.修改为原来的密码(方便下次调试)", v1.UpdatePasswordRequest{Username: "uppasswd", Password: "admin1234", NewPassword: "admin123"}, false, codes.OK},
 	}
 
-	for i, test := range tests {
+	for _, test := range tests {
 		// 更新密码后登录校验
 		if test.Relogin {
 			token, err = GetToken(&v1.AdminLoginRequest{
@@ -341,7 +313,7 @@ func TestUpdatePasswd(t *testing.T) {
 			if err != nil {
 				var serr *status.Status
 				if !errors.As(err, &serr) || serr.Code != test.want {
-					t.Errorf("index:%d, err: %v", i, err)
+					t.Errorf("name: %s, err: %v", test.name, err)
 					return
 				}
 			}
@@ -358,7 +330,7 @@ func TestUpdatePasswd(t *testing.T) {
 			t.Fatal(err)
 		}
 		if resp.Code != test.want {
-			t.Errorf("index:%d, codes: %d msg: %s, err: %v", i, resp.Code, resp.Msg, resp.Err)
+			t.Errorf("name: %s, codes: %d msg: %s, err: %v", test.name, resp.Code, resp.Msg, resp.Err)
 		}
 	}
 }
@@ -369,21 +341,17 @@ func TestAdminStatus(t *testing.T) {
 		t.Fatal(err)
 	}
 	var tests = []struct {
+		name string
 		v1.AdminUpdateStatusRequest
 		relogin bool
 		want    codes.Code
 	}{
-		// 测试用例
-		// 1.修改状态成功
-		// 2.登录禁止
-		// 3.状态改回来
-		// 4.状态不传
-		{AdminUpdateStatusRequest: v1.AdminUpdateStatusRequest{ID: 7, Status: lo.ToPtr(false)}, want: codes.OK},
-		{relogin: true, want: errs.AdminLoginForbidden.Code},
-		{AdminUpdateStatusRequest: v1.AdminUpdateStatusRequest{ID: 7, Status: lo.ToPtr(true)}, want: codes.OK},
-		{AdminUpdateStatusRequest: v1.AdminUpdateStatusRequest{ID: 7}, want: codes.BadRequest},
+		{name: "1.修改状态成功", AdminUpdateStatusRequest: v1.AdminUpdateStatusRequest{ID: 7, Status: lo.ToPtr(false)}, want: codes.OK},
+		{name: "2.登录禁止", relogin: true, want: errs.AdminLoginForbidden.Code},
+		{name: "3.状态改回来", AdminUpdateStatusRequest: v1.AdminUpdateStatusRequest{ID: 7, Status: lo.ToPtr(true)}, want: codes.OK},
+		{name: "4.状态不传", AdminUpdateStatusRequest: v1.AdminUpdateStatusRequest{ID: 7}, want: codes.BadRequest},
 	}
-	for i, test := range tests {
+	for _, test := range tests {
 		if test.relogin {
 			token, err = GetToken(&v1.AdminLoginRequest{
 				v1.UsernamePasswd{
@@ -394,7 +362,7 @@ func TestAdminStatus(t *testing.T) {
 			if err != nil {
 				var serr *status.Status
 				if !errors.As(err, &serr) || serr.Code != test.want {
-					t.Errorf("index:%d, err: %v", i, err)
+					t.Errorf("name: %s, err: %v", test.name, err)
 					return
 				}
 			}
@@ -410,7 +378,7 @@ func TestAdminStatus(t *testing.T) {
 			t.Fatal(err)
 		}
 		if resp.Code != test.want {
-			t.Errorf("index:%d, codes: %d msg: %s, err: %v", i, resp.Code, resp.Msg, resp.Err)
+			t.Errorf("name: %s, codes: %d msg: %s, err: %v", test.name, resp.Code, resp.Msg, resp.Err)
 		}
 	}
 }

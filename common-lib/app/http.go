@@ -7,6 +7,7 @@ import (
 	"log"
 	"log/slog"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gogoclouds/gogo-services/common-lib/app/conf"
@@ -37,7 +38,7 @@ func RunMustHttpServer(app *App, register func(e *gin.Engine, a *Options)) {
 	e.Use(middleware.Recovery())
 	e.Use(middleware.LoggerResponseFail())
 
-	if cfg.Env != conf.EnvDev {
+	if strings.EqualFold(string(cfg.Env), string(conf.EnvDev)) {
 		slog.Warn(fmt.Sprintf(`[gin] Running in "%s" mode`, gin.Mode()))
 	}
 
