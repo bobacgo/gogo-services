@@ -11,11 +11,11 @@ import (
 	healthgrpc "google.golang.org/grpc/health/grpc_health_v1"
 )
 
-func RunRpcServer(app *App, register func(server *grpc.Server, app *Options)) {
+func RunMustRpcServer(app *App, register func(server *grpc.Server, app *Options)) {
 	app.wg.Add(1)
 	defer app.wg.Done()
 
-	cfg := app.opts.GetConf()
+	cfg := app.opts.Conf()
 
 	lis, err := net.Listen("tcp", cfg.Server.Rpc.Addr)
 	if err != nil {

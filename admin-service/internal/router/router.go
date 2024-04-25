@@ -14,9 +14,9 @@ func Init(e *gin.Engine, app *app.Options) {
 	e.StaticFS("./web", http.Dir("./web"))
 	//authRouter := e.Use(middleware.Auth())
 	//_ = authRouter
-	cfg := app.GetConf()
+	cfg := app.Conf()
 
-	security.JwtHelper = security.NewJWT(&cfg.Security.Jwt, app.GetRedis())
+	security.JwtHelper = security.NewJWT(&cfg.Security.Jwt, app.Redis())
 	e.Use(middleware.HeaderToContext(), middleware.Trace(cfg.Name))
 	system.Register(app, e)
 }

@@ -60,11 +60,11 @@ func (a *App) Run() error {
 	opts := a.opts
 
 	if opts.httpServer != nil {
-		go RunHttpServer(a, opts.httpServer)
+		go RunMustHttpServer(a, opts.httpServer)
 	}
 
 	if opts.rpcServer != nil {
-		go RunRpcServer(a, opts.rpcServer)
+		go RunMustRpcServer(a, opts.rpcServer)
 	}
 
 	ctx := context.Background()

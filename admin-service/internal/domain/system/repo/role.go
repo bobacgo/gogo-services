@@ -21,8 +21,7 @@ func NewRoleRepo(db *gorm.DB) service.IRoleRepo {
 }
 
 func (repo *roleRepo) Find(ctx context.Context, req *v1.RoleListRequest) (result []*model.Role, count int64, err error) {
-	q := repo.q.Role
-	return q.WithContext(ctx).FindByPage(req.Offset(), req.Limit())
+	return repo.q.Role.WithContext(ctx).FindByPage(req.Offset(), req.Limit())
 }
 
 func (repo *roleRepo) FindOne(ctx context.Context, req *v1.RoleRequest) (*model.Role, error) {

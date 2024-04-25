@@ -22,13 +22,13 @@ func init() {
 
 func main() {
 	newApp := app.New(
-		app.WithConfig(*filepath, func(cfg *conf.ServiceConfig[config.Service]) {
+		app.WithMustConfig(*filepath, func(cfg *conf.ServiceConfig[config.Service]) {
 			config.Conf = cfg
 		}),
 		app.WithLogger(),
-		app.WithLocalCache(),
-		app.WithDB(),
-		app.WithRedis(),
+		app.WithMustLocalCache(),
+		app.WithMustDB(),
+		app.WithMustRedis(),
 		//app.WithGinServer(nil),
 		// app.WithGrpcServer(domain.RegisterServer),
 		// app.WithRegistrar(etcd.New(etcdClient)),

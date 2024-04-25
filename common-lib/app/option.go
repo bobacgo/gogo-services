@@ -24,7 +24,7 @@ import (
 type Option func(o *Options)
 
 type Options struct {
-	// 内部属性不能直接开放,需要通过 GetXxx 获取
+	// 内部属性不能直接开放
 	conf       *conf.BasicConfig
 	localCache cache.Cache
 	db         *gorm.DB
@@ -43,29 +43,29 @@ type Options struct {
 	beforeStart, beforeStop, afterStart, afterStop []func(context.Context) error
 }
 
-// GetConf 获取公共配置(eg app info、logger config、db config 、redis config)
-func (o Options) GetConf() *conf.BasicConfig {
+// Conf 获取公共配置(eg app info、logger config、db config 、redis config)
+func (o Options) Conf() *conf.BasicConfig {
 	return o.conf
 }
 
-// GetLocalCache 获取本地缓存 Interface
-func (o Options) GetLocalCache() cache.Cache {
+// LocalCache 获取本地缓存 Interface
+func (o Options) LocalCache() cache.Cache {
 	return o.localCache
 }
 
-// GetDB 获取数据库默认client
-func (o Options) GetDB() *gorm.DB {
+// DB 获取数据库默认client
+func (o Options) DB() *gorm.DB {
 	return o.db
 }
 
-// GetDBByKey 获取数据库client
-func (o Options) GetDBByKey(key string) *gorm.DB {
+// DBByKey 获取数据库client
+func (o Options) DBByKey(key string) *gorm.DB {
 	// TODO 多个数据源时
 	return o.db
 }
 
-// GetRedis 获取redis client
-func (o Options) GetRedis() redis.UniversalClient {
+// Redis 获取redis client
+func (o Options) Redis() redis.UniversalClient {
 	return o.redis
 }
 
@@ -99,13 +99,13 @@ func WithRegistrarTimeout(rt time.Duration) Option {
 	}
 }
 
-func WithConfig[T any](filename string, fn func(cfg *conf.ServiceConfig[T])) Option {
+func WithMustConfig[T any](filename string, fn func(cfg *conf.ServiceConfig[T])) Option {
 	return func(o *Options) {
 		cfg, err := conf.Load[conf.ServiceConfig[T]](filename, func(e fsnotify.Event) {
 			//logger.S(config.Conf.Logger.Level)
 		})
 		if err != nil {
-			panic(err)
+			log.Panic(err)
 		}
 		fn(cfg)
 		o.conf = &cfg.BasicConfig
@@ -123,7 +123,7 @@ func WithLogger() Option {
 	}
 }
 
-func WithLocalCache() Option {
+func WithMustLocalCache() Option {
 	return func(o *Options) {
 		var err error
 		o.localCache, err = cache.DefaultCache()
@@ -134,7 +134,7 @@ func WithLocalCache() Option {
 	}
 }
 
-func WithDB(tables ...[]string) Option {
+func WithMustDB(tables ...[]string) Option {
 	// TODO gorm.AutoMerge
 	return func(o *Options) {
 		var err error
@@ -146,7 +146,7 @@ func WithDB(tables ...[]string) Option {
 	}
 }
 
-func WithRedis() Option {
+func WithMustRedis() Option {
 	return func(o *Options) {
 		var err error
 		o.redis, err = cache.NewRedis(o.conf.Redis)

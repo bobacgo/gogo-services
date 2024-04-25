@@ -11,7 +11,7 @@ import (
 )
 
 func Test_HttpServer(t *testing.T) {
-	app.RunHttpServer(nil, router)
+	app.RunMustHttpServer(nil, router)
 }
 
 func Test_HttpApi(t *testing.T) {

@@ -10,10 +10,11 @@ import (
 )
 
 func Register(app *app.Options, r gin.IRouter) {
-	db, rdb := app.GetDB(), app.GetRedis()
+	db, rdb := app.DB(), app.Redis()
 
 	authRouter := r.Group("")
 	authRouter.Use(middleware.Auth())
+
 	{
 		adminRepo := repo.NewAdminRepo(db)
 		adminRoleRepo := repo.NewAdminRoleRepo(db)

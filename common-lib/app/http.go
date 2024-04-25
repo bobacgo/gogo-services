@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"log/slog"
 	"net/http"
 	"time"
@@ -12,16 +13,14 @@ import (
 	"github.com/gogoclouds/gogo-services/common-lib/app/server/http/middleware"
 	"github.com/gogoclouds/gogo-services/common-lib/web/r"
 
-	"github.com/gogoclouds/gogo-services/common-lib/app/logger"
-
 	"github.com/gin-gonic/gin"
 )
 
-func RunHttpServer(app *App, register func(e *gin.Engine, a *Options)) {
+func RunMustHttpServer(app *App, register func(e *gin.Engine, a *Options)) {
 	app.wg.Add(1)
 	defer app.wg.Done()
 
-	cfg := app.opts.GetConf()
+	cfg := app.opts.Conf()
 
 	switch cfg.Env {
 	case conf.EnvProd:
@@ -54,7 +53,7 @@ func RunHttpServer(app *App, register func(e *gin.Engine, a *Options)) {
 	// it won't block the graceful shutdown handling below
 	go func() {
 		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			logger.Panicf("listen: %s\n", err)
+			log.Panicf("listen: %s\n", err)
 		}
 	}()
 	slog.Info("http server running", "addr", cfg.Server.Http.Addr)
