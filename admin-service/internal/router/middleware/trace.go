@@ -6,6 +6,8 @@ import (
 	"github.com/gogoclouds/gogo-services/common-lib/pkg/uid"
 )
 
+// X-Request-ID
+
 const (
 	TraceID = "traceID"
 	Span    = "span"
@@ -16,10 +18,11 @@ func Trace(serviceName string) gin.HandlerFunc {
 		traceID := c.GetString(TraceID)
 		if traceID == "" {
 			traceID = uid.UUID()
+			c.Header(TraceID, traceID)
 		}
-		ctx := slogcontext.WithValue(c, TraceID, traceID)
-		ctx = slogcontext.WithValue(ctx, Span, serviceName) // TODO 根据配置获取 service name
 
+		ctx := slogcontext.WithValue(c.Request.Context(), TraceID, traceID)
+		ctx = slogcontext.WithValue(ctx, Span, serviceName)
 		c.Request = c.Request.WithContext(ctx)
 		c.Next()
 	}

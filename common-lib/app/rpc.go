@@ -2,6 +2,7 @@ package app
 
 import (
 	"log"
+	"log/slog"
 	"net"
 
 	"google.golang.org/grpc"
@@ -31,6 +32,9 @@ func RunMustRpcServer(app *App, register func(server *grpc.Server, app *Options)
 	}
 
 	go func() {
+		localhost, _ := getRegistryUrl("grpc", cfg.Server.Http.Addr)
+		slog.Info("grpc server running " + localhost)
+
 		if err = s.Serve(lis); err != nil {
 			log.Panic(err)
 		}

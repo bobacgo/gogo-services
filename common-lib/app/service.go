@@ -75,7 +75,7 @@ func (a *App) Run() error {
 		}
 	}
 
-	// 注册服务
+	// 注册服务 TODO 等待服务启动成功
 	if opts.registrar != nil {
 		ctx, cancel := context.WithTimeout(context.Background(), opts.registryTimeout)
 		defer cancel()
@@ -91,6 +91,7 @@ func (a *App) Run() error {
 		}
 	}
 
+	slog.Info("server started")
 	// 阻塞,监听退出信号
 	signal.Notify(a.signal, opts.sigs...)
 	<-a.signal

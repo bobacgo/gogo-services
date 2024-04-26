@@ -12,8 +12,7 @@ import (
 
 func Init(e *gin.Engine, app *app.Options) {
 	e.StaticFS("./web", http.Dir("./web"))
-	//authRouter := e.Use(middleware.Auth())
-	//_ = authRouter
+
 	cfg := app.Conf()
 
 	security.JwtHelper = security.NewJWT(&cfg.Security.Jwt, app.Redis())

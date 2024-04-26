@@ -33,6 +33,7 @@ func RunMustHttpServer(app *App, register func(e *gin.Engine, a *Options)) {
 	}
 
 	e := gin.New()
+	e.ContextWithFallback = true
 
 	e.Use(gin.Logger()) // TODO -> zap.Logger
 	e.Use(middleware.Recovery())
@@ -53,11 +54,14 @@ func RunMustHttpServer(app *App, register func(e *gin.Engine, a *Options)) {
 	// Initializing the server in a goroutine so that
 	// it won't block the graceful shutdown handling below
 	go func() {
+		localhost, _ := getRegistryUrl("http", cfg.Server.Http.Addr)
+		slog.Info("http server running " + localhost)
+
 		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			log.Panicf("listen: %s\n", err)
 		}
 	}()
-	slog.Info("http server running", "addr", cfg.Server.Http.Addr)
+
 	<-app.exit
 	slog.Info("Shutting down http server...")
 	// The context is used to inform the server it has 5 seconds to finish
