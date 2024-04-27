@@ -23,7 +23,7 @@ func init() {
 func main() {
 	newApp := app.New(
 		app.WithMustConfig(*filepath, func(cfg *conf.ServiceConfig[config.Service]) {
-			config.Conf = cfg
+			config.Cfg = cfg
 		}),
 		app.WithLogger(),
 		app.WithMustLocalCache(),

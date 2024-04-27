@@ -18,9 +18,9 @@ const (
 )
 
 type Config struct {
-	Level      string `mapstructure:"level"`
-	LevelCh    chan LogLevel
-	TimeFormat string `mapstructure:"timeFormat"`
+	Level      string        `mapstructure:"level"`
+	LevelCh    chan LogLevel `json:"-"`
+	TimeFormat string        `mapstructure:"timeFormat"`
 
 	// 完整的文件路径名
 	Filepath        string `mapstructure:"filepath"`

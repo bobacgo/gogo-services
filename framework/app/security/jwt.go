@@ -7,7 +7,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gogoclouds/gogo-services/framework/app/security/config"
 	"github.com/golang-jwt/jwt"
 	"github.com/redis/go-redis/v9"
 )
@@ -27,11 +26,11 @@ type JWToken struct {
 	cacheKeyPrefix      string
 }
 
-var JwtHelper = NewJWT(&config.JwtConfig{
+var JwtHelper = NewJWT(&JwtConfig{
 	Secret: "gogo",
 }, nil)
 
-func NewJWT(conf *config.JwtConfig, rdb redis.Cmdable) *JWToken {
+func NewJWT(conf *JwtConfig, rdb redis.Cmdable) *JWToken {
 	if conf.CacheKeyPrefix == "" {
 		conf.CacheKeyPrefix = CacheKeyPrefix
 	}

@@ -10,6 +10,8 @@ import (
 	"github.com/spf13/viper"
 )
 
+// TODO 加载多个配置文件
+
 // LoadDefault ./config.yaml
 func LoadDefault[T any](onChange func(e fsnotify.Event)) (*T, error) {
 	return Load[T](".", onChange)

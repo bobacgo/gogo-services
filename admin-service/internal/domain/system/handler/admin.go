@@ -3,6 +3,7 @@ package handler
 import (
 	"github.com/gin-gonic/gin"
 	v1 "github.com/gogoclouds/gogo-services/admin-service/api/system/v1"
+	"github.com/gogoclouds/gogo-services/admin-service/internal/config"
 	"github.com/gogoclouds/gogo-services/admin-service/internal/router/middleware"
 	"github.com/gogoclouds/gogo-services/framework/app/security"
 	"github.com/gogoclouds/gogo-services/framework/web/r"
@@ -23,7 +24,7 @@ func (h *AdminApi) Register(ctx *gin.Context) {
 		r.Reply(ctx, errs.BadRequest.WithDetails(err))
 		return
 	}
-	if err := req.Password.Decrypt(); err != nil {
+	if err := req.Password.Decrypt(config.Cfg.Security); err != nil {
 		r.Reply(ctx, err)
 		return
 	}
@@ -38,7 +39,7 @@ func (h *AdminApi) Login(ctx *gin.Context) {
 		return
 	}
 
-	if err := req.Password.Decrypt(); err != nil {
+	if err := req.Password.Decrypt(config.Cfg.Security); err != nil {
 		r.Reply(ctx, err)
 		return
 	}
@@ -136,7 +137,7 @@ func (h *AdminApi) UpdatePassword(ctx *gin.Context) {
 		return
 	}
 
-	if err := req.Password.Decrypt(); err != nil {
+	if err := req.Password.Decrypt(config.Cfg.Security); err != nil {
 		r.Reply(ctx, err)
 		return
 	}

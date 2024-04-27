@@ -330,7 +330,7 @@ func (svc *adminService) GetRoleList(ctx context.Context, req *v1.AdminRequest) 
 }
 
 func (svc *adminService) newPasswdVerifier(ctx context.Context, admin *model.Admin) *security.PasswdVerifier {
-	pwdHelper := security.NewPasswdVerifier(svc.cache, config.Conf.Service.ErrAttemptLimit)
+	pwdHelper := security.NewPasswdVerifier(svc.cache, config.Cfg.Service.ErrAttemptLimit)
 	// 第二天0点清零
 	remain := utime.ZeroHour(1).Unix() - time.Now().Unix()
 	pwdHelper.SetKey(fmt.Sprintf("%s:%s", LoginLimitKeyPrefix, admin.Username), time.Duration(remain)*time.Second)

@@ -1,7 +1,6 @@
 package security
 
 import (
-	"github.com/gogoclouds/gogo-services/framework/app/conf"
 	"github.com/gogoclouds/gogo-services/framework/pkg/ucrypto"
 )
 
@@ -15,13 +14,13 @@ import (
 // 4.入库时hash不可逆编码(可以加盐)
 type Ciphertext string
 
-func (ct *Ciphertext) Decrypt() error {
-	cfg := conf.Conf.Security.Ciphertext
+func (ct *Ciphertext) Decrypt(conf Config) error {
+	cfg := conf.Ciphertext
 	// TODO 密码强度规则校验
 	if !cfg.IsCiphertext {
 		return nil
 	}
-	pt, err := ucrypto.AESDecrypt(string(*ct), cfg.CipherKey)
+	pt, err := ucrypto.AESDecrypt(string(*ct), string(cfg.CipherKey))
 	if err != nil {
 		return err
 	}

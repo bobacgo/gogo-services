@@ -4,10 +4,8 @@ import (
 	"github.com/gogoclouds/gogo-services/framework/app/cache"
 	"github.com/gogoclouds/gogo-services/framework/app/db"
 	"github.com/gogoclouds/gogo-services/framework/app/logger"
-	"github.com/gogoclouds/gogo-services/framework/app/security/config"
+	"github.com/gogoclouds/gogo-services/framework/app/security"
 )
-
-var Conf *BasicConfig
 
 type EnvType string
 
@@ -31,7 +29,7 @@ type BasicConfig struct {
 		Http Transport `mapstructure:"http"`
 		Rpc  Transport `mapstructure:"rpc"`
 	}
-	Security config.Config   `mapstructure:"security"`
+	Security security.Config `mapstructure:"security"`
 	Logger   logger.Config   `mapstructure:"logger"`
 	Registry Transport       `mapstructure:"registry"`
 	DB       db.Config       `mapstructure:"db"`

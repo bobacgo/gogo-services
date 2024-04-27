@@ -16,9 +16,11 @@ import (
 	"github.com/gogoclouds/gogo-services/framework/app/logger"
 	"github.com/gogoclouds/gogo-services/framework/app/registry"
 	"github.com/redis/go-redis/v9"
+	"github.com/spf13/viper"
 	"google.golang.org/grpc"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
+	"sigs.k8s.io/yaml"
 )
 
 type Option func(o *Options)
@@ -107,9 +109,9 @@ func WithMustConfig[T any](filename string, fn func(cfg *conf.ServiceConfig[T]))
 		if err != nil {
 			log.Panic(err)
 		}
-		fn(cfg)
 		o.conf = &cfg.BasicConfig
-		conf.Conf = &cfg.BasicConfig
+		fn(cfg)
+
 	}
 }
 
@@ -119,6 +121,11 @@ func WithLogger() Option {
 		o.conf.Logger.Filename = o.conf.Name
 		//o.Conf.Logger.TimeFormat = o.Conf.TimeFormat
 		logger.InitZapLogger(o.conf.Logger)
+
+		// yaml 格式输出到控制台
+		cfgData, _ := yaml.Marshal(viper.GetViper().AllSettings())
+		slog.Info("local config info\n" + string(cfgData)) // TODO 脱密
+		slog.Info("[config] init done.")
 		slog.Info("[logger] init done.")
 	}
 }
