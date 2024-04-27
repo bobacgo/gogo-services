@@ -11,10 +11,10 @@ import (
 	v1 "github.com/gogoclouds/gogo-services/admin-service/api/system/v1"
 	"github.com/gogoclouds/gogo-services/admin-service/internal/model"
 	"github.com/gogoclouds/gogo-services/admin-service/internal/router/middleware"
-	"github.com/gogoclouds/gogo-services/common-lib/pkg/uhttp"
-	"github.com/gogoclouds/gogo-services/common-lib/web/r"
-	"github.com/gogoclouds/gogo-services/common-lib/web/r/codes"
-	"github.com/gogoclouds/gogo-services/common-lib/web/r/page"
+	"github.com/gogoclouds/gogo-services/framework/pkg/uhttp"
+	"github.com/gogoclouds/gogo-services/framework/web/r"
+	"github.com/gogoclouds/gogo-services/framework/web/r/codes"
+	"github.com/gogoclouds/gogo-services/framework/web/r/page"
 	"github.com/samber/lo"
 )
 

@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"github.com/gogoclouds/gogo-services/admin-service/internal/model"
-	"github.com/gogoclouds/gogo-services/common-lib/app/security"
-	"github.com/gogoclouds/gogo-services/common-lib/web/r/page"
+	"github.com/gogoclouds/gogo-services/framework/app/security"
+	"github.com/gogoclouds/gogo-services/framework/web/r/page"
 )
 
 type IAdminServer interface {

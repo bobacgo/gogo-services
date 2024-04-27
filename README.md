@@ -11,7 +11,7 @@
 ```text
 gogo-services
     ├─admin-service -- 平台运营服务、用户中心
-    ├─common-lib    -- 基础库
+    ├─framework    -- 基础库
     ├─devops-conf   -- 部署相关
     ├─gateway       -- 后端网关
     ├─gen           -- 代码生成

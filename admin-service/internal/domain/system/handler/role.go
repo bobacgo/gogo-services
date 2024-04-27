@@ -5,9 +5,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 	v1 "github.com/gogoclouds/gogo-services/admin-service/api/system/v1"
-	"github.com/gogoclouds/gogo-services/common-lib/web/r"
-	"github.com/gogoclouds/gogo-services/common-lib/web/r/errs"
-	"github.com/gogoclouds/gogo-services/common-lib/web/r/page"
+	"github.com/gogoclouds/gogo-services/framework/web/r"
+	"github.com/gogoclouds/gogo-services/framework/web/r/errs"
+	"github.com/gogoclouds/gogo-services/framework/web/r/page"
 )
 
 type RoleApi struct {

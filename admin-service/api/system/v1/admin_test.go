@@ -14,10 +14,10 @@ import (
 	"github.com/gogoclouds/gogo-services/admin-service/api/errs"
 	v1 "github.com/gogoclouds/gogo-services/admin-service/api/system/v1"
 	"github.com/gogoclouds/gogo-services/admin-service/internal/router/middleware"
-	"github.com/gogoclouds/gogo-services/common-lib/pkg/uhttp"
-	"github.com/gogoclouds/gogo-services/common-lib/web/r"
-	"github.com/gogoclouds/gogo-services/common-lib/web/r/codes"
-	"github.com/gogoclouds/gogo-services/common-lib/web/r/status"
+	"github.com/gogoclouds/gogo-services/framework/pkg/uhttp"
+	"github.com/gogoclouds/gogo-services/framework/web/r"
+	"github.com/gogoclouds/gogo-services/framework/web/r/codes"
+	"github.com/gogoclouds/gogo-services/framework/web/r/status"
 	"github.com/samber/lo"
 )
 

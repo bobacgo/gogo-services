@@ -4,9 +4,9 @@ import (
 	"github.com/gin-gonic/gin"
 	v1 "github.com/gogoclouds/gogo-services/admin-service/api/system/v1"
 	"github.com/gogoclouds/gogo-services/admin-service/internal/router/middleware"
-	"github.com/gogoclouds/gogo-services/common-lib/app/security"
-	"github.com/gogoclouds/gogo-services/common-lib/web/r"
-	"github.com/gogoclouds/gogo-services/common-lib/web/r/errs"
+	"github.com/gogoclouds/gogo-services/framework/app/security"
+	"github.com/gogoclouds/gogo-services/framework/web/r"
+	"github.com/gogoclouds/gogo-services/framework/web/r/errs"
 )
 
 type AdminApi struct {

@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/gin-gonic/gin"
-	"github.com/gogoclouds/gogo-services/common-lib/g"
+	"github.com/gogoclouds/gogo-services/framework/g"
 	"github.com/gogoclouds/gogo/web/gin/reply"
 )
 

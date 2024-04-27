@@ -6,8 +6,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gogoclouds/gogo-services/admin-service/internal/domain/system"
 	"github.com/gogoclouds/gogo-services/admin-service/internal/router/middleware"
-	"github.com/gogoclouds/gogo-services/common-lib/app"
-	"github.com/gogoclouds/gogo-services/common-lib/app/security"
+	app "github.com/gogoclouds/gogo-services/framework/app"
+	"github.com/gogoclouds/gogo-services/framework/app/security"
 )
 
 func Init(e *gin.Engine, app *app.Options) {

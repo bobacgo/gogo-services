@@ -2,7 +2,8 @@ package service
 
 import (
 	"context"
-	"github.com/gogoclouds/gogo-services/common-lib/web/r/page"
+
+	"github.com/gogoclouds/gogo-services/framework/web/r/page"
 	v1 "github.com/gogoclouds/gogo-services/gen/internal/mvc/sample/api/user/v1"
 	"github.com/gogoclouds/gogo-services/gen/internal/mvc/sample/internal/model"
 	"github.com/jinzhu/copier"

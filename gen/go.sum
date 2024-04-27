@@ -27,10 +27,10 @@ github.com/go-sql-driver/mysql v1.7.1 h1:lUIinVbN1DY0xBg0eMOzmmtGoHwWBbvnWubQUrt
 github.com/go-sql-driver/mysql v1.7.1/go.mod h1:OXbVy3sEdcQ2Doequ6Z5BW6fXNQTmx+9S1MCJN5yJMI=
 github.com/goccy/go-json v0.10.2 h1:CrxCmQqYDkv1z7lO7Wbh2HN93uovUHgrECaO5ZrCXAU=
 github.com/goccy/go-json v0.10.2/go.mod h1:6MelG93GURQebXPDq3khkgXZkazVtN9CRI+MGFi0w8I=
-github.com/gogoclouds/common-lib v0.0.0-20221122033832-9f7e6c267998 h1:0SSOtDVvwtzQPTifcjlwiCuWUsctYXNBdKmVGi2ggGc=
-github.com/gogoclouds/common-lib v0.0.0-20221122033832-9f7e6c267998/go.mod h1:d8DrbXmd+7n0lKVI2jiX/PQE2Tqbe+R3TnT/uVaFvPI=
-github.com/gogoclouds/gogo-services/common-lib v0.0.0-20240127101537-2658a1cd9797 h1:at6uJj3RbfQ7l7wuRub3BUHZn2mk//CB2qW0+lBW02s=
-github.com/gogoclouds/gogo-services/common-lib v0.0.0-20240127101537-2658a1cd9797/go.mod h1:1YDMmqT/GWM9BBOUNXvtpEC8f5U8LA7RUUbmZrBapSI=
+github.com/gogoclouds/framework v0.0.0-20221122033832-9f7e6c267998 h1:0SSOtDVvwtzQPTifcjlwiCuWUsctYXNBdKmVGi2ggGc=
+github.com/gogoclouds/framework v0.0.0-20221122033832-9f7e6c267998/go.mod h1:d8DrbXmd+7n0lKVI2jiX/PQE2Tqbe+R3TnT/uVaFvPI=
+github.com/gogoclouds/gogo-services/framework v0.0.0-20240127101537-2658a1cd9797 h1:at6uJj3RbfQ7l7wuRub3BUHZn2mk//CB2qW0+lBW02s=
+github.com/gogoclouds/gogo-services/framework v0.0.0-20240127101537-2658a1cd9797/go.mod h1:1YDMmqT/GWM9BBOUNXvtpEC8f5U8LA7RUUbmZrBapSI=
 github.com/golang-sql/civil v0.0.0-20220223132316-b832511892a9 h1:au07oEsX2xN0ktxqI+Sida1w446QrXBRJ0nee3SNZlA=
 github.com/golang-sql/civil v0.0.0-20220223132316-b832511892a9/go.mod h1:8vg3r2VgvsThLBIFL93Qb5yWzgyZWhEmBwUJWevAkK0=
 github.com/golang-sql/sqlexp v0.1.0 h1:ZCD6MBpcuOVfGVqsEmY5/4FtYiKz6tSyUv9LPEDei6A=

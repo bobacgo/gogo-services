@@ -4,7 +4,7 @@ go 1.22
 
 require (
 	github.com/gin-gonic/gin v1.9.1
-	github.com/gogoclouds/gogo-services/common-lib v0.0.0-20240127101537-2658a1cd9797
+	github.com/gogoclouds/gogo-services/framework v0.0.0-20240127101537-2658a1cd9797
 	github.com/jinzhu/copier v0.4.0
 	gorm.io/driver/mysql v1.5.2
 	gorm.io/gen v0.3.25

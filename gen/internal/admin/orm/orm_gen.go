@@ -6,8 +6,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/gogoclouds/gogo-services/common-lib/pkg/word"
-
+	"github.com/gogoclouds/gogo-services/framework/pkg/word"
 	"gorm.io/driver/mysql"
 	"gorm.io/gen"
 	"gorm.io/gen/field"

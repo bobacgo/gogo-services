@@ -1,6 +1,6 @@
 package config
 
-import "github.com/gogoclouds/gogo-services/common-lib/app/conf"
+import "github.com/gogoclouds/gogo-services/framework/app/conf"
 
 var Conf *conf.ServiceConfig[Service]
 

@@ -1,8 +1,8 @@
 package errs
 
 import (
-	"github.com/gogoclouds/gogo-services/common-lib/web/r/errs"
-	"github.com/gogoclouds/gogo-services/common-lib/web/r/status"
+	"github.com/gogoclouds/gogo-services/framework/web/r/errs"
+	"github.com/gogoclouds/gogo-services/framework/web/r/status"
 )
 
 // Token

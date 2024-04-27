@@ -6,8 +6,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/gogoclouds/gogo-services/admin-service/api/errs"
-	"github.com/gogoclouds/gogo-services/common-lib/app/security"
-	"github.com/gogoclouds/gogo-services/common-lib/web/r"
+	"github.com/gogoclouds/gogo-services/framework/app/security"
+	"github.com/gogoclouds/gogo-services/framework/web/r"
 )
 
 const (

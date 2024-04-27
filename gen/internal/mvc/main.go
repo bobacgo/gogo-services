@@ -1,11 +1,12 @@
 package main
 
 import (
-	"github.com/gogoclouds/gogo-services/common-lib/pkg"
 	"log"
 	"path/filepath"
 	"strings"
 	"text/template"
+
+	"github.com/gogoclouds/gogo-services/framework/pkg"
 )
 
 func main() {

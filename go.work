@@ -1,9 +1,7 @@
-go 1.22
+go 1.22.0
 
 use (
 	./admin-service
-	./common-lib
+	./framework
 	./gateway
-	./gen
-	./main-service
 )

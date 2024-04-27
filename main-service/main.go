@@ -5,9 +5,9 @@ import (
 
 	"github.com/gogoclouds/gogo-services/main-service/internal/config"
 
-	"github.com/gogoclouds/gogo-services/common-lib/app"
-	"github.com/gogoclouds/gogo-services/common-lib/app/conf"
-	"github.com/gogoclouds/gogo-services/common-lib/app/logger"
+	"github.com/gogoclouds/gogo-services/framework/app"
+	"github.com/gogoclouds/gogo-services/framework/app/conf"
+	"github.com/gogoclouds/gogo-services/framework/app/logger"
 )
 
 var filepath = flag.String("config", "./config.yaml", "config file path")

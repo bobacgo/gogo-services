@@ -6,7 +6,7 @@ import (
 	"github.com/gogoclouds/gogo-services/admin-service/internal/domain/system/repo"
 	"github.com/gogoclouds/gogo-services/admin-service/internal/domain/system/service"
 	"github.com/gogoclouds/gogo-services/admin-service/internal/router/middleware"
-	"github.com/gogoclouds/gogo-services/common-lib/app"
+	"github.com/gogoclouds/gogo-services/framework/app"
 )
 
 func Register(app *app.Options, r gin.IRouter) {

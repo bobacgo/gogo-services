@@ -3,7 +3,7 @@ package middleware
 import (
 	slogcontext "github.com/PumpkinSeed/slog-context"
 	"github.com/gin-gonic/gin"
-	"github.com/gogoclouds/gogo-services/common-lib/pkg/uid"
+	"github.com/gogoclouds/gogo-services/framework/pkg/uid"
 )
 
 // X-Request-ID

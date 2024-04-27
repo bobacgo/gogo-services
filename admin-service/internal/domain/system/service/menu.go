@@ -7,8 +7,8 @@ import (
 	v1 "github.com/gogoclouds/gogo-services/admin-service/api/system/v1"
 	"github.com/gogoclouds/gogo-services/admin-service/internal/domain/system/dto"
 	"github.com/gogoclouds/gogo-services/admin-service/internal/model"
-	"github.com/gogoclouds/gogo-services/common-lib/app/validator"
-	"github.com/gogoclouds/gogo-services/common-lib/web/r/page"
+	"github.com/gogoclouds/gogo-services/framework/app/validator"
+	"github.com/gogoclouds/gogo-services/framework/web/r/page"
 	"github.com/jinzhu/copier"
 	"github.com/samber/lo"
 )

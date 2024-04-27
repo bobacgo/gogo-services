@@ -2,7 +2,7 @@ package v1
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/gogoclouds/gogo-services/common-lib/web/r/page"
+	"github.com/gogoclouds/gogo-services/framework/web/r/page"
 	"github.com/gogoclouds/gogo-services/gen/internal/mvc/sample/internal/model"
 )
 
