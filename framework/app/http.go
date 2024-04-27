@@ -75,7 +75,7 @@ func RunMustHttpServer(app *App, register func(e *gin.Engine, a *Options)) {
 }
 
 // healthApi http check-up API
-func healthApi(e *gin.Engine, cfg *conf.BasicConfig) {
+func healthApi(e *gin.Engine, cfg *conf.Basic) {
 	e.GET("/health", func(c *gin.Context) {
 		msg := fmt.Sprintf("%s [env=%s] %s, is active", cfg.Name, cfg.Env, cfg.Version)
 		r.Reply(c, msg)

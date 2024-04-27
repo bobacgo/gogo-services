@@ -16,7 +16,6 @@ import (
 	"github.com/gogoclouds/gogo-services/framework/app/logger"
 	"github.com/gogoclouds/gogo-services/framework/app/registry"
 	"github.com/redis/go-redis/v9"
-	"github.com/spf13/viper"
 	"google.golang.org/grpc"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -27,7 +26,7 @@ type Option func(o *Options)
 
 type Options struct {
 	// 内部属性不能直接开放
-	conf       *conf.BasicConfig
+	conf       *conf.Basic
 	localCache cache.Cache
 	db         *gorm.DB
 	redis      redis.UniversalClient
@@ -46,7 +45,7 @@ type Options struct {
 }
 
 // Conf 获取公共配置(eg app info、logger config、db config 、redis config)
-func (o Options) Conf() *conf.BasicConfig {
+func (o Options) Conf() *conf.Basic {
 	return o.conf
 }
 
@@ -103,15 +102,16 @@ func WithRegistrarTimeout(rt time.Duration) Option {
 
 func WithMustConfig[T any](filename string, fn func(cfg *conf.ServiceConfig[T])) Option {
 	return func(o *Options) {
-		cfg, err := conf.Load[conf.ServiceConfig[T]](filename, func(e fsnotify.Event) {
+		cfg, err := conf.LoadService[T](filename, func(e fsnotify.Event) {
 			//logger.S(config.Conf.Logger.Level)
 		})
 		if err != nil {
 			log.Panic(err)
 		}
-		o.conf = &cfg.BasicConfig
+		o.conf = &cfg.Basic
+		cfgData, _ := yaml.Marshal(cfg)
+		slog.Info("local config info\n" + string(cfgData)) // TODO 脱密
 		fn(cfg)
-
 	}
 }
 
@@ -123,8 +123,8 @@ func WithLogger() Option {
 		logger.InitZapLogger(o.conf.Logger)
 
 		// yaml 格式输出到控制台
-		cfgData, _ := yaml.Marshal(viper.GetViper().AllSettings())
-		slog.Info("local config info\n" + string(cfgData)) // TODO 脱密
+		// cfgData, _ := yaml.Marshal(viper.AllSettings())
+		// slog.Info("local config info\n" + string(cfgData)) // TODO 脱密
 		slog.Info("[config] init done.")
 		slog.Info("[logger] init done.")
 	}

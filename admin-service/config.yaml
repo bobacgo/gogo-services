@@ -2,6 +2,10 @@ name: admin-service
 version: '0.0.1'
 env: dev
 timeFormat: '2006-01-02 15:04:05'
+configs:
+  - ./db.yaml
+  - ./logger.yaml
+  - ./redis.yaml
 server:
   http:
     addr: '0.0.0.0:8080'
@@ -22,43 +26,6 @@ service:
   errAttemptLimit: 5
 
 # ====================================
-# logger
-
-logger:
-  level: debug                          # 可选 debug | info | error
-  filepath: './logs'
-  filenameSuffix: '2006-01-02-150405'
-  fileExtension: log
-  fileJsonEncoder: true
-  fileSizeMax: 10                      # 10MB 切割文件
-  fileAgeMax: 30                       # 日志保留30天
-  fileCompress: true
-
-# ====================================
 # registry
 registry:
   addr: '127.0.0.1:2379'
-
-
-# ====================================
-# db
-
-# CREATE DATABASE IF NOT EXISTS `gogo` default charset utf8mb4 COLLATE utf8mb4_unicode_ci
-db:
-  dryRun: false # 是否空跑 (用于调试,数据不会写入数据库)
-  source: root:root@tcp(127.0.0.1:3306)/mall-ums?charset=utf8mb4&parseTime=True&loc=Local
-  slowThreshold: 1
-  maxLifeTime: 1
-  maxOpenConn: 100
-  maxIdleConn: 30
-
-# ====================================
-# redis
-redis:
-  addrs: ['127.0.0.1:6379']
-  db: 0
-  username:
-  password:
-  readTimeout: 1ms
-  writeTimeout: 1ms
-  poolSize: 50

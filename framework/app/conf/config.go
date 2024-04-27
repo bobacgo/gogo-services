@@ -16,15 +16,16 @@ const (
 )
 
 type ServiceConfig[T any] struct {
-	BasicConfig `mapstructure:",squash"`
-	Service     T `mapstructure:"service"`
+	Basic   `mapstructure:",squash"`
+	Service T `mapstructure:"service"`
 }
 
-type BasicConfig struct {
-	Name       string  `mapstructure:"name" validate:"required"`    // 服务名
-	Version    string  `mapstructure:"version" validate:"required"` // 版本号
-	Env        EnvType `mapstructure:"env" validate:"required"`
-	TimeFormat string  `mapstructure:"timeFormat"`
+type Basic struct {
+	Name       string   `mapstructure:"name" validate:"required"`    // 服务名
+	Version    string   `mapstructure:"version" validate:"required"` // 版本号
+	Env        EnvType  `mapstructure:"env" validate:"required"`
+	TimeFormat string   `mapstructure:"timeFormat"`
+	Configs    []string `mapstructure:"configs"` // 其他配置文件路径
 	Server     struct {
 		Http Transport `mapstructure:"http"`
 		Rpc  Transport `mapstructure:"rpc"`

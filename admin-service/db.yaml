@@ -1,0 +1,11 @@
+# ====================================
+# db
+
+# CREATE DATABASE IF NOT EXISTS `gogo` default charset utf8mb4 COLLATE utf8mb4_unicode_ci
+db:
+  dryRun: false # 是否空跑 (用于调试,数据不会写入数据库)
+  source: root:root@tcp(127.0.0.1:3306)/mall-ums?charset=utf8mb4&parseTime=True&loc=Local
+  slowThreshold: 1
+  maxLifeTime: 1
+  maxOpenConn: 100
+  maxIdleConn: 30
